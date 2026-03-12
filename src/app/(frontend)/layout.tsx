@@ -1,16 +1,25 @@
 import React from 'react'
-import './styles.css'
+import './global.css'
+import { Bricolage_Grotesque } from 'next/font/google'
+import { Footer } from '../components/footer'
+import { footerData } from '../components/footer/data'
 
 export const metadata = {
   description: 'A blank template using Payload in a Next.js app.',
   title: 'Payload Blank Template',
 }
 
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-bricolage',
+  weight: ['300', '400', '500', '600', '700', '800'],
+})
+
 export default async function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
 
   return (
-    <html lang="en">
+    <html lang="en" className={bricolage.variable}>
       <body>
         <main>{children}</main>
       </body>
