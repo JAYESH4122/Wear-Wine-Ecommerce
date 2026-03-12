@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@next/env':
+        specifier: ^16.1.6
+        version: 16.1.6
       '@payloadcms/db-postgres':
         specifier: 3.79.0
         version: 3.79.0(payload@3.79.0(graphql@16.13.1)(typescript@5.7.3))
@@ -1267,6 +1270,9 @@ packages:
 
   '@next/env@15.5.12':
     resolution: {integrity: sha512-pUvdJN1on574wQHjaBfNGDt9Mz5utDSZFsIIQkMzPgNS8ZvT4H2mwOrOIClwsQOb6EGx5M76/CZr6G8i6pSpLg==}
+
+  '@next/env@16.1.6':
+    resolution: {integrity: sha512-N1ySLuZjnAtN3kFnwhAwPvZah8RJxKasD7x1f8shFqhncnWZn4JMfg37diLNuoHsLAlrDfM3g4mawVdtAG8XLQ==}
 
   '@next/eslint-plugin-next@15.4.11':
     resolution: {integrity: sha512-WSY6ZwahlbR3JLfXrBezo2H4OmCeF2aFpguZuTkGV/n7+C10wYP17gxsCXbKVI6TpWmHZysp/AhwovUObPjfEA==}
@@ -5236,6 +5242,8 @@ snapshots:
   '@next/env@15.4.11': {}
 
   '@next/env@15.5.12': {}
+
+  '@next/env@16.1.6': {}
 
   '@next/eslint-plugin-next@15.4.11':
     dependencies:
