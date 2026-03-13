@@ -1,0 +1,32 @@
+.arrow-slider-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.swiper-pagination-external {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.swiper-pagination-bullet {
+  width: 6px !important;
+  height: 6px !important;
+  background: var(--content-disabled, #ffff) !important;
+  opacity: 1 !important;
+  transition: all 1s ease !important;
+  border-radius: 10px !important;
+  cursor: pointer;
+  margin: 0 !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: var(--background-alt, #000000) !important;
+  width: 30px !important;
+  border-radius: 10px !important;
+}
+
+.swiper-slide {
+  height: auto !important;
+}

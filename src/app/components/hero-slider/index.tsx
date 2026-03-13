@@ -1,9 +1,9 @@
 'use client'
 import React, { useRef } from 'react'
 import Image from 'next/image'
-import { SliderNavButtons } from '../ui/arrow-slider/slider-nav-button'
+import { SliderNavButtons } from '../arrow-slider/slider-nav-button'
 import { useResponsive } from '@/hooks/use-responsive'
-import { ArrowSlider } from '../ui/arrow-slider'
+import { ArrowSlider } from '../arrow-slider'
 import { StaticImageData } from 'next/image'
 
 export interface HeroSliderProps {
