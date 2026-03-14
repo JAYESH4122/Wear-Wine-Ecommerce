@@ -9,14 +9,11 @@ import './styles.css'
 import { ProductListSection } from '@/app/components/product-list-section'
 import { Header } from '@/app/components/Header'
 import { HeroSlider } from '@/app/components/hero-slider'
+import { Footer } from '@/app/components/footer'
 
 export default async function HomePage() {
-  const headers = await getHeaders()
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const fileURL = `vscode://file/${fileURLToPath(import.meta.url)}`
 
   const { docs: heroImages } = await payload.find({
     collection: 'media',
@@ -41,7 +38,7 @@ export default async function HomePage() {
         href: `/category/${category.slug}`,
         count: totalDocs,
       }
-    })
+    }),
   )
 
   return (
@@ -49,6 +46,7 @@ export default async function HomePage() {
       <Header categories={categoryItems} />
       {heroImages.length > 0 && <HeroSlider slides={heroImages} />}
       <ProductListSection />
+      <Footer />
     </>
   )
 }

@@ -20,6 +20,13 @@ export const headerData: HeaderType = {
     {
       link: {
         type: 'custom',
+        url: '/',
+        label: 'Home',
+      },
+    },
+    {
+      link: {
+        type: 'custom',
         url: '/shop',
         label: 'Shop',
       },
@@ -27,8 +34,8 @@ export const headerData: HeaderType = {
     {
       link: {
         type: 'custom',
-        url: '/categories',
-        label: 'Categories',
+        url: '/new-arrivals',
+        label: 'New',
       },
     },
     {
@@ -54,17 +61,28 @@ export type NavigationItem = {
   icon: LucideIcon
 }
 
-export const navigation: NavigationItem[] = [
-  { name: 'Home', href: '/', icon: Store },
-  { name: 'Shop', href: '/shop', icon: ShoppingBag },
-  { name: 'New', href: '/new-arrivals', icon: Sparkles },
-  { name: 'About', href: '/about', icon: User },
-  { name: 'Contact', href: '/contact', icon: Clock },
-]
+export const navigation: NavigationItem[] =
+  headerData.navItems?.map((item, index) => {
+    const link = item.link
+
+    const href =
+      link.type === 'custom'
+        ? link.url ?? '/'
+        : link.reference
+        ? `/${link.reference.value}`
+        : '/'
+
+    const icons: LucideIcon[] = [Store, ShoppingBag, Sparkles, User, Clock]
+
+    return {
+      name: link.label,
+      href,
+      icon: icons[index] ?? Store,
+    }
+  }) ?? []
 
 export type CategoryItem = {
   name: string
   href: string
   count: number
 }
-

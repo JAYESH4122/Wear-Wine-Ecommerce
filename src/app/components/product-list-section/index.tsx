@@ -95,10 +95,10 @@ export const ProductListSection = () => {
   )
 
   return (
-    <section className="relative py-20 bg-[#fafafa] overflow-hidden">
+    <section className="relative py-20 bg-background overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-neutral-200/50 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-neutral-200/50 rounded-full blur-[120px]" />
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -110,21 +110,21 @@ export const ProductListSection = () => {
             className="max-w-2xl"
           >
             <div className="flex items-center gap-2 mb-4">
-              <span className="w-12 h-[1px] bg-black" />
-              <span className="text-xs font-bold tracking-[0.2em] uppercase text-neutral-500">
+              <span className="w-12 h-[1px] bg-primary" />
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-secondary">
                 New Arrivals
               </span>
             </div>
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-neutral-900 mb-4">
-              Premium <span className="text-neutral-400 font-light italic">Collection</span>
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-text mb-4">
+              Premium <span className="text-secondary/60 font-light italic">Collection</span>
             </h2>
-            <p className="text-neutral-500 text-lg">
+            <p className="text-secondary text-lg">
               Explore our latest pieces designed for modern living.
             </p>
           </motion.div>
 
           <div className="flex items-center gap-3">
-            <button className="group flex items-center gap-2 text-sm font-semibold text-primary hover:text-neutral-600 transition-colors cursor-pointer">
+            <button className="group flex items-center gap-2 text-sm font-semibold text-primary hover:text-secondary transition-colors cursor-pointer">
               View All Products{' '}
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
@@ -141,14 +141,14 @@ export const ProductListSection = () => {
                   className={cn(
                     'relative px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap cursor-pointer',
                     selectedCategory === cat.id
-                      ? 'text-white'
-                      : 'bg-white text-neutral-600 border border-neutral-200 shadow-sm hover:shadow hover:bg-neutral-50',
+                      ? 'text-background'
+                      : 'bg-background text-secondary border border-secondary/20 shadow-sm hover:shadow hover:bg-secondary/5',
                   )}
                 >
                   {selectedCategory === cat.id && (
                     <motion.div
                       layoutId="active-pill"
-                      className="absolute inset-0 bg-black rounded-full"
+                      className="absolute inset-0 bg-primary rounded-full"
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                     />
                   )}
