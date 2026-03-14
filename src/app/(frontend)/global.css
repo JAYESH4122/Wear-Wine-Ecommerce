@@ -18,6 +18,13 @@
 }
 
 @theme static {
+  /* --- NEW CORE COLORS --- */
+  --color-text: #171717;
+  --color-background: #ffffff;
+  --color-primary: #1d1b1b;
+  --color-secondary: #52575b;
+  --color-accent: #050914;
+
   /* Background Colors */
   --color-background-primary: #ffffff;
   --color-background-secondary: #f5f5f5;
@@ -147,4 +154,13 @@
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+.swiper-pagination-bullets.swiper-pagination-horizontal {
+  margin-top: 0 !important;
 }

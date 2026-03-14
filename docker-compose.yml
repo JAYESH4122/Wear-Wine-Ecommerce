@@ -1,10 +1,10 @@
 services:
   wearwine-db:
-    container_name: wearwine--local
+    container_name: wearwine-db
     image: postgres:16
     restart: always
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
     environment:
       POSTGRES_USER: payload

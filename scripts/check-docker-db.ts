@@ -11,7 +11,7 @@ try {
     console.log('Docker Postgres already running.')
   } else {
     console.log('Starting Docker Postgres...')
-    execSync('docker compose up -d', { stdio: 'inherit' })
+    execSync('docker-compose up -d', { stdio: 'inherit' })
   }
 } catch {
   console.error('Docker is not running or not installed.')

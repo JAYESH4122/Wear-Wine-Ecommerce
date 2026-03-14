@@ -4,19 +4,25 @@ import Image from 'next/image'
 import { SliderNavButtons } from '../arrow-slider/slider-nav-button'
 import { useResponsive } from '@/hooks/use-responsive'
 import { ArrowSlider } from '../arrow-slider'
-import { StaticImageData } from 'next/image'
+import type { Media } from '@/payload-types'
 
 export interface HeroSliderProps {
-  slides: StaticImageData[]
+  slides: Media[]
 }
 
 export const HeroSlider = ({ slides }: HeroSliderProps) => {
   const swiperRef = useRef(null)
   const { isDesktop } = useResponsive()
-  const renderImages = (slide: StaticImageData) => {
+  const renderImages = (slide: Media) => {
     return (
-      <div className="w-screen h-62.5 lg:h-200 relative">
-        <Image src={slide.src} alt="slide" fill className="object-cover" />
+      <div className="w-screen h-[400px] lg:h-[800px] relative">
+        <Image
+          src={slide.url || ''}
+          alt={slide.alt || 'Hero Image'}
+          fill
+          className="object-cover"
+          priority
+        />
       </div>
     )
   }
@@ -31,10 +37,10 @@ export const HeroSlider = ({ slides }: HeroSliderProps) => {
       <ArrowSlider
         swiperRef={swiperRef}
         renderItem={slides.map((slide) => ({
-          key: `${slide.src}`,
+          key: `${slide.id}`,
           element: renderImages(slide),
         }))}
-        paginationClassName="absolute bottom-30 z-50"
+        paginationClassName="absolute bottom-10 z-50"
         autoplay={{
           delay: 2000,
         }}
