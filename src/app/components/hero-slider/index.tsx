@@ -31,7 +31,7 @@ export const HeroSlider = ({ slides }: HeroSliderProps) => {
       {isDesktop && (
         <SliderNavButtons
           swiperRef={swiperRef}
-          SliderArrowClassname="absolute w-full flex justify-between z-50 px-10"
+          SliderArrowClassname="absolute w-full flex justify-between z-10 px-10"
         />
       )}
       <ArrowSlider
@@ -40,7 +40,7 @@ export const HeroSlider = ({ slides }: HeroSliderProps) => {
           key: `${slide.id}`,
           element: renderImages(slide),
         }))}
-        paginationClassName="absolute bottom-10 z-50"
+        paginationClassName="absolute bottom-10 z-10"
         autoplay={{
           delay: 2000,
         }}
