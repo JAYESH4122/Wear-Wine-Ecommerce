@@ -3,6 +3,7 @@ import './global.css'
 import { Bricolage_Grotesque } from 'next/font/google'
 import { Footer } from '../components/footer'
 import { footerData } from '../components/footer/data'
+import { WishlistProvider } from '@/providers/wishlist'
 
 export const metadata = {
   description: 'A blank template using Payload in a Next.js app.',
@@ -21,7 +22,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" className={bricolage.variable}>
       <body>
-        <main>{children}</main>
+        <WishlistProvider>
+          <main>{children}</main>
+        </WishlistProvider>
       </body>
     </html>
   )

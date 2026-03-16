@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { clsx } from 'clsx'
 import { Search, ShoppingBag, User, Menu, X, Heart, ChevronDown, ChevronRight } from 'lucide-react'
 import { navigation, type CategoryItem } from './data'
+import { useWishlist } from '@/providers/wishlist'
 
 interface HeaderProps {
   categories?: CategoryItem[]
@@ -17,7 +18,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
   const [cartCount] = useState(3)
-  const [wishlistCount] = useState(2)
+  const { wishlistCount } = useWishlist()
   const [searchQuery, setSearchQuery] = useState('')
   const pathname = usePathname()
 
@@ -174,12 +175,14 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
 
               <Link
                 href="/wishlist"
-                className="hidden sm:flex p-2 text-secondary hover:text-text transition-colors relative"
+                className="hidden sm:flex p-2 text-secondary hover:text-text transition-colors relative group/wishlist"
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5" />
                 {wishlistCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] bg-primary text-[10px] font-bold text-white rounded-full px-1 shadow-sm border-2 border-background">
+                    {wishlistCount}
+                  </span>
                 )}
               </Link>
 

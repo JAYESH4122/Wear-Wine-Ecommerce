@@ -79,13 +79,14 @@ export const ProductListSection = () => {
         price: p.salePrice ?? p.price ?? 0,
         originalPrice: p.salePrice ? p.price : undefined,
         image:
-          p.image?.url ??
+          p.images?.[0]?.image?.url ??
           'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=1200',
         badge: p.tags?.[0]?.name ?? (p.salePrice ? 'Sale' : undefined),
         rating: 5.0,
         reviews: Math.floor(Math.random() * 50) + 10,
         category: p.category?.name ?? 'General',
         categorySlug: p.category?.slug,
+        slug: p.slug,
       })),
     [dbProducts],
   )

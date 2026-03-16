@@ -181,6 +181,10 @@ export interface Product {
   slug?: string | null;
   description?: string | null;
   category: number | Category;
+  images: {
+    image: number | Media;
+    id?: string | null;
+  }[];
   tags?: (number | Tag)[] | null;
   price: number;
   salePrice?: number | null;
@@ -385,6 +389,12 @@ export interface ProductsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   category?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
   tags?: T;
   price?: T;
   salePrice?: T;

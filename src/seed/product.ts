@@ -86,11 +86,16 @@ export const seed = async (payload: Payload) => {
         price: p.price,
         category: p.cat,
         description: `Professional studio photography of a model in ${p.name}. Minimalist urban aesthetic with soft lighting.`,
+        images: [
+          {
+            image: media.id,
+          },
+        ],
         // Note: Ensure your Categories collection has an 'image' field if you want to link it there too
         variants: [
-          { color: white.id, size: m.id, sku: `${p.name.slice(0,3)}-WHT-M`, stock: 10 },
-          { color: charcoal.id, size: l.id, sku: `${p.name.slice(0,3)}-CHR-L`, stock: 5 },
-        ]
+          { color: white.id, size: m.id, sku: `${p.name.slice(0, 3)}-WHT-M`, stock: 10 },
+          { color: charcoal.id, size: l.id, sku: `${p.name.slice(0, 3)}-CHR-L`, stock: 5 },
+        ],
       },
     })
   }

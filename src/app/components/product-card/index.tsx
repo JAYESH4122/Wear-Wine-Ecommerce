@@ -6,6 +6,9 @@ import { useState } from 'react'
 import { clsx } from 'clsx'
 import { Heart, ShoppingBag, Star, Eye, Check, Truck } from 'lucide-react'
 
+import { useWishlist } from '@/providers/wishlist'
+import type { Product } from '@/payload-types'
+
 type ProductCardProps = {
   id: string
   title: string
@@ -16,8 +19,10 @@ type ProductCardProps = {
   originalPrice?: number
   rating?: number
   reviews?: number
+  slug?: string | null
   isNew?: boolean
   isInStock?: boolean
+  product?: Product // Optional full product object
   onAddToCart?: (id: string) => void
   onFavorite?: (id: string) => void
   onQuickView?: (id: string) => void
@@ -33,14 +38,16 @@ export const ProductCard = ({
   originalPrice,
   rating,
   reviews,
-  isNew,
+  slug,
   isInStock = true,
+  product,
   onAddToCart,
   onFavorite,
   onQuickView,
 }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
-  const [isFavorite, setIsFavorite] = useState(false)
+  const { isInWishlist, toggleWishlist } = useWishlist()
+  const isFavorite = isInWishlist(id)
   const [isLoading, setIsLoading] = useState(false)
   const [isAddedToCart, setIsAddedToCart] = useState(false)
 
@@ -48,10 +55,32 @@ export const ProductCard = ({
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0
 
-  const handleFavorite = (e: React.MouseEvent) => {
+  const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsFavorite(!isFavorite)
+
+    // Construct a minimal product object if the full one isn't provided
+    // This ensures consistency when displaying in the wishlist page
+    const productToWishlist: Product = product || ({
+      id: Number(id),
+      name: title,
+      slug: slug || '',
+      price: price,
+      salePrice: originalPrice,
+      images: [
+        {
+          image: {
+            url: typeof image === 'string' ? image : (image as any).src,
+            alt: title,
+          },
+        },
+      ],
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      category: 0,
+    } as any)
+
+    toggleWishlist(productToWishlist)
     onFavorite?.(id)
   }
 
@@ -81,7 +110,7 @@ export const ProductCard = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/product/${id}`} className="block cursor-pointer">
+      <Link href={`/product/${slug || id}`} className="block cursor-pointer">
         <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
           <Image
             src={image}
@@ -141,14 +170,14 @@ export const ProductCard = ({
           )}>
             <div className="relative group/btn">
               <button
-                onClick={handleFavorite}
+                onClick={handleFavoriteClick}
                 className={clsx(
                   "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110",
                   isFavorite 
                     ? "bg-red-500 text-white shadow-lg shadow-red-500/30" 
                     : "bg-white/90 text-gray-700 hover:bg-white hover:shadow-lg"
                 )}
-                aria-label="Add to favorites"
+                aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <Heart 
                   className={clsx(
