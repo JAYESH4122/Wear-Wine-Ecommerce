@@ -24,7 +24,10 @@ export const seed = async (payload: Payload) => {
 
     return await payload.create({
       collection: 'media',
-      data: { alt: altText },
+      data: {
+        alt: altText,
+        type: 'product',
+      },
       file: {
         data: buffer,
         name: filename,
@@ -58,19 +61,69 @@ export const seed = async (payload: Payload) => {
   ])
 
   // 5. THE 10 PRODUCTS (Matching your "Minimalist Fashion Catalog" aesthetic)
-  // These Unsplash links are specifically chosen for: 
+  // These Unsplash links are specifically chosen for:
   // - Professional model pose, Centered, Full body, Light grey/Studio background.
   const products = [
-    { name: 'Heavyweight Boxy Tee', price: 45, cat: categories[0].id, img: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a' },
-    { name: 'Core French Terry Hoodie', price: 85, cat: categories[1].id, img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7' },
-    { name: 'Minimalist Nylon Bomber', price: 140, cat: categories[2].id, img: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea' },
-    { name: 'Structured Midi Dress', price: 115, cat: categories[3].id, img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c' },
-    { name: 'Essential Sand Hoodie', price: 85, cat: categories[1].id, img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2' },
-    { name: 'Oversized Street Jacket', price: 160, cat: categories[2].id, img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a' },
-    { name: 'Vintage Raw Denim Jacket', price: 125, cat: categories[2].id, img: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531' },
-    { name: 'Graphic Studio Tee', price: 50, cat: categories[0].id, img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab' },
-    { name: 'Urban Shift Dress', price: 110, cat: categories[3].id, img: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b' },
-    { name: 'Monochrome Lounge Set', price: 95, cat: categories[0].id, img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f' },
+    {
+      name: 'Heavyweight Boxy Tee',
+      price: 45,
+      cat: categories[0].id,
+      img: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a',
+    },
+    {
+      name: 'Core French Terry Hoodie',
+      price: 85,
+      cat: categories[1].id,
+      img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7',
+    },
+    {
+      name: 'Minimalist Nylon Bomber',
+      price: 140,
+      cat: categories[2].id,
+      img: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea',
+    },
+    {
+      name: 'Structured Midi Dress',
+      price: 115,
+      cat: categories[3].id,
+      img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c',
+    },
+    {
+      name: 'Essential Sand Hoodie',
+      price: 85,
+      cat: categories[1].id,
+      img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2',
+    },
+    {
+      name: 'Oversized Street Jacket',
+      price: 160,
+      cat: categories[2].id,
+      img: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a',
+    },
+    {
+      name: 'Vintage Raw Denim Jacket',
+      price: 125,
+      cat: categories[2].id,
+      img: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531',
+    },
+    {
+      name: 'Graphic Studio Tee',
+      price: 50,
+      cat: categories[0].id,
+      img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab',
+    },
+    {
+      name: 'Urban Shift Dress',
+      price: 110,
+      cat: categories[3].id,
+      img: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b',
+    },
+    {
+      name: 'Monochrome Lounge Set',
+      price: 95,
+      cat: categories[0].id,
+      img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f',
+    },
   ]
 
   for (const p of products) {

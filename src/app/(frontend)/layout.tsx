@@ -1,8 +1,6 @@
 import React from 'react'
 import './global.css'
 import { Bricolage_Grotesque } from 'next/font/google'
-import { Footer } from '../components/footer'
-import { footerData } from '../components/footer/data'
 import { WishlistProvider } from '@/providers/wishlist'
 
 export const metadata = {

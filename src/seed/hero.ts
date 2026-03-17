@@ -39,6 +39,7 @@ export const seedHero = async (payload: Payload) => {
         collection: 'media',
         data: {
           alt,
+          type: 'hero',
         },
         file: {
           data: buffer,

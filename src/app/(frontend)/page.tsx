@@ -1,15 +1,11 @@
-import { headers as getHeaders } from 'next/headers.js'
-import Image from 'next/image'
 import { getPayload } from 'payload'
-import React from 'react'
-import { fileURLToPath } from 'url'
-
 import config from '@/payload.config'
 import './styles.css'
 import { ProductListSection } from '@/app/components/product-list-section'
 import { Header } from '@/app/components/Header'
 import { HeroSlider } from '@/app/components/hero-slider'
 import { Footer } from '@/app/components/footer'
+import { DepthDeckCarousel } from '../components/depth-card-carousel'
 
 export default async function HomePage() {
   const payloadConfig = await config
@@ -17,8 +13,25 @@ export default async function HomePage() {
 
   const { docs: heroImages } = await payload.find({
     collection: 'media',
+    where: {
+      type: { equals: 'hero' },
+    },
     limit: 30,
   })
+
+  const { docs: carouselDocs } = await payload.find({
+    collection: 'media',
+    where: {
+      type: { equals: 'carousel' },
+    },
+    limit: 30,
+  })
+
+  const carouselCards = carouselDocs.map((doc) => ({
+    src: doc.url || '',
+    title: doc.alt,
+    description: 'Editorial Selection',
+  }))
 
   const { docs: categories } = await payload.find({
     collection: 'categories',
@@ -46,6 +59,7 @@ export default async function HomePage() {
       <Header categories={categoryItems} />
       {heroImages.length > 0 && <HeroSlider slides={heroImages} />}
       <ProductListSection />
+      <DepthDeckCarousel cards={carouselCards} />
       <Footer />
     </>
   )
