@@ -1,16 +1,15 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import type { Swiper as SwiperInstance } from 'swiper'
 import NextImage from 'next/image'
-import { Sparkles, Tag, Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
+import { Sparkles, Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
 import { ProductCard } from '../product-card'
-import { SliderNavButtons } from '../arrow-slider/slider-nav-button'
 import { ArrowSlider } from '../arrow-slider'
 import { cn } from '@/lib/utils'
 
-type Category = { id: string; name: string; icon: React.ElementType }
+type Category = { id: string; name: string }
 
 interface Product {
   id: string
@@ -23,9 +22,10 @@ interface Product {
   reviews: number
   category: string
   categorySlug?: string
+  slug?: string
 }
 
-const ALL_CATEGORY: Category = { id: 'all', name: 'All Products', icon: Sparkles }
+const ALL_CATEGORY: Category = { id: 'all', name: 'All Products' }
 
 const BREAKPOINTS = {
   320: { slidesPerView: 1, spaceBetween: 16 },
@@ -34,6 +34,52 @@ const BREAKPOINTS = {
   1280: { slidesPerView: 4, spaceBetween: 24 },
 }
 
+const NavButton = ({ direction, onClick }: { direction: 'prev' | 'next'; onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className="w-10 h-10 flex items-center justify-center cursor-pointer text-neutral-600 border border-neutral-200 bg-white backdrop-blur-sm transition-all duration-200 hover:border-neutral-400 hover:text-neutral-900"
+    aria-label={direction === 'prev' ? 'Previous' : 'Next'}
+  >
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {direction === 'prev' ? <path d="M8 2L4 6L8 10" /> : <path d="M4 2L8 6L4 10" />}
+    </svg>
+  </button>
+)
+
+const ToggleButton = ({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  active: boolean
+  onClick: () => void
+  icon: React.ElementType
+  label: string
+}) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      'p-2.5 transition-all duration-200 cursor-pointer',
+      active
+        ? 'bg-white text-neutral-900 border border-neutral-200'
+        : 'text-neutral-400 hover:text-neutral-600 border border-transparent',
+    )}
+    aria-label={label}
+  >
+    <Icon className="w-4 h-4" />
+  </button>
+)
+
 export const ProductListSection = () => {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [viewMode, setViewMode] = useState<'detailed' | 'images'>('detailed')
@@ -41,34 +87,38 @@ export const ProductListSection = () => {
   const [dbProducts, setDbProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<Category[]>([ALL_CATEGORY])
   const [loading, setLoading] = useState(true)
+  const [activeIndex, setActiveIndex] = useState(0)
 
   useEffect(() => {
+    const controller = new AbortController()
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/products?limit=20')
-        if (res.ok) {
-          const data = await res.json()
-          const products: any[] = data.docs || []
-          setDbProducts(products)
+        const res = await fetch('/api/products?limit=20', { signal: controller.signal })
+        if (!res.ok) throw new Error('Failed to fetch')
+        const data = await res.json()
+        const products: any[] = data.docs || []
+        setDbProducts(products)
 
-          const seen = new Set<string>()
-          const derived: Category[] = []
-          products.forEach((p) => {
-            const cat = p.category
-            if (cat && typeof cat === 'object' && cat.slug && !seen.has(cat.slug)) {
-              seen.add(cat.slug)
-              derived.push({ id: cat.slug, name: cat.name, icon: Tag })
-            }
-          })
-          setCategories([ALL_CATEGORY, ...derived])
+        const seen = new Set<string>()
+        const derived: Category[] = []
+        for (const p of products) {
+          const cat = p.category
+          if (cat?.slug && !seen.has(cat.slug)) {
+            seen.add(cat.slug)
+            derived.push({ id: cat.slug, name: cat.name })
+          }
         }
+        setCategories([ALL_CATEGORY, ...derived])
       } catch (error) {
-        console.error('Error fetching products:', error)
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error fetching products:', error)
+        }
       } finally {
         setLoading(false)
       }
     }
     fetchProducts()
+    return () => controller.abort()
   }, [])
 
   const formattedProducts: Product[] = useMemo(
@@ -78,9 +128,7 @@ export const ProductListSection = () => {
         title: p.name ?? 'Untitled Product',
         price: p.salePrice ?? p.price ?? 0,
         originalPrice: p.salePrice ? p.price : undefined,
-        image:
-          p.images?.[0]?.image?.url ??
-          'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=1200',
+        image: p.images?.[0]?.image?.url ?? '/placeholder.jpg',
         badge: p.tags?.[0]?.name ?? (p.salePrice ? 'Sale' : undefined),
         rating: 5.0,
         reviews: Math.floor(Math.random() * 50) + 10,
@@ -91,18 +139,40 @@ export const ProductListSection = () => {
     [dbProducts],
   )
 
-  const filteredProducts = formattedProducts.filter((p) =>
-    selectedCategory === 'all' ? true : p.categorySlug === selectedCategory,
+  const filteredProducts = useMemo(
+    () =>
+      formattedProducts.filter((p) =>
+        selectedCategory === 'all' ? true : p.categorySlug === selectedCategory,
+      ),
+    [formattedProducts, selectedCategory],
   )
+
+  const totalSlides = Math.max(1, Math.ceil(filteredProducts.length / 4))
+
+  const handleSlideChange = useCallback((swiper: SwiperInstance) => {
+    setActiveIndex(Math.floor(swiper.realIndex / 4))
+  }, [])
+
+  const handleCategoryChange = useCallback((id: string) => {
+    setSelectedCategory(id)
+    setActiveIndex(0)
+    swiperRef.current?.slideTo(0)
+  }, [])
+
+  const goToSlide = useCallback((index: number) => {
+    swiperRef.current?.slideTo(index * 4)
+  }, [])
 
   return (
     <section className="relative py-20 bg-background overflow-hidden">
+      {/* Background gradients */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
+        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between lg:mb-8 mb-4 gap-6">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -111,7 +181,7 @@ export const ProductListSection = () => {
             className="max-w-2xl"
           >
             <div className="flex items-center gap-2 mb-4">
-              <span className="w-12 h-[1px] bg-primary" />
+              <span className="w-12 h-px bg-primary" />
               <span className="text-xs font-bold tracking-[0.2em] uppercase text-secondary">
                 New Arrivals
               </span>
@@ -124,37 +194,36 @@ export const ProductListSection = () => {
             </p>
           </motion.div>
 
-          <div className="flex items-center gap-3">
-            <button className="group flex items-center gap-2 text-sm font-semibold text-primary hover:text-secondary transition-colors cursor-pointer">
-              View All Products{' '}
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+          <button className="group flex items-center gap-2 text-sm font-semibold text-primary hover:text-secondary transition-colors cursor-pointer">
+            View All Products
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
         </div>
 
+        {/* Controls */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200">
           <LayoutGroup>
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  onClick={() => handleCategoryChange(cat.id)}
                   className={cn(
-                    'relative px-5 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap cursor-pointer',
+                    'relative px-5 py-2.5 text-sm font-medium transition-all whitespace-nowrap cursor-pointer',
                     selectedCategory === cat.id
-                      ? 'text-background'
-                      : 'bg-background text-secondary border border-secondary/20 shadow-sm hover:shadow hover:bg-secondary/5',
+                      ? 'text-white'
+                      : 'text-secondary border border-neutral-200 hover:border-neutral-400',
                   )}
                 >
                   {selectedCategory === cat.id && (
                     <motion.div
-                      layoutId="active-pill"
-                      className="absolute inset-0 bg-primary rounded-full"
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                      layoutId="active-category"
+                      className="absolute inset-0 bg-neutral-900"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2">
-                    {cat.id === 'all' && <cat.icon className="w-4 h-4" />}
+                    {cat.id === 'all' && <Sparkles className="w-4 h-4" />}
                     {cat.name}
                   </span>
                 </button>
@@ -162,114 +231,114 @@ export const ProductListSection = () => {
             </div>
           </LayoutGroup>
 
-          <div className="flex items-center gap-3 w-full justify-start md:w-auto md:ml-auto md:justify-end">
-            <div className="hidden md:flex items-center gap-2 mr-2">
-              <SliderNavButtons
-                key={selectedCategory + viewMode}
-                swiperRef={swiperRef}
-                variant="primary"
-                size="sm"
-              />
+          <div className="flex items-center gap-4">
+            {/* Counter */}
+            <span className="text-sm text-neutral-400 tracking-wider tabular-nums">
+              <span className="text-neutral-700">{String(activeIndex + 1).padStart(2, '0')}</span>
+              {' / '}
+              {String(totalSlides).padStart(2, '0')}
+            </span>
+
+            {/* Nav buttons */}
+            <div className="hidden md:flex items-center gap-1">
+              <NavButton direction="prev" onClick={() => swiperRef.current?.slidePrev()} />
+              <NavButton direction="next" onClick={() => swiperRef.current?.slideNext()} />
             </div>
 
-            <div className="flex items-center p-1 bg-neutral-100 rounded-lg border border-neutral-200">
-              <button
+            {/* View toggle */}
+            <div className="flex items-center border border-neutral-200 bg-neutral-50">
+              <ToggleButton
+                active={viewMode === 'detailed'}
                 onClick={() => setViewMode('detailed')}
-                className={cn(
-                  'p-2 rounded-md transition-all cursor-pointer',
-                  viewMode === 'detailed'
-                    ? 'bg-white shadow-sm text-black'
-                    : 'text-neutral-400 hover:text-neutral-600',
-                )}
-                aria-label="Detailed View"
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </button>
-              <button
+                icon={Grid3x3}
+                label="Detailed View"
+              />
+              <ToggleButton
+                active={viewMode === 'images'}
                 onClick={() => setViewMode('images')}
-                className={cn(
-                  'p-2 rounded-md transition-all cursor-pointer',
-                  viewMode === 'images'
-                    ? 'bg-white shadow-sm text-black'
-                    : 'text-neutral-400 hover:text-neutral-600',
-                )}
-                aria-label="Images Only View"
-              >
-                <ImageIcon className="w-4 h-4" />
-              </button>
+                icon={ImageIcon}
+                label="Images View"
+              />
             </div>
           </div>
         </div>
 
+        {/* Content */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse rounded-2xl" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse" />
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
-          <motion.div layout className="relative">
+          <div className="relative">
             <AnimatePresence mode="wait">
               <motion.div
-                key={selectedCategory + viewMode}
-                initial={{ opacity: 0, y: 20 }}
+                key={`${selectedCategory}-${viewMode}`}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.3 }}
               >
                 <ArrowSlider
                   swiperRef={swiperRef}
                   renderItem={filteredProducts.map((product) => ({
                     key: product.id,
-                    element: (
-                      <div className="h-full">
-                        {viewMode === 'detailed' ? (
-                          <div className="h-full">
-                            <ProductCard {...product} />
-                          </div>
-                        ) : (
-                          <div className="h-full">
-                            <div className="group relative aspect-square bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border border-gray-100 cursor-pointer">
-                              <NextImage
-                                src={product.image}
-                                alt={product.title}
-                                fill
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                              />
-                              <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                              {product.badge && (
-                                <div className="absolute left-4 top-4 flex flex-col gap-2 z-10">
-                                  <span className="px-3 py-1.5 bg-white text-gray-900 text-xs font-semibold shadow-lg">
-                                    {product.badge}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ),
+                    element:
+                      viewMode === 'detailed' ? (
+                        <ProductCard {...product} />
+                      ) : (
+                        <div className="group relative aspect-square bg-neutral-100 overflow-hidden cursor-pointer">
+                          <NextImage
+                            src={product.image}
+                            alt={product.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          {product.badge && (
+                            <span className="absolute left-4 top-4 px-3 py-1.5 bg-white text-neutral-900 text-xs font-medium">
+                              {product.badge}
+                            </span>
+                          )}
+                        </div>
+                      ),
                   }))}
                   slidesPerView={1}
                   spaceBetween={16}
                   breakpoints={BREAKPOINTS}
-                  speed={800}
-                  autoplay={{ delay: 4000, disableOnInteraction: false }}
-                  showPagination
-                  paginationClassName="bottom-0"
-                  autoHeight
+                  speed={600}
+                  autoplay={{ delay: 5000, disableOnInteraction: true }}
+                  showPagination={false}
+                  onSlideChange={handleSlideChange}
                 />
+
+                {/* Line pagination */}
+                <div className="flex gap-2 items-center justify-center mt-8">
+                  {Array.from({ length: totalSlides }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goToSlide(i)}
+                      className={cn(
+                        'h-px transition-all duration-300 cursor-pointer',
+                        i === activeIndex
+                          ? 'w-10 bg-neutral-800'
+                          : 'w-5 bg-neutral-300 hover:bg-neutral-500',
+                      )}
+                      aria-label={`Go to slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
               </motion.div>
             </AnimatePresence>
-          </motion.div>
+          </div>
         ) : (
           <div className="py-20 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-100 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 mb-4">
               <X className="w-6 h-6 text-neutral-400" />
             </div>
             <h3 className="text-lg font-medium">No products found</h3>
-            <p className="text-neutral-500">Try adjusting your filters or category.</p>
+            <p className="text-neutral-500">Try adjusting your filters.</p>
           </div>
         )}
       </div>
