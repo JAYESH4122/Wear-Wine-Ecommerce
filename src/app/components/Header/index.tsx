@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { clsx } from 'clsx'
@@ -8,12 +8,14 @@ import { Search, ShoppingBag, User, Menu, X, Heart, ChevronDown, ChevronRight } 
 import { navigation, type CategoryItem } from './data'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
+import Image from 'next/image'
+import { IconBlack, WearWine } from 'assets'
 
 interface HeaderProps {
   categories?: CategoryItem[]
 }
 
-export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
+export const Header = ({ categories = [] }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -22,14 +24,17 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
   const { wishlistCount } = useWishlist()
   const [searchQuery, setSearchQuery] = useState('')
   const pathname = usePathname()
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const categories = initialCategories
+  // Scroll handler with useCallback to avoid recreation
+  const handleScroll = useCallback(() => {
+    setIsScrolled(window.scrollY > 20)
+  }, [])
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [handleScroll])
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -43,9 +48,24 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
     }
   }, [isMenuOpen])
 
+  // Focus search input when opened
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [isSearchOpen])
+
+  // Close menu on route change
+  useEffect(() => {
+    setIsMenuOpen(false)
+    setIsCategoriesOpen(false)
+  }, [pathname])
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Searching for:', searchQuery)
+    if (searchQuery.trim()) {
+      console.log('Searching for:', searchQuery)
+    }
   }
 
   const closeMenu = () => {
@@ -94,18 +114,35 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
               onClick={() => setIsMenuOpen(true)}
               className="lg:hidden p-2 -ml-2 text-text"
               aria-label="Open menu"
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
             >
               <Menu className="w-6 h-6" />
             </button>
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative flex items-center justify-center w-8 h-8 bg-primary rounded-full transition-transform duration-500 group-hover:rotate-180">
-                <span className="text-white font-bold text-sm tracking-tight">W</span>
+            <Link href="/" className="flex items-center group relative">
+              <div className="relative w-9 h-9 flex items-center justify-center">
+                <Image
+                  src={IconBlack}
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="object-contain transition-transform duration-500 ease-out group-hover:rotate-[360deg]"
+                  priority
+                />
               </div>
-              <span className="font-bold text-lg lg:text-xl tracking-wider text-text uppercase">
-                Wear Wine
-              </span>
+
+              <div className="relative overflow-hidden">
+                <Image
+                  src={WearWine}
+                  alt="Wear Vine"
+                  width={80}
+                  height={40}
+                  className="h-7 w-auto object-contain transition-all duration-300 group-hover:opacity-80"
+                  priority
+                />
+              </div>
             </Link>
 
             {/* Desktop nav */}
@@ -120,6 +157,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
                       'px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all duration-300 relative group',
                       isActive ? 'text-primary' : 'text-secondary hover:text-text',
                     )}
+                    aria-current={isActive ? 'page' : undefined}
                   >
                     {item.name}
                     <span
@@ -134,7 +172,10 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
 
               {/* Shop dropdown */}
               <div className="relative group ml-2">
-                <button className="flex items-center gap-1 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-secondary hover:text-text transition-colors">
+                <button
+                  className="flex items-center gap-1 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-secondary hover:text-text transition-colors"
+                  aria-haspopup="true"
+                >
                   Shop
                   <ChevronDown className="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" />
                 </button>
@@ -167,9 +208,10 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
             {/* Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
               <button
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                onClick={() => setIsSearchOpen((prev) => !prev)}
                 className="p-2 text-secondary hover:text-text transition-colors"
-                aria-label="Search"
+                aria-label={isSearchOpen ? 'Close search' : 'Open search'}
+                aria-expanded={isSearchOpen}
               >
                 <Search className="w-5 h-5" />
               </button>
@@ -177,7 +219,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
               <Link
                 href="/wishlist"
                 className="hidden sm:flex p-2 text-secondary hover:text-text transition-colors relative group/wishlist"
-                aria-label="Wishlist"
+                aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ''}`}
               >
                 <Heart className="w-5 h-5" />
                 {wishlistCount > 0 && (
@@ -198,7 +240,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
               <Link
                 href="/cart"
                 className="p-2 text-secondary hover:text-text transition-colors relative"
-                aria-label="Cart"
+                aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
               >
                 <ShoppingBag className="w-5 h-5" />
                 {cartCount > 0 && (
@@ -219,16 +261,17 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
           >
             <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="What are you looking for?"
                 className="w-full bg-secondary/5 border-none rounded-full px-6 py-3 text-sm focus:ring-1 focus:ring-primary transition-all placeholder:text-secondary/60 outline-none"
-                autoFocus={isSearchOpen}
               />
               <button
                 type="submit"
                 className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-white p-2 rounded-full hover:opacity-90 transition-opacity"
+                aria-label="Submit search"
               >
                 <Search className="w-4 h-4" />
               </button>
@@ -237,7 +280,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
         </div>
       </header>
 
-      {/* Mobile drawer — rendered outside header to avoid z-index conflicts */}
+      {/* Mobile drawer */}
       {/* Backdrop */}
       <div
         className={clsx(
@@ -250,6 +293,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
 
       {/* Drawer panel */}
       <div
+        id="mobile-menu"
         className={clsx(
           'fixed top-0 left-0 bottom-0 z-50 w-[85vw] max-w-xs bg-background lg:hidden',
           'flex flex-col',
@@ -259,6 +303,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
+        aria-hidden={!isMenuOpen}
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-secondary/10">
@@ -294,6 +339,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
                     'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-colors',
                     isActive ? 'text-primary bg-primary/5' : 'text-text hover:bg-secondary/5',
                   )}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   {isActive && <span className="w-1 h-1 rounded-full bg-primary" />}
                   {item.name}
@@ -304,8 +350,9 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
             {/* Shop / Categories accordion */}
             <div>
               <button
-                onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
+                onClick={() => setIsCategoriesOpen((prev) => !prev)}
                 className="w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider text-text hover:bg-secondary/5 transition-colors"
+                aria-expanded={isCategoriesOpen}
               >
                 Shop
                 <ChevronDown
