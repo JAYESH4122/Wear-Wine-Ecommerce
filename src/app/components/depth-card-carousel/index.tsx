@@ -10,10 +10,10 @@ const SPRING = { stiffness: 120, damping: 14, mass: 1.2 }
 
 const CONSTANTS = {
   CARD_WIDTH_DESKTOP: 480,
-  CARD_WIDTH_MOBILE: 288,
+  CARD_WIDTH_MOBILE: '75%',
   CARD_HEIGHT_DESKTOP: 650,
   CARD_HEIGHT_MOBILE: 450,
-  STK_X_SPREAD_DESKTOP: 220,
+  STK_X_SPREAD_DESKTOP: 320,
   STK_X_SPREAD_MOBILE_RIGHT: 45,
   STK_X_SPREAD_MOBILE_LEFT: 20,
   BORDER_RADIUS: '10px',
@@ -143,18 +143,7 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
           })}
         </motion.div>
 
-        {/* Minimalist Controls */}
-        <div className="mt-8 md:mt-12 flex items-center gap-10 hidden md:flex">
-          <button
-            onClick={() => goTo(-1)}
-            className="group p-4 rounded-full bg-white shadow-lg hover:bg-black transition-all duration-300 transform active:scale-90"
-          >
-            <ChevronLeft
-              size={22}
-              className="text-black group-hover:text-white transition-colors"
-            />
-          </button>
-
+        <div className="flex items-center gap-10 hidden md:flex">
           <div className="flex gap-3">
             {cards.map((_, i) => (
               <button
@@ -167,16 +156,6 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
               />
             ))}
           </div>
-
-          <button
-            onClick={() => goTo(1)}
-            className="group p-4 rounded-full bg-white shadow-lg hover:bg-black transition-all duration-300 transform active:scale-90"
-          >
-            <ChevronRight
-              size={22}
-              className="text-black group-hover:text-white transition-colors"
-            />
-          </button>
         </div>
       </div>
     </div>

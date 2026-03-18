@@ -1,3 +1,5 @@
+import { LogoWhite } from '../../../../assets'
+
 export interface FooterType {
   logo: {
     url: string
@@ -19,16 +21,17 @@ export interface FooterType {
   copyright: {
     year: string
     brand: string
-    text: string 
+    text: string
   }
 }
 
 export const footerData: FooterType = {
   logo: {
-    url: '/logo.svg',
+    url: LogoWhite.src,
     alt: 'Wear Wine Logo',
     tagline: 'Elegance & Comfort',
-    description: 'We blend classic styles with modern luxury to give you the perfect wardrobe for every occasion.',
+    description:
+      'We blend classic styles with modern luxury to give you the perfect wardrobe for every occasion.',
   },
   policies: {
     title: 'Policies',
