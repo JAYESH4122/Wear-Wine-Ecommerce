@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Product, Media, Color, Size } from '@/payload-types'
 import { useWishlist } from '@/providers/wishlist'
+import { useCart } from '@/providers/cart'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -289,6 +290,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
   const [showTermsError, setShowTermsError] = useState(false)
 
   const { isInWishlist, toggleWishlist } = useWishlist()
+  const { addItem } = useCart()
   const isWishlisted = isInWishlist(String(product.id))
 
   const handleWishlistClick = (e: React.MouseEvent) => {
@@ -422,7 +424,9 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
       return
     }
     setIsAddingToCart(true)
-    await new Promise((r) => setTimeout(r, 800))
+    const color = selectedColor ? colors.find((c) => String(c.id) === selectedColor) : undefined
+    const size = selectedSize ? sizes.find((s) => String(s.id) === selectedSize) : undefined
+    addItem(product, quantity, color, size)
     setIsAddingToCart(false)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2500)
@@ -435,11 +439,12 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
       setTimeout(() => setShowTermsError(false), 3000)
       return
     }
-    // Simulation of direct checkout
     setIsAddingToCart(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    window.alert('Redirecting to checkout...')
+    const color = selectedColor ? colors.find((c) => String(c.id) === selectedColor) : undefined
+    const size = selectedSize ? sizes.find((s) => String(s.id) === selectedSize) : undefined
+    addItem(product, quantity, color, size)
     setIsAddingToCart(false)
+    window.location.href = '/cart'
   }
 
   const prevImage = () => setSelectedImageIndex((p) => (p === 0 ? allImages.length - 1 : p - 1))
@@ -952,4 +957,3 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
       </>
     )
   }
-

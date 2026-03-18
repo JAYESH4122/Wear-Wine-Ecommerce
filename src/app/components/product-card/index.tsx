@@ -7,7 +7,9 @@ import { clsx } from 'clsx'
 import { Heart, ShoppingBag, Star, Eye, Check, Truck } from 'lucide-react'
 
 import { useWishlist } from '@/providers/wishlist'
-import type { Product } from '@/payload-types'
+import { useCart } from '@/providers/cart'
+import type { CartProduct } from '@/providers/cart'
+import type { WishlistItem } from '@/providers/wishlist'
 
 type ProductCardProps = {
   id: string
@@ -22,7 +24,7 @@ type ProductCardProps = {
   slug?: string | null
   isNew?: boolean
   isInStock?: boolean
-  product?: Product // Optional full product object
+  product?: WishlistItem | CartProduct // Optional full product object (or minimal wishlist/cart-safe shape)
   onAddToCart?: (id: string) => void
   onFavorite?: (id: string) => void
   onQuickView?: (id: string) => void
@@ -47,6 +49,7 @@ export const ProductCard = ({
 }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const { isInWishlist, toggleWishlist } = useWishlist()
+  const { addItem } = useCart()
   const isFavorite = isInWishlist(id)
   const [isLoading, setIsLoading] = useState(false)
   const [isAddedToCart, setIsAddedToCart] = useState(false)
@@ -59,26 +62,20 @@ export const ProductCard = ({
     e.preventDefault()
     e.stopPropagation()
 
-    // Construct a minimal product object if the full one isn't provided
-    // This ensures consistency when displaying in the wishlist page
-    const productToWishlist: Product = product || ({
-      id: Number(id),
-      name: title,
-      slug: slug || '',
-      price: price,
-      salePrice: originalPrice,
-      images: [
-        {
-          image: {
-            url: typeof image === 'string' ? image : (image as any).src,
-            alt: title,
+    const productToWishlist: WishlistItem =
+      product ??
+      ({
+        id,
+        name: title,
+        slug: slug ?? null,
+        price,
+        salePrice: originalPrice ?? null,
+        images: [
+          {
+            image: typeof image === 'string' ? image : image.src,
           },
-        },
-      ],
-      updatedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      category: 0,
-    } as any)
+        ],
+      } satisfies WishlistItem)
 
     toggleWishlist(productToWishlist)
     onFavorite?.(id)
@@ -89,8 +86,23 @@ export const ProductCard = ({
     e.stopPropagation()
     setIsLoading(true)
     
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    await onAddToCart?.(id)
+    if (onAddToCart) {
+      await onAddToCart(id)
+    } else {
+      const cartProduct: CartProduct = {
+        id,
+        name: title,
+        slug: slug ?? null,
+        price: originalPrice ?? price,
+        salePrice: originalPrice ? price : null,
+        images: [
+          {
+            image: typeof image === 'string' ? image : image.src,
+          },
+        ],
+      }
+      addItem(cartProduct, 1)
+    }
     
     setIsLoading(false)
     setIsAddedToCart(true)

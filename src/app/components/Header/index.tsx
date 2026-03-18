@@ -7,6 +7,7 @@ import { clsx } from 'clsx'
 import { Search, ShoppingBag, User, Menu, X, Heart, ChevronDown, ChevronRight } from 'lucide-react'
 import { navigation, type CategoryItem } from './data'
 import { useWishlist } from '@/providers/wishlist'
+import { useCart } from '@/providers/cart'
 
 interface HeaderProps {
   categories?: CategoryItem[]
@@ -17,7 +18,7 @@ export const Header = ({ categories: initialCategories = [] }: HeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
-  const [cartCount] = useState(3)
+  const { cartCount } = useCart()
   const { wishlistCount } = useWishlist()
   const [searchQuery, setSearchQuery] = useState('')
   const pathname = usePathname()

@@ -1,13 +1,20 @@
 'use client'
 
-import React from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, ShoppingBag, ArrowLeft, Trash2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useWishlist } from '@/providers/wishlist'
 import { ProductCard } from '@/app/components/product-card'
-import type { Media } from '@/payload-types'
+import type { WishlistItem } from '@/providers/wishlist'
+
+const getWishlistImageURL = (product: WishlistItem): string => {
+  const image = product.images?.[0]?.image
+  if (!image) return '/logo.svg'
+  if (typeof image === 'string') return image || '/logo.svg'
+  if (typeof image === 'number') return '/logo.svg'
+  if (typeof image === 'object') return image.url ?? '/logo.svg'
+  return '/logo.svg'
+}
 
 export default function WishlistPage() {
   const { wishlist, wishlistCount, clearWishlist } = useWishlist()
@@ -38,7 +45,7 @@ export default function WishlistPage() {
             <button
               onClick={() => {
                 if (window.confirm('Are you sure you want to clear your wishlist?')) {
-                    clearWishlist()
+                  clearWishlist()
                 }
               }}
               className="flex items-center gap-2 group text-neutral-500 hover:text-rose-600 transition-colors py-2 px-1"
@@ -86,18 +93,14 @@ export default function WishlistPage() {
                   transition={{ delay: idx * 0.05 }}
                   className="relative group"
                 >
-                    <ProductCard 
-                      product={product as any}
-                      id={String(product.id)}
-                      title={product.name}
-                      price={product.price}
-                      image={
-                        typeof product.images?.[0]?.image === 'object' && product.images?.[0]?.image !== null
-                          ? (product.images[0].image as Media).url ?? ''
-                          : (product.images?.[0]?.image as string) ?? ''
-                      }
-                      slug={product.slug}
-                    />
+                  <ProductCard
+                    product={product}
+                    id={String(product.id)}
+                    title={product.name}
+                    price={product.price}
+                    image={getWishlistImageURL(product)}
+                    slug={product.slug}
+                  />
                 </motion.div>
               ))}
             </motion.div>
@@ -108,25 +111,31 @@ export default function WishlistPage() {
         <div className="mt-20 py-12 border-t border-neutral-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex flex-col items-center text-center p-6 bg-white rounded-2xl border border-neutral-100 shadow-sm">
-                <div className="w-12 h-12 rounded-full bg-neutral-50 flex items-center justify-center mb-4">
-                    <Heart className="w-6 h-6 text-neutral-900" />
-                </div>
-                <h3 className="font-bold text-neutral-900 mb-2">Save for Later</h3>
-                <p className="text-sm text-neutral-500">Pick up where you left off. Your wishlist is saved locally.</p>
+              <div className="w-12 h-12 rounded-full bg-neutral-50 flex items-center justify-center mb-4">
+                <Heart className="w-6 h-6 text-neutral-900" />
+              </div>
+              <h3 className="font-bold text-neutral-900 mb-2">Save for Later</h3>
+              <p className="text-sm text-neutral-500">
+                Pick up where you left off. Your wishlist is saved locally.
+              </p>
             </div>
             <div className="flex flex-col items-center text-center p-6 bg-white rounded-2xl border border-neutral-100 shadow-sm">
-                <div className="w-12 h-12 rounded-full bg-neutral-50 flex items-center justify-center mb-4">
-                    <ShoppingBag className="w-6 h-6 text-neutral-900" />
-                </div>
-                <h3 className="font-bold text-neutral-900 mb-2">Easy Checkout</h3>
-                <p className="text-sm text-neutral-500">Move items to your bag with a single click when you're ready.</p>
+              <div className="w-12 h-12 rounded-full bg-neutral-50 flex items-center justify-center mb-4">
+                <ShoppingBag className="w-6 h-6 text-neutral-900" />
+              </div>
+              <h3 className="font-bold text-neutral-900 mb-2">Easy Checkout</h3>
+              <p className="text-sm text-neutral-500">
+                Move items to your bag with a single click when you&apos;re ready.
+              </p>
             </div>
             <div className="flex flex-col items-center text-center p-6 bg-white rounded-2xl border border-neutral-100 shadow-sm">
-                <div className="w-12 h-12 rounded-full bg-neutral-50 flex items-center justify-center mb-4">
-                    <ArrowLeft className="w-6 h-6 text-neutral-900" />
-                </div>
-                <h3 className="font-bold text-neutral-900 mb-2">Keep Browsing</h3>
-                <p className="text-sm text-neutral-500">Easily find your way back to our collection and continue exploring.</p>
+              <div className="w-12 h-12 rounded-full bg-neutral-50 flex items-center justify-center mb-4">
+                <ArrowLeft className="w-6 h-6 text-neutral-900" />
+              </div>
+              <h3 className="font-bold text-neutral-900 mb-2">Keep Browsing</h3>
+              <p className="text-sm text-neutral-500">
+                Easily find your way back to our collection and continue exploring.
+              </p>
             </div>
           </div>
         </div>

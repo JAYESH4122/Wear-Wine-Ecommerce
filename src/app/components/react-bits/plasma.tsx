@@ -174,14 +174,14 @@ export const Plasma: React.FC<PlasmaProps> = ({
     ro.observe(containerRef.current)
     setSize()
 
-    let raf = 0
-    const t0 = performance.now()
-    const loop = (t: number) => {
-      let timeValue = (t - t0) * 0.001
-      if (direction === 'pingpong') {
-        const pingpongDuration = 10
-        const segmentTime = timeValue % pingpongDuration
-        const isForward = Math.floor(timeValue / pingpongDuration) % 2 === 0
+	    let raf = 0
+	    const t0 = performance.now()
+	    const loop = (t: number) => {
+	      const timeValue = (t - t0) * 0.001
+	      if (direction === 'pingpong') {
+	        const pingpongDuration = 10
+	        const segmentTime = timeValue % pingpongDuration
+	        const isForward = Math.floor(timeValue / pingpongDuration) % 2 === 0
         const u = segmentTime / pingpongDuration
         const smooth = u * u * (3 - 2 * u)
         const pingpongTime = isForward ? smooth * pingpongDuration : (1 - smooth) * pingpongDuration
