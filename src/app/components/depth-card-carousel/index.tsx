@@ -13,7 +13,7 @@ const CONSTANTS = {
   CARD_WIDTH_MOBILE: 288,
   CARD_HEIGHT_DESKTOP: 650,
   CARD_HEIGHT_MOBILE: 450,
-  STK_X_SPREAD_DESKTOP: 220,
+  STK_X_SPREAD_DESKTOP: 320,
   STK_X_SPREAD_MOBILE_RIGHT: 45,
   STK_X_SPREAD_MOBILE_LEFT: 20,
   BORDER_RADIUS: '10px',
@@ -61,10 +61,14 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
   return (
     <div
       className={cn(
-        'relative w-full bg-background select-none overflow-hidden flex flex-col items-center justify-center pb-10 lg:py-15',
+        'relative w-full  select-none overflow-hidden flex flex-col items-center justify-center pb-10 lg:py-15',
         className,
       )}
     >
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
+      </div>
       <div className="relative w-full flex flex-col items-center">
         <motion.div
           drag="x"
