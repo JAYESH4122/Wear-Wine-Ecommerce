@@ -213,7 +213,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 aria-label={isSearchOpen ? 'Close search' : 'Open search'}
                 aria-expanded={isSearchOpen}
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-5 h-5 cursor-pointer" />
               </button>
 
               <Link
@@ -255,23 +255,23 @@ export const Header = ({ categories = [] }: HeaderProps) => {
           {/* Search bar */}
           <div
             className={clsx(
-              'overflow-hidden transition-all duration-500 ease-in-out',
-              isSearchOpen ? 'max-h-24 pb-4 opacity-100' : 'max-h-0 opacity-0',
+              'overflow-hidden transition-all duration-300',
+              isSearchOpen ? 'max-h-20 pb-4 opacity-100' : 'max-h-0 opacity-0',
             )}
           >
-            <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
+            <form onSubmit={handleSearch} className="relative max-w-xl mx-auto">
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="What are you looking for?"
-                className="w-full bg-secondary/5 border-none rounded-full px-6 py-3 text-sm focus:ring-1 focus:ring-primary transition-all placeholder:text-secondary/60 outline-none"
+                placeholder="Search products..."
+                className="w-full bg-white border text-text border-neutral-200 px-5 py-3 pr-12 text-sm placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 transition-colors"
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-white p-2 rounded-full hover:opacity-90 transition-opacity"
-                aria-label="Submit search"
+                className="absolute right-0 top-0 h-full px-4 text-neutral-500 hover:text-neutral-900 transition-colors"
+                aria-label="Search"
               >
                 <Search className="w-4 h-4" />
               </button>

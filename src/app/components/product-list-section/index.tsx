@@ -222,10 +222,7 @@ export const ProductListSection = () => {
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center gap-2">
-                    {cat.id === 'all' && <Sparkles className="w-4 h-4" />}
-                    {cat.name}
-                  </span>
+                  <span className="relative z-10 flex items-center gap-2">{cat.name}</span>
                 </button>
               ))}
             </div>

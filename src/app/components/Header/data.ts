@@ -20,20 +20,6 @@ export const headerData: HeaderType = {
     {
       link: {
         type: 'custom',
-        url: '/',
-        label: 'Home',
-      },
-    },
-    {
-      link: {
-        type: 'custom',
-        url: '/shop',
-        label: 'Shop',
-      },
-    },
-    {
-      link: {
-        type: 'custom',
         url: '/new-arrivals',
         label: 'New',
       },
@@ -66,11 +52,7 @@ export const navigation: NavigationItem[] =
     const link = item.link
 
     const href =
-      link.type === 'custom'
-        ? link.url ?? '/'
-        : link.reference
-        ? `/${link.reference.value}`
-        : '/'
+      link.type === 'custom' ? (link.url ?? '/') : link.reference ? `/${link.reference.value}` : '/'
 
     const icons: LucideIcon[] = [Store, ShoppingBag, Sparkles, User, Clock]
 

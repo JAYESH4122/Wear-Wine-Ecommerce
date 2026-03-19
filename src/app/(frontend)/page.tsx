@@ -6,6 +6,8 @@ import { Header } from '@/app/components/Header'
 import { HeroSlider } from '@/app/components/hero-slider'
 import { Footer } from '@/app/components/footer'
 import { DepthDeckCarousel } from '../components/depth-card-carousel'
+import { ContactSection } from '../components/contact-section'
+import { AboutSection } from '../components/about-section'
 
 export default async function HomePage() {
   const payloadConfig = await config
@@ -60,6 +62,8 @@ export default async function HomePage() {
       {heroImages.length > 0 && <HeroSlider slides={heroImages} />}
       <ProductListSection />
       <DepthDeckCarousel cards={carouselCards} />
+      <AboutSection />
+      <ContactSection />
       <Footer />
     </>
   )
