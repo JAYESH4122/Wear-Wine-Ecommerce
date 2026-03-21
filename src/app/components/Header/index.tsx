@@ -32,7 +32,10 @@ export const Header = ({ categories = [] }: HeaderProps) => {
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
-
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   // Scroll handler with useCallback to avoid recreation
   const handleScroll = useCallback(() => {
     setIsScrolled(window.scrollY > 20)
@@ -74,6 +77,39 @@ export const Header = ({ categories = [] }: HeaderProps) => {
       console.log('Searching for:', searchQuery)
     }
   }
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Fetch search results
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    const fetchResults = async () => {
+      setIsSearching(true)
+      try {
+        const res = await fetch(`/api/products?q=${encodeURIComponent(debouncedQuery)}&limit=5`)
+        if (res.ok) {
+          const data = await res.json()
+          setSearchResults(data.docs || [])
+        }
+      } catch (err) {
+        console.error('Error searching products:', err)
+      } finally {
+        setIsSearching(false)
+      }
+    }
+
+    fetchResults()
+  }, [debouncedQuery])
 
   const closeMenu = () => {
     setIsMenuOpen(false)
@@ -255,9 +291,9 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 <AnimatePresence>
                   {user && isAccountDropdownOpen && (
                     <>
-                      <div 
-                        className="fixed inset-0 z-[-1]" 
-                        onClick={() => setIsAccountDropdownOpen(false)} 
+                      <div
+                        className="fixed inset-0 z-[-1]"
+                        onClick={() => setIsAccountDropdownOpen(false)}
                       />
                       <motion.div
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -266,21 +302,25 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                         className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
                       >
                         <div className="px-4 py-3 border-b border-secondary/5 mb-2">
-                          <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">Signed in as</p>
-                          <p className="text-sm font-bold text-text truncate">{(user as any).name || user.email}</p>
+                          <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
+                            Signed in as
+                          </p>
+                          <p className="text-sm font-bold text-text truncate">
+                            {(user as any).name || user.email}
+                          </p>
                         </div>
-                        
-                        <Link 
-                          href="/account" 
+
+                        <Link
+                          href="/account"
                           onClick={() => setIsAccountDropdownOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
                         >
                           <UserIcon className="w-4 h-4" />
                           My Profile
                         </Link>
-                        
-                        <Link 
-                          href="/account/orders" 
+
+                        <Link
+                          href="/account/orders"
                           onClick={() => setIsAccountDropdownOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
                         >
@@ -324,26 +364,138 @@ export const Header = ({ categories = [] }: HeaderProps) => {
           {/* Search bar */}
           <div
             className={clsx(
-              'overflow-hidden transition-all duration-300',
-              isSearchOpen ? 'max-h-20 pb-4 opacity-100' : 'max-h-0 opacity-0',
+              'transition-all duration-300 relative',
+              isSearchOpen
+                ? 'max-h-[500px] pb-4 opacity-100 z-50 overflow-visible'
+                : 'max-h-0 opacity-0 -z-10 overflow-hidden pointer-events-none',
             )}
           >
-            <form onSubmit={handleSearch} className="relative max-w-xl mx-auto">
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="w-full bg-white border text-text border-neutral-200 px-5 py-3 pr-12 text-sm placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 transition-colors"
-              />
-              <button
-                type="submit"
-                className="absolute right-0 top-0 h-full px-4 text-neutral-500 hover:text-neutral-900 transition-colors"
-                aria-label="Search"
-              >
-                <Search className="w-4 h-4" />
-              </button>
+            <form onSubmit={handleSearch} className="relative max-w-xl mx-auto flex flex-col">
+              <div className="relative">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full bg-white border text-text border-neutral-200 px-5 py-3 pr-12 text-sm placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 transition-colors"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-0 top-0 h-full px-4 text-neutral-500 hover:text-neutral-900 transition-colors"
+                  aria-label="Search"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Dropdown for search results */}
+              {searchQuery.trim() && (
+                <div
+                  ref={dropdownRef}
+                  className="absolute top-full left-0 right-0 bg-white border border-neutral-200 shadow-[0_20px_40px_rgba(0,0,0,0.1)] z-[100] max-h-[60vh] overflow-y-auto rounded-none"
+                >
+                  {isSearching ? (
+                    <div className="py-10 flex flex-col items-center justify-center">
+                      <div className="w-4 h-4 border border-neutral-200 border-t-black animate-spin mb-2" />
+                      <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-neutral-400">
+                        Searching...
+                      </span>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div className="flex flex-col">
+                      {/* Compact Header */}
+                      <div className="px-4 py-2 bg-neutral-50 border-b border-neutral-100 flex justify-between items-center">
+                        <span className="text-[9px] font-black uppercase tracking-[0.25em] text-neutral-400">
+                          Results
+                        </span>
+                        <span className="text-[9px] font-medium text-neutral-500 uppercase tracking-widest">
+                          {searchResults.length} Products Found
+                        </span>
+                      </div>
+
+                      <div className="divide-y divide-neutral-50">
+                        {searchResults.map((product) => (
+                          <Link
+                            key={product.id}
+                            href={`/product/${product.slug}`}
+                            onClick={() => {
+                              setIsSearchOpen(false)
+                              setSearchQuery('')
+                              setDebouncedQuery('')
+                              setSearchResults([])
+                            }}
+                            className="flex items-center gap-4 px-4 py-2.5 hover:bg-neutral-50 transition-colors group"
+                          >
+                            {/* Architectural Sharp Image */}
+                            <div className="relative w-10 h-14 bg-neutral-100 flex-shrink-0 overflow-hidden rounded-none border border-neutral-100">
+                              {product.images?.[0]?.image?.url ? (
+                                <Image
+                                  src={product.images[0].image.url}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ShoppingBag className="w-3 h-3 text-neutral-300" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Minimalist Info Section */}
+                            <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
+                              <div className="min-w-0">
+                                <h4 className="text-[12px] font-medium text-black truncate tracking-tight group-hover:text-neutral-500 transition-colors uppercase">
+                                  {product.name}
+                                </h4>
+                                {product.category?.name && (
+                                  <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-neutral-400 mt-0.5">
+                                    {product.category.name}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="flex flex-col items-end shrink-0">
+                                {product.salePrice ? (
+                                  <div className="flex flex-col items-end">
+                                    <span className="text-[11px] font-bold text-black">
+                                      ₹{product.salePrice}
+                                    </span>
+                                    <span className="text-[9px] font-medium text-neutral-400 line-through decoration-neutral-300">
+                                      ₹{product.price}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-[11px] font-bold text-black">
+                                    ₹{product.price}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+
+                      {/* Action Call to Action */}
+                      <div className="border-t border-neutral-100 px-4 py-3 bg-white">
+                        <button className="w-full text-[9px] font-black uppercase tracking-[0.3em] text-black hover:opacity-50 transition-opacity">
+                          View all collections
+                        </button>
+                      </div>
+                    </div>
+                  ) : debouncedQuery ? (
+                    <div className="py-16 flex flex-col items-center justify-center">
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black">
+                        No Matches Found
+                      </p>
+                      <p className="text-[9px] text-neutral-400 mt-2 uppercase tracking-widest">
+                        Try a different keyword
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </form>
           </div>
         </div>
