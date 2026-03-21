@@ -4,12 +4,16 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { clsx } from 'clsx'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Search, ShoppingBag, User, Menu, X, Heart, ChevronDown, ChevronRight } from 'lucide-react'
 import { navigation, type CategoryItem } from './data'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import Image from 'next/image'
 import { IconBlack, WearWine } from 'assets'
+import { useAuth } from '@/providers/auth'
+import { AuthModal } from './AuthModal'
+import { LogOut, User as UserIcon, Settings, Package } from 'lucide-react'
 
 interface HeaderProps {
   categories?: CategoryItem[]
@@ -23,8 +27,11 @@ export const Header = ({ categories = [] }: HeaderProps) => {
   const { cartCount } = useCart()
   const { wishlistCount } = useWishlist()
   const [searchQuery, setSearchQuery] = useState('')
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const { user, logout } = useAuth()
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
 
   // Scroll handler with useCallback to avoid recreation
   const handleScroll = useCallback(() => {
@@ -229,13 +236,75 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 )}
               </Link>
 
-              <Link
-                href="/account"
-                className="hidden md:flex p-2 text-secondary hover:text-text transition-colors"
-                aria-label="Account"
-              >
-                <User className="w-5 h-5" />
-              </Link>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    if (user) {
+                      setIsAccountDropdownOpen(!isAccountDropdownOpen)
+                    } else {
+                      setIsAuthModalOpen(true)
+                    }
+                  }}
+                  className="hidden md:flex p-2 text-secondary hover:text-text transition-colors"
+                  aria-label="Account"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+
+                {/* Desktop Account Dropdown */}
+                <AnimatePresence>
+                  {user && isAccountDropdownOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-[-1]" 
+                        onClick={() => setIsAccountDropdownOpen(false)} 
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
+                      >
+                        <div className="px-4 py-3 border-b border-secondary/5 mb-2">
+                          <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">Signed in as</p>
+                          <p className="text-sm font-bold text-text truncate">{(user as any).name || user.email}</p>
+                        </div>
+                        
+                        <Link 
+                          href="/account" 
+                          onClick={() => setIsAccountDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
+                        >
+                          <UserIcon className="w-4 h-4" />
+                          My Profile
+                        </Link>
+                        
+                        <Link 
+                          href="/account/orders" 
+                          onClick={() => setIsAccountDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
+                        >
+                          <Package className="w-4 h-4" />
+                          My Orders
+                        </Link>
+
+                        <div className="h-px bg-secondary/5 my-2" />
+
+                        <button
+                          onClick={() => {
+                            logout()
+                            setIsAccountDropdownOpen(false)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50 transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <Link
                 href="/cart"
@@ -400,14 +469,39 @@ export const Header = ({ categories = [] }: HeaderProps) => {
             <p className="px-3 py-1 text-[10px] font-bold text-secondary/50 uppercase tracking-widest">
               Account
             </p>
-            <Link
-              href="/account"
-              onClick={closeMenu}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5 transition-colors"
-            >
-              <User className="w-4 h-4 text-secondary" />
-              My Account
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/account"
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5 transition-colors"
+                >
+                  <User className="w-4 h-4 text-secondary" />
+                  My Account
+                </Link>
+                <button
+                  onClick={() => {
+                    logout()
+                    closeMenu()
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-rose-500 hover:bg-rose-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsAuthModalOpen(true)
+                  closeMenu()
+                }}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5 transition-colors"
+              >
+                <User className="w-4 h-4 text-secondary" />
+                Sign In / Join
+              </button>
+            )}
             <Link
               href="/wishlist"
               onClick={closeMenu}
@@ -454,6 +548,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
           </div>
         </div>
       </div>
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   )
 }

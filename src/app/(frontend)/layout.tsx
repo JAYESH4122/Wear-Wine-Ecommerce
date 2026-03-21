@@ -3,6 +3,7 @@ import './global.css'
 import { Bricolage_Grotesque } from 'next/font/google'
 import { WishlistProvider } from '@/providers/wishlist'
 import { CartProvider } from '@/providers/cart'
+import { AuthProvider } from '@/providers/auth'
 
 export const metadata = {
   description: 'A blank template using Payload in a Next.js app.',
@@ -20,12 +21,14 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
 
   return (
     <html lang="en" className={bricolage.variable}>
-      <body>
-        <CartProvider>
-          <WishlistProvider>
-            <main>{children}</main>
-          </WishlistProvider>
-        </CartProvider>
+      <body className="antialiased font-bricolage overflow-x-hidden">
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <main>{children}</main>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   )
