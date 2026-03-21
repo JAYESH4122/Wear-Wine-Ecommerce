@@ -291,11 +291,6 @@ export const HeroSlider = ({ slides }: HeroSliderProps) => {
 
   return (
     <div className="relative">
-      {/* Brand */}
-      <div className="absolute top-[5%] left-[5%] z-30 font-[Cormorant_Garamond] font-light text-lg tracking-[0.35em] uppercase text-[rgba(245,242,238,0.8)]">
-        Atelier
-      </div>
-
       {/* Counter */}
       <div className="absolute top-[5%] right-[5%] z-30 font-[Cormorant_Garamond] text-[13px] text-[rgba(245,242,238,0.32)] tracking-[0.12em]">
         <span className="text-[rgba(245,242,238,0.65)]">

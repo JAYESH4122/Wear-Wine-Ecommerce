@@ -1,0 +1,119 @@
+'use client'
+
+import React from 'react'
+import Image from 'next/image'
+import { motion } from 'framer-motion'
+
+interface GalleryImage {
+  id: number
+  src: string
+  title: string
+  label: string
+  gridClass: string
+}
+
+const defaultImages: GalleryImage[] = [
+  {
+    id: 1,
+    src: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1200&q=80',
+    title: 'New Arrivals',
+    label: 'Spring 2024',
+    gridClass: 'col-span-12 md:col-span-8 row-span-2 md:row-span-4',
+  },
+  {
+    id: 2,
+    src: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80',
+    title: 'Spring Edit',
+    label: 'Editorial',
+    gridClass: 'col-span-6 md:col-span-4 row-span-2',
+  },
+  {
+    id: 3,
+    src: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&q=80',
+    title: 'Essentials',
+    label: 'Curated',
+    gridClass: 'col-span-6 md:col-span-4 row-span-2',
+  },
+  {
+    id: 4,
+    src: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=1200&q=80',
+    title: 'Minimalist Series',
+    label: 'Collection',
+    gridClass: 'col-span-12 md:col-span-12 row-span-2',
+  },
+]
+
+const ImageCard = ({ image, index }: { image: GalleryImage; index: number }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className={`group relative bg-neutral-50 overflow-hidden cursor-pointer ${image.gridClass}`}
+    >
+      {/* Image */}
+      <div className="relative w-full h-full">
+        <Image
+          src={image.src}
+          alt={image.title}
+          fill
+          priority={index === 0}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+
+        {/* Subtle dark overlay at bottom for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      </div>
+
+      {/* Content - Always visible at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
+        <p className="text-xs font-medium tracking-wider uppercase text-white/70 mb-1">
+          {image.label}
+        </p>
+        <h3 className="text-base md:text-lg font-medium text-white tracking-tight">
+          {image.title}
+        </h3>
+      </div>
+    </motion.div>
+  )
+}
+
+export const CollectionGallery = ({ images = defaultImages }) => {
+  return (
+    <section className="bg-white py-12 md:py-20 px-4 md:px-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <header className="mb-8 md:mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+          <div>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs font-medium tracking-wider uppercase text-neutral-500 mb-3"
+            >
+              Selected Works
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-4xl md:text-5xl font-light tracking-tight text-neutral-900"
+            >
+              Premium Collection
+            </motion.h2>
+          </div>
+        </header>
+
+        {/* Bento Grid */}
+        <div className="grid grid-cols-12 gap-4 md:gap-6 auto-rows-[180px] md:auto-rows-[160px]">
+          {images.map((img, idx) => (
+            <ImageCard key={img.id} image={img} index={idx} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default CollectionGallery

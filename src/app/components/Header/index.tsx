@@ -248,7 +248,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   className="hidden md:flex p-2 text-secondary hover:text-text transition-colors"
                   aria-label="Account"
                 >
-                  <User className="w-5 h-5" />
+                  <User className="w-5 h-5 cursor-pointer" />
                 </button>
 
                 {/* Desktop Account Dropdown */}
