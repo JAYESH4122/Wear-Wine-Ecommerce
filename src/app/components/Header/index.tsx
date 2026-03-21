@@ -32,8 +32,16 @@ export const Header = ({ categories = [] }: HeaderProps) => {
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
+  const [isLogoHovered, setIsLogoHovered] = useState(false)
+  const [wordmarkVisible, setWordmarkVisible] = useState(true)
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Scroll handler with useCallback to avoid recreation
+  useEffect(() => {
+    return () => {
+      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current)
+    }
+  }, [])
+
   const handleScroll = useCallback(() => {
     setIsScrolled(window.scrollY > 20)
   }, [])
@@ -90,30 +98,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
             : 'bg-background py-3',
         )}
       >
-        {/* Top utility bar */}
-        <div
-          className={clsx(
-            'hidden lg:block transition-all duration-300 overflow-hidden border-b border-secondary/5',
-            isScrolled ? 'max-h-0 opacity-0' : 'max-h-10 opacity-100',
-          )}
-        >
-          <div className="container mx-auto px-6 py-2">
-            <div className="flex justify-end items-center text-xs uppercase tracking-wider font-medium text-secondary">
-              <div className="flex items-center gap-6">
-                {['Track Order', 'Help', 'Support'].map((item) => (
-                  <Link
-                    key={item}
-                    href={`/${item.toLowerCase().replace(' ', '-')}`}
-                    className="hover:text-text transition-colors"
-                  >
-                    {item}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-14 lg:h-16">
             {/* Burger - mobile only */}
@@ -127,29 +111,66 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               <Menu className="w-6 h-6" />
             </button>
 
-            {/* Logo */}
-            <Link href="/" className="flex items-center group relative">
-              <div className="relative w-9 h-9 flex items-center justify-center">
+            <Link
+              href="/"
+              className="flex items-center relative w-100"
+              onMouseEnter={() => {
+                if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current)
+                if (!isLogoHovered) {
+                  setIsLogoHovered(true)
+                  setWordmarkVisible(false)
+                }
+              }}
+              onMouseLeave={() => {
+                leaveTimerRef.current = setTimeout(() => {
+                  setIsLogoHovered(false)
+                  setWordmarkVisible(true)
+                }, 10)
+              }}
+            >
+              <motion.div
+                key={isLogoHovered ? 'hover' : 'rest'}
+                className="flex-shrink-0 flex items-center justify-center"
+                initial={isLogoHovered ? { scale: 0.08 } : false}
+                animate={{ scale: 1 }}
+                transition={
+                  isLogoHovered ? { type: 'spring', stiffness: 1000, damping: 40 } : { duration: 0 }
+                }
+                onAnimationComplete={() => {
+                  if (isLogoHovered) setWordmarkVisible(true)
+                }}
+              >
                 <Image
                   src={IconBlack}
                   alt=""
-                  width={36}
-                  height={36}
-                  className="object-contain transition-transform duration-500 ease-out group-hover:rotate-[360deg]"
+                  width={50}
+                  height={50}
+                  className="object-contain"
                   priority
                 />
-              </div>
+              </motion.div>
 
-              <div className="relative overflow-hidden">
-                <Image
-                  src={WearWine}
-                  alt="Wear Vine"
-                  width={80}
-                  height={40}
-                  className="h-7 w-auto object-contain transition-all duration-300 group-hover:opacity-80"
-                  priority
-                />
-              </div>
+              <AnimatePresence>
+                {wordmarkVisible && (
+                  <motion.div
+                    key="wordmark"
+                    className="overflow-hidden"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ type: 'spring', stiffness: 1500, damping: 40 }}
+                  >
+                    <Image
+                      src={WearWine}
+                      alt="Wear Wine"
+                      width={100}
+                      height={50}
+                      className="w-auto object-contain"
+                      priority
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Link>
 
             {/* Desktop nav */}
@@ -176,40 +197,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   </Link>
                 )
               })}
-
-              {/* Shop dropdown */}
-              <div className="relative group ml-2">
-                <button
-                  className="flex items-center gap-1 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-secondary hover:text-text transition-colors"
-                  aria-haspopup="true"
-                >
-                  Shop
-                  <ChevronDown className="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" />
-                </button>
-                <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                  <div className="bg-background shadow-2xl border border-secondary/10 p-6 min-w-72 rounded-2xl">
-                    <h3 className="text-xs font-bold text-secondary uppercase tracking-widest mb-4">
-                      Collections
-                    </h3>
-                    <div className="grid gap-y-3">
-                      {categories.map((category) => (
-                        <Link
-                          key={category.name}
-                          href={category.href}
-                          className="flex items-center justify-between group/item"
-                        >
-                          <span className="text-sm text-secondary group-hover/item:text-text transition-colors">
-                            {category.name}
-                          </span>
-                          <span className="text-xs bg-secondary/5 px-2 py-0.5 rounded text-secondary">
-                            {category.count}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </nav>
 
             {/* Actions */}
@@ -255,9 +242,9 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 <AnimatePresence>
                   {user && isAccountDropdownOpen && (
                     <>
-                      <div 
-                        className="fixed inset-0 z-[-1]" 
-                        onClick={() => setIsAccountDropdownOpen(false)} 
+                      <div
+                        className="fixed inset-0 z-[-1]"
+                        onClick={() => setIsAccountDropdownOpen(false)}
                       />
                       <motion.div
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -266,21 +253,25 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                         className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
                       >
                         <div className="px-4 py-3 border-b border-secondary/5 mb-2">
-                          <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">Signed in as</p>
-                          <p className="text-sm font-bold text-text truncate">{(user as any).name || user.email}</p>
+                          <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
+                            Signed in as
+                          </p>
+                          <p className="text-sm font-bold text-text truncate">
+                            {(user as any).name || user.email}
+                          </p>
                         </div>
-                        
-                        <Link 
-                          href="/account" 
+
+                        <Link
+                          href="/account"
                           onClick={() => setIsAccountDropdownOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
                         >
                           <UserIcon className="w-4 h-4" />
                           My Profile
                         </Link>
-                        
-                        <Link 
-                          href="/account/orders" 
+
+                        <Link
+                          href="/account/orders"
                           onClick={() => setIsAccountDropdownOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
                         >
