@@ -11,20 +11,22 @@ export type CartProduct = {
   slug?: string | null
   price: number
   salePrice?: number | null
+  category?: any
   images: {
     image: CartImage
     id?: string | null
   }[]
 }
 
-const toCartProduct = (product: CartProduct): CartProduct => ({
+const toCartProduct = (product: CartProduct | any): CartProduct => ({
   id: product.id,
   name: product.name,
   slug: product.slug ?? null,
   price: product.price,
   salePrice: product.salePrice ?? null,
+  category: product.category ?? null,
   images: Array.isArray(product.images)
-    ? product.images.map((img) => ({
+    ? product.images.map((img: any) => ({
         image: img?.image,
         id: img?.id ?? null,
       }))

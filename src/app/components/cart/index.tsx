@@ -118,7 +118,7 @@ function CartItemCard({
       {/* Mobile layout */}
       <div className="flex gap-4 md:hidden">
         <Link
-          href={product.slug ? `/products/${product.slug}` : '#'}
+          href={product.slug ? `/product/${product.slug}` : '#'}
           className="relative w-28 h-36 bg-neutral-50 overflow-hidden flex-shrink-0 rounded-sm"
         >
           {imageUrl ? (
@@ -149,7 +149,7 @@ function CartItemCard({
                   {categoryName}
                 </p>
               )}
-              <Link href={product.slug ? `/products/${product.slug}` : '#'}>
+              <Link href={product.slug ? `/product/${product.slug}` : '#'}>
                 <h3 className="text-sm font-medium text-neutral-900 hover:text-neutral-600 transition-colors leading-snug">
                   {product.name}
                 </h3>
@@ -235,7 +235,7 @@ function CartItemCard({
       <div className="hidden md:grid grid-cols-12 gap-4 items-start">
         <div className="col-span-6 flex gap-5">
           <Link
-            href={product.slug ? `/products/${product.slug}` : '#'}
+            href={product.slug ? `/product/${product.slug}` : '#'}
             className="relative w-36 h-44 bg-neutral-50 overflow-hidden flex-shrink-0 rounded-sm"
           >
             {imageUrl ? (
@@ -264,7 +264,7 @@ function CartItemCard({
                 {categoryName}
               </p>
             )}
-            <Link href={product.slug ? `/products/${product.slug}` : '#'}>
+            <Link href={product.slug ? `/product/${product.slug}` : '#'}>
               <h3 className="text-base font-medium text-neutral-900 hover:text-neutral-600 transition-colors">
                 {product.name}
               </h3>
@@ -724,6 +724,7 @@ export function CartPage() {
             slug: p.slug ?? null,
             price: p.price,
             salePrice: p.salePrice ?? null,
+            category: p.category ?? null,
             images: p.images?.map((img) => ({ image: img?.image, id: img?.id ?? null })) ?? [],
           }))
 
