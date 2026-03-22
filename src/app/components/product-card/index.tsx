@@ -4,7 +4,7 @@ import Image, { StaticImageData } from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { clsx } from 'clsx'
-import { Heart, ShoppingBag, Star, Eye, Check, Truck } from 'lucide-react'
+import { Heart, ShoppingBag, Star, Eye, Check, Truck, HeartIcon } from 'lucide-react'
 
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
@@ -85,7 +85,7 @@ export const ProductCard = ({
     e.preventDefault()
     e.stopPropagation()
     setIsLoading(true)
-    
+
     if (onAddToCart) {
       await onAddToCart(id)
     } else {
@@ -103,22 +103,16 @@ export const ProductCard = ({
       }
       addItem(cartProduct, 1)
     }
-    
+
     setIsLoading(false)
     setIsAddedToCart(true)
-    
-    setTimeout(() => setIsAddedToCart(false), 2000)
-  }
 
-  const handleQuickView = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    onQuickView?.(id)
+    setTimeout(() => setIsAddedToCart(false), 2000)
   }
 
   return (
     <div
-      className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border border-gray-100"
+      className="group relative bg-white rounded-none overflow-hidden transition-all duration-500 hover:shadow-sm hover:-translate-y-2 border border-gray-100"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -130,8 +124,8 @@ export const ProductCard = ({
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={clsx(
-              "object-cover transition-all duration-700 ease-out",
-              hoverImage && isHovered ? "opacity-0 scale-110" : "opacity-100 scale-100"
+              'object-cover transition-all duration-700 ease-out',
+              hoverImage && isHovered ? 'opacity-0 scale-110' : 'opacity-100 scale-100',
             )}
             priority={false}
           />
@@ -143,16 +137,18 @@ export const ProductCard = ({
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={clsx(
-                "object-cover transition-all duration-700 ease-out",
-                isHovered ? "opacity-100 scale-110" : "opacity-0 scale-100"
+                'object-cover transition-all duration-700 ease-out',
+                isHovered ? 'opacity-100 scale-110' : 'opacity-0 scale-100',
               )}
             />
           )}
 
-          <div className={clsx(
-            "absolute inset-0 bg-black/5 transition-opacity duration-500",
-            isHovered ? "opacity-100" : "opacity-0"
-          )} />
+          <div
+            className={clsx(
+              'absolute inset-0 bg-black/5 transition-opacity duration-500',
+              isHovered ? 'opacity-100' : 'opacity-0',
+            )}
+          />
 
           <div className="absolute left-4 top-4 flex flex-col gap-2 z-10">
             {badge && (
@@ -176,26 +172,25 @@ export const ProductCard = ({
             </div>
           )}
 
-          <div className={clsx(
-            "absolute right-4 top-4 flex flex-col gap-2 transition-all duration-500 z-10",
-            isHovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
-          )}>
+          <div
+            className={clsx(
+              'absolute right-4 top-4 flex flex-col gap-2 transition-all duration-500 z-10',
+              isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4',
+            )}
+          >
             <div className="relative group/btn">
               <button
                 onClick={handleFavoriteClick}
                 className={clsx(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110",
-                  isFavorite 
-                    ? "bg-red-500 text-white shadow-lg shadow-red-500/30" 
-                    : "bg-white/90 text-gray-700 hover:bg-white hover:shadow-lg"
+                  'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110',
+                  isFavorite
+                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
+                    : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-lg',
                 )}
                 aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <Heart 
-                  className={clsx(
-                    "w-5 h-5 transition-all",
-                    isFavorite && "fill-current"
-                  )} 
+                <HeartIcon
+                  className={clsx('w-5 h-5 transition-all', isFavorite && 'fill-current')}
                 />
               </button>
               <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -203,7 +198,7 @@ export const ProductCard = ({
               </span>
             </div>
 
-            <div className="relative group/btn">
+            {/* <div className="relative group/btn">
               <button
                 onClick={handleQuickView}
                 className="w-10 h-10 rounded-full bg-white/90 text-gray-700 flex items-center justify-center transition-all duration-300 hover:bg-white hover:scale-110 hover:shadow-lg"
@@ -214,28 +209,30 @@ export const ProductCard = ({
               <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                 Quick view
               </span>
-            </div>
+            </div> */}
           </div>
 
-          <div className={clsx(
-            "absolute bottom-4 left-4 right-4 transition-all duration-500 z-10",
-            isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          )}>
+          <div
+            className={clsx(
+              'absolute bottom-4 left-4 right-4 transition-all duration-500 z-10',
+              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4',
+            )}
+          >
             <button
               onClick={handleAddToCart}
               disabled={!isInStock || isLoading || isAddedToCart}
               className={clsx(
-                "w-full py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group/add",
+                'w-full py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group/add',
                 isInStock && !isAddedToCart
-                  ? "bg-black text-white hover:bg-gray-800 hover:shadow-xl hover:shadow-black/25" 
+                  ? 'bg-black text-white hover:bg-gray-800 hover:shadow-xl hover:shadow-black/25'
                   : isAddedToCart
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-500 cursor-not-allowed",
-                isLoading && "opacity-75 cursor-wait"
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed',
+                isLoading && 'opacity-75 cursor-wait',
               )}
             >
               <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover/add:translate-x-full transition-transform duration-700" />
-              
+
               {isAddedToCart ? (
                 <>
                   <Check className="w-4 h-4 animate-bounce" />
@@ -243,10 +240,12 @@ export const ProductCard = ({
                 </>
               ) : (
                 <>
-                  <ShoppingBag className={clsx(
-                    "w-4 h-4 transition-transform duration-300 group-hover/add:-translate-y-0.5 group-hover/add:translate-x-0.5",
-                    isLoading && "animate-spin"
-                  )} />
+                  <ShoppingBag
+                    className={clsx(
+                      'w-4 h-4 transition-transform duration-300 group-hover/add:-translate-y-0.5 group-hover/add:translate-x-0.5',
+                      isLoading && 'animate-spin',
+                    )}
+                  />
                   {isLoading ? 'Adding...' : 'Add'}
                 </>
               )}
@@ -255,44 +254,38 @@ export const ProductCard = ({
         </div>
 
         <div className="p-3 space-y-2">
-          <h3 className={clsx(
-            "text-base font-medium line-clamp-2 transition-all duration-300",
-            isHovered 
-              ? "text-black translate-x-0.5" 
-              : "text-gray-900"
-          )}>
+          <h3
+            className={clsx(
+              'text-base font-medium line-clamp-2 transition-all duration-300',
+              isHovered ? 'text-black translate-x-0.5' : 'text-gray-900',
+            )}
+          >
             {title}
           </h3>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-lg font-bold text-gray-900">
-                ${price}
-              </span>
+              <span className="text-lg font-bold text-gray-900">${price}</span>
               {originalPrice && (
-                <span className="text-xs text-gray-400 line-through">
-                  ${originalPrice}
-                </span>
+                <span className="text-xs text-gray-400 line-through">${originalPrice}</span>
               )}
             </div>
 
             {rating && (
-              <div className={clsx(
-                "flex items-center gap-0.5 transition-all duration-300",
-                isHovered && "scale-105"
-              )}>
-                <Star className={clsx(
-                  "w-3.5 h-3.5 fill-yellow-400 text-yellow-400 transition-all duration-300",
-                  isHovered && "rotate-12"
-                )} />
-                <span className="text-xs font-medium text-gray-600">
-                  {rating}
-                </span>
-                {reviews && (
-                  <span className="text-xs text-gray-400">
-                    ({reviews})
-                  </span>
+              <div
+                className={clsx(
+                  'flex items-center gap-0.5 transition-all duration-300',
+                  isHovered && 'scale-105',
                 )}
+              >
+                <Star
+                  className={clsx(
+                    'w-3.5 h-3.5 fill-yellow-400 text-yellow-400 transition-all duration-300',
+                    isHovered && 'rotate-12',
+                  )}
+                />
+                <span className="text-xs font-medium text-gray-600">{rating}</span>
+                {reviews && <span className="text-xs text-gray-400">({reviews})</span>}
               </div>
             )}
           </div>
@@ -304,7 +297,7 @@ export const ProductCard = ({
                   <div className="flex items-center gap-1.5 group/stock">
                     <div className="flex-1 max-w-[60px]">
                       <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="h-full bg-gray-800 rounded-full transition-all duration-500 group-hover/stock:bg-green-500"
                           style={{ width: `${Math.random() * 60 + 20}%` }}
                         />
@@ -318,10 +311,12 @@ export const ProductCard = ({
 
                 {isHovered && (
                   <div className="flex items-center gap-1.5 text-xs text-gray-600 animate-fadeIn group/shipping">
-                    <Truck className={clsx(
-                      "w-3.5 h-3.5 transition-all duration-300",
-                      isHovered && "translate-x-0.5 -translate-y-0.5"
-                    )} />
+                    <Truck
+                      className={clsx(
+                        'w-3.5 h-3.5 transition-all duration-300',
+                        isHovered && 'translate-x-0.5 -translate-y-0.5',
+                      )}
+                    />
                     <span className="relative">
                       Free shipping
                       <span className="absolute bottom-0 left-0 w-0 h-px bg-gray-600 group-hover/shipping:w-full transition-all duration-300" />
@@ -336,24 +331,23 @@ export const ProductCard = ({
 
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5">
-              <span className={clsx(
-                "relative flex h-2 w-2",
-                isInStock && "group/status"
-              )}>
-                <span className={clsx(
-                  "absolute inline-flex h-full w-full rounded-full",
-                  isInStock ? "bg-green-500" : "bg-red-500"
-                )} />
+              <span className={clsx('relative flex h-2 w-2', isInStock && 'group/status')}>
+                <span
+                  className={clsx(
+                    'absolute inline-flex h-full w-full rounded-full',
+                    isInStock ? 'bg-green-500' : 'bg-red-500',
+                  )}
+                />
                 {isInStock && (
                   <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 animate-ping opacity-75 group-hover/status:animate-none" />
                 )}
               </span>
-              <span className={clsx(
-                "font-medium transition-colors duration-300",
-                isInStock 
-                  ? isHovered ? "text-green-600" : "text-gray-500"
-                  : "text-red-500"
-              )}>
+              <span
+                className={clsx(
+                  'font-medium transition-colors duration-300',
+                  isInStock ? (isHovered ? 'text-green-600' : 'text-gray-500') : 'text-red-500',
+                )}
+              >
                 {isInStock ? 'In stock' : 'Sold out'}
               </span>
             </span>
