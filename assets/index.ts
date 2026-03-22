@@ -4,5 +4,7 @@ import WearWine from './PNG/wearvine/black.png'
 import IconBlack from './PNG/icon/black.png'
 import LogoWhite from './PNG/logo/WHITE.png'
 import DummyTee from './graphic-studio-tee-2.jpg'
+import LogoSvg from './SVG/icon-01.svg'
+import AmeSvg from './SVG/name-01.svg'
 
-export { ArrowRight, ArrowRightDark, WearWine, IconBlack, LogoWhite, DummyTee }
+export { ArrowRight, ArrowRightDark, WearWine, IconBlack, LogoWhite, DummyTee, LogoSvg, AmeSvg }

@@ -20,6 +20,13 @@ export const headerData: HeaderType = {
     {
       link: {
         type: 'custom',
+        url: '/',
+        label: 'Home',
+      },
+    },
+    {
+      link: {
+        type: 'custom',
         url: '/new-arrivals',
         label: 'New',
       },

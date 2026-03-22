@@ -151,7 +151,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
             <Link
               href="/"
-              className="flex items-center relative w-100"
+              className="flex items-center relative w-100 gap-2"
               onMouseEnter={() => {
                 if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current)
                 if (!isLogoHovered) {
@@ -181,8 +181,8 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 <Image
                   src={IconBlack}
                   alt=""
-                  width={50}
-                  height={50}
+                  width={30}
+                  height={30}
                   className="object-contain"
                   priority
                 />
@@ -201,7 +201,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                     <Image
                       src={WearWine}
                       alt="Wear Wine"
-                      width={100}
+                      width={120}
                       height={50}
                       className="w-auto object-contain"
                       priority
