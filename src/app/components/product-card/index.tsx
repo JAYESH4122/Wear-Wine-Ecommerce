@@ -51,6 +51,9 @@ export const ProductCard = ({
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { cart, addItem } = useCart()
 
+  const stockPercentage = (Number(id.replace(/\D/g, '')) || 1) * 7
+  const stockLeft = ((Number(id.replace(/\D/g, '')) || 1) % 21) + 10
+
   const isInCart = cart.some((item) => String(item.product.id) === String(id))
   const isFavorite = isInWishlist(id)
   const [isLoading, setIsLoading] = useState(false)
@@ -301,12 +304,12 @@ export const ProductCard = ({
                       <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gray-800 rounded-full transition-all duration-500 group-hover/stock:bg-green-500"
-                          style={{ width: `${Math.random() * 60 + 20}%` }}
+                          style={{ width: `${stockPercentage}%` }}
                         />
                       </div>
                     </div>
                     <span className="text-xs text-gray-500 font-medium">
-                      {Math.floor(Math.random() * 30 + 10)} left
+                      {stockLeft} left
                     </span>
                   </div>
                 )}
