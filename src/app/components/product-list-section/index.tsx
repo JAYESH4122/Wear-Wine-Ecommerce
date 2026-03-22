@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import type { Swiper as SwiperInstance } from 'swiper'
 import NextImage from 'next/image'
-import { Sparkles, Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
+import { Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
 import { ProductCard } from '../product-card'
 import { ArrowSlider } from '../arrow-slider'
 import { cn } from '@/lib/utils'
@@ -32,6 +32,19 @@ const BREAKPOINTS = {
   640: { slidesPerView: 2, spaceBetween: 16 },
   1024: { slidesPerView: 3, spaceBetween: 20 },
   1280: { slidesPerView: 4, spaceBetween: 24 },
+}
+
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: -100 },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
+      delay,
+    },
+  }),
 }
 
 const NavButton = ({ direction, onClick }: { direction: 'prev' | 'next'; onClick: () => void }) => (
@@ -165,21 +178,17 @@ export const ProductListSection = () => {
 
   return (
     <section className="relative py-20 bg-background overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
-      </div>
-
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between lg:mb-8 mb-4 gap-6">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="max-w-2xl"
-          >
+        <motion.div
+          className="flex flex-col md:flex-row md:items-end justify-between lg:mb-8 mb-4 gap-6"
+          variants={fadeUpVariant}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: false, margin: '-80px' }}
+          custom={0}
+        >
+          <div className="max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
               <span className="w-12 h-px bg-primary" />
               <span className="text-xs font-bold tracking-[0.2em] uppercase text-secondary">
@@ -187,21 +196,28 @@ export const ProductListSection = () => {
               </span>
             </div>
             <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-text mb-4">
-              Premium <span className="text-secondary/60 font-light italic">Collection</span>
+              Premium <span className="text-secondary/60 font-bold">Collection</span>
             </h2>
             <p className="text-secondary text-lg">
               Explore our latest pieces designed for modern living.
             </p>
-          </motion.div>
+          </div>
 
           <button className="group flex items-center gap-2 text-sm font-semibold text-primary hover:text-secondary transition-colors cursor-pointer">
             View All Products
             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
-        </div>
+        </motion.div>
 
         {/* Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200">
+        <motion.div
+          className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200"
+          variants={fadeUpVariant}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: false, margin: '-80px' }}
+          custom={0.15}
+        >
           <LayoutGroup>
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
               {categories.map((cat) => (
@@ -229,20 +245,17 @@ export const ProductListSection = () => {
           </LayoutGroup>
 
           <div className="flex items-center gap-4">
-            {/* Counter */}
             <span className="text-sm text-neutral-400 tracking-wider tabular-nums">
               <span className="text-neutral-700">{String(activeIndex + 1).padStart(2, '0')}</span>
               {' / '}
               {String(totalSlides).padStart(2, '0')}
             </span>
 
-            {/* Nav buttons */}
             <div className="hidden md:flex items-center gap-1">
               <NavButton direction="prev" onClick={() => swiperRef.current?.slidePrev()} />
               <NavButton direction="next" onClick={() => swiperRef.current?.slideNext()} />
             </div>
 
-            {/* View toggle */}
             <div className="flex items-center border border-neutral-200 bg-neutral-50">
               <ToggleButton
                 active={viewMode === 'detailed'}
@@ -258,24 +271,42 @@ export const ProductListSection = () => {
               />
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Content */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse" />
+              <motion.div
+                key={i}
+                className="aspect-[3/4] bg-neutral-100 animate-pulse"
+                variants={fadeUpVariant}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: false, margin: '-60px' }}
+                custom={i * 0.1}
+              />
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
-          <div className="relative">
+          <motion.div
+            className="relative"
+            variants={fadeUpVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, margin: '-80px' }}
+            custom={0.2}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${selectedCategory}-${viewMode}`}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: -100 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: -40 }}
+                transition={{
+                  duration: 0.5,
+                  ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
+                }}
               >
                 <ArrowSlider
                   swiperRef={swiperRef}
@@ -283,7 +314,9 @@ export const ProductListSection = () => {
                     key: product.id,
                     element:
                       viewMode === 'detailed' ? (
-                        <ProductCard {...product} />
+                        <div>
+                          <ProductCard {...product} />
+                        </div>
                       ) : (
                         <div className="group relative aspect-square bg-neutral-100 overflow-hidden cursor-pointer">
                           <NextImage
@@ -311,7 +344,14 @@ export const ProductListSection = () => {
                 />
 
                 {/* Line pagination */}
-                <div className="flex gap-2 items-center justify-center mt-8">
+                <motion.div
+                  className="flex gap-2 items-center justify-center mt-8"
+                  variants={fadeUpVariant}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: false }}
+                  custom={0.3}
+                >
                   {Array.from({ length: totalSlides }).map((_, i) => (
                     <button
                       key={i}
@@ -325,18 +365,25 @@ export const ProductListSection = () => {
                       aria-label={`Go to slide ${i + 1}`}
                     />
                   ))}
-                </div>
+                </motion.div>
               </motion.div>
             </AnimatePresence>
-          </div>
+          </motion.div>
         ) : (
-          <div className="py-20 text-center">
+          <motion.div
+            className="py-20 text-center"
+            variants={fadeUpVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false }}
+            custom={0}
+          >
             <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 mb-4">
               <X className="w-6 h-6 text-neutral-400" />
             </div>
             <h3 className="text-lg font-medium">No products found</h3>
             <p className="text-neutral-500">Try adjusting your filters.</p>
-          </div>
+          </motion.div>
         )}
       </div>
     </section>
