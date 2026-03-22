@@ -100,7 +100,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
       >
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-14 lg:h-16">
-            {/* Burger - mobile only */}
             <button
               onClick={() => setIsMenuOpen(true)}
               className="lg:hidden p-2 -ml-2 text-text"
