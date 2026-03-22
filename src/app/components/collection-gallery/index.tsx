@@ -82,7 +82,7 @@ const ImageCard = ({ image, index }: { image: GalleryImage; index: number }) => 
 
 export const CollectionGallery = ({ images = defaultImages }) => {
   return (
-    <section className="bg-white py-12 md:py-20 px-4 md:px-6">
+    <section className="bg-background  py-12 md:py-20 px-4 md:px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="mb-8 md:mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">

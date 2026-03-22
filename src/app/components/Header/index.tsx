@@ -24,8 +24,8 @@ export const Header = ({ categories = [] }: HeaderProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
-  const { cartCount } = useCart()
-  const { wishlistCount } = useWishlist()
+  const { cartCount, isHydrated: isCartHydrated } = useCart()
+  const { wishlistCount, isHydrated: isWishlistHydrated } = useWishlist()
   const [searchQuery, setSearchQuery] = useState('')
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const { user, logout } = useAuth()
@@ -254,7 +254,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ''}`}
               >
                 <Heart className="w-5 h-5" />
-                {wishlistCount > 0 && (
+                {isWishlistHydrated && wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] bg-primary text-[10px] font-bold text-white rounded-full px-1 shadow-sm border-2 border-background">
                     {wishlistCount}
                   </span>
@@ -341,7 +341,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
               >
                 <ShoppingBag className="w-5 h-5" />
-                {cartCount > 0 && (
+                {isCartHydrated && cartCount > 0 && (
                   <span className="absolute top-1 right-1 min-w-4 h-4 bg-accent text-white text-[10px] font-bold flex items-center justify-center rounded-full px-1">
                     {cartCount}
                   </span>
@@ -650,7 +650,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
             >
               <Heart className="w-4 h-4 text-secondary" />
               Wishlist
-              {wishlistCount > 0 && (
+              {isWishlistHydrated && wishlistCount > 0 && (
                 <span className="ml-auto text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
                   {wishlistCount}
                 </span>
@@ -663,7 +663,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
             >
               <ShoppingBag className="w-4 h-4 text-secondary" />
               Cart
-              {cartCount > 0 && (
+              {isCartHydrated && cartCount > 0 && (
                 <span className="ml-auto text-xs bg-accent/10 text-accent font-semibold px-2 py-0.5 rounded-full">
                   {cartCount}
                 </span>

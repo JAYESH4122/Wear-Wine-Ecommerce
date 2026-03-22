@@ -1,219 +1,258 @@
 'use client'
 
+import React, { useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, ShoppingBag, ArrowLeft, Trash2, ChevronRight, X } from 'lucide-react'
-import { useWishlist } from '@/providers/wishlist'
-import { ProductCard } from '@/app/components/product-card'
-import type { WishlistItem } from '@/providers/wishlist'
+import { ArrowLeft, Heart, ShoppingBag, Trash2, X, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import type { Media } from '@/payload-types'
+import { useWishlist, type WishlistItem } from '@/providers/wishlist'
+import { useCart } from '@/providers/cart'
 
-const getWishlistImageURL = (product: WishlistItem): string => {
-  const image = product.images?.[0]?.image
-  if (!image) return '/logo.svg'
-  if (typeof image === 'string') return image || '/logo.svg'
-  if (typeof image === 'number') return '/logo.svg'
-  if (typeof image === 'object') return image.url ?? '/logo.svg'
-  return '/logo.svg'
+// --- Helper ---
+function getImageUrl(item: WishlistItem): string | null {
+  const image = item.images?.[0]?.image
+  if (!image) return null
+  if (typeof image === 'string') return image
+  if (typeof image === 'object' && 'url' in image) return (image as Media).url ?? null
+  return null
 }
 
-export default function WishlistPage() {
-  const { wishlist, wishlistCount, clearWishlist } = useWishlist()
+// --- Wishlist Row ---
+function WishlistItemRow({
+  item,
+  onRemove,
+  onAddToCart,
+}: {
+  item: WishlistItem
+  onRemove: (id: string) => void
+  onAddToCart: (item: WishlistItem) => void
+}) {
+  const imageUrl = getImageUrl(item)
+  const hasDiscount = item.salePrice && item.salePrice < item.price
+  const currentPrice = hasDiscount ? item.salePrice! : item.price
 
   return (
-    <section className="relative min-h-screen py-20 bg-background overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px]" />
+    <motion.div
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, x: -10 }}
+      className="grid grid-cols-1 md:grid-cols-12 items-center gap-4 py-6 border-b border-neutral-200 group"
+    >
+      {/* Product Column */}
+      <div className="md:col-span-6 flex items-center gap-4">
+        <button
+          onClick={() => onRemove(String(item.id))}
+          className="hidden md:block p-2 text-neutral-400 hover:text-red-500 transition-colors"
+          aria-label="Remove"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <Link
+          href={`/products/${item.slug}`}
+          className="relative w-20 h-24 bg-neutral-50 rounded flex-shrink-0 overflow-hidden"
+        >
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={item.name}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-neutral-100 text-neutral-300">
+              <Heart className="w-5 h-5" />
+            </div>
+          )}
+        </Link>
+
+        <div className="flex flex-col">
+          <Link
+            href={`/products/${item.slug}`}
+            className="font-medium text-neutral-900 hover:underline decoration-neutral-300 underline-offset-4"
+          >
+            {item.name}
+          </Link>
+          <button
+            onClick={() => onRemove(String(item.id))}
+            className="md:hidden flex items-center gap-1 text-xs text-red-500 mt-2"
+          >
+            <Trash2 className="w-3 h-3" /> Remove
+          </button>
+        </div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between lg:mb-8 mb-4 gap-6">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-2xl"
-          >
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-secondary hover:text-text transition-colors mb-4 group"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-xs font-bold tracking-[0.2em] uppercase">Back to Store</span>
-            </Link>
+      {/* Unit Price Column */}
+      <div className="md:col-span-2 flex md:justify-center items-baseline gap-2">
+        <span className="md:hidden text-xs text-neutral-400 mr-2 uppercase">Price:</span>
+        <span className={cn('font-medium', hasDiscount ? 'text-red-600' : 'text-neutral-900')}>
+          ${currentPrice.toFixed(2)}
+        </span>
+        {hasDiscount && (
+          <span className="text-xs text-neutral-400 line-through">${item.price.toFixed(2)}</span>
+        )}
+      </div>
 
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-12 h-px bg-primary" />
-              <span className="text-xs font-bold tracking-[0.2em] uppercase text-secondary">
-                Saved Items
-              </span>
+      {/* Stock Status Column */}
+      <div className="md:col-span-2 flex md:justify-center">
+        <span className="md:hidden text-xs text-neutral-400 mr-2 uppercase">Status:</span>
+        <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+          In Stock
+        </span>
+      </div>
+
+      {/* Actions Column */}
+      <div className="md:col-span-2 flex justify-end">
+        <button
+          onClick={() => onAddToCart(item)}
+          className="w-full md:w-auto flex items-center justify-center gap-2 bg-neutral-900 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all active:scale-95"
+        >
+          <ShoppingBag className="w-3.5 h-3.5" />
+          Add To Cart
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+// --- Empty State ---
+function EmptyWishlist() {
+  return (
+    <div className="flex flex-col items-center justify-center py-32 text-center">
+      <div className="mb-6 p-6 bg-neutral-50 rounded-full">
+        <Heart className="w-12 h-12 text-neutral-300 stroke-[1px]" />
+      </div>
+      <h2 className="text-2xl font-light mb-2">Your wishlist is currently empty.</h2>
+      <p className="text-neutral-500 mb-8 max-w-xs">
+        Save your favorite items here to keep track of what you love.
+      </p>
+      <Link
+        href="/shop"
+        className="bg-neutral-900 text-white px-10 py-4 text-sm font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
+      >
+        Return To Shop
+      </Link>
+    </div>
+  )
+}
+
+// --- Main Page Component ---
+export default function WishlistPage() {
+  const { wishlist, wishlistCount, isHydrated, removeFromWishlist, clearWishlist } = useWishlist()
+  const { addItem } = useCart()
+
+  const handleAddToCart = useCallback(
+    (item: WishlistItem) => {
+      addItem({
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+        price: item.price,
+        salePrice: item.salePrice,
+        images: item.images,
+      })
+    },
+    [addItem],
+  )
+
+  return (
+    <main className="min-h-screen bg-white pb-20">
+      {/* Breadcrumb / Top Bar */}
+      <div className="border-b border-neutral-100">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xs uppercase tracking-widest flex items-center gap-2 text-neutral-500 hover:text-black transition-colors"
+          >
+            <ArrowLeft className="w-3 h-3" /> Back to Home
+          </Link>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-400">
+            Free Shipping on orders over $150
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 pt-12 max-w-6xl">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+          <div>
+            <h1 className="text-4xl font-light tracking-tight text-neutral-900">My Wishlist</h1>
+            <p className="text-neutral-500 text-sm mt-2">
+              {isHydrated ? (
+                <>You have {wishlistCount} {wishlistCount === 1 ? 'item' : 'items'} saved in your list.</>
+              ) : (
+                <span className="inline-block w-32 h-4 bg-neutral-100 animate-pulse rounded" />
+              )}
+            </p>
+          </div>
+
+          {isHydrated && wishlistCount > 0 && (
+            <button
+              onClick={() => window.confirm('Clear all items?') && clearWishlist()}
+              className="text-xs uppercase tracking-widest text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"
+            >
+              <Trash2 className="w-3 h-3" /> Clear Wishlist
+            </button>
+          )}
+        </div>
+
+        {!isHydrated ? (
+          <div className="mt-8 animate-pulse">
+            <div className="hidden md:grid grid-cols-12 pb-4 border-b border-neutral-900">
+              <div className="col-span-6 h-4 bg-neutral-100 w-32" />
+            </div>
+            <div className="flex flex-col gap-6 py-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 bg-neutral-50 rounded" />
+              ))}
+            </div>
+          </div>
+        ) : wishlistCount === 0 ? (
+          <EmptyWishlist />
+        ) : (
+          <div className="mt-8">
+            {/* Table Headers (Desktop Only) */}
+            <div className="hidden md:grid grid-cols-12 pb-4 border-b border-neutral-900 text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-900">
+              <div className="col-span-6">Product Details</div>
+              <div className="col-span-2 text-center">Unit Price</div>
+              <div className="col-span-2 text-center">Stock Status</div>
+              <div className="col-span-2 text-right">Action</div>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-text mb-4">
-              My <span className="text-secondary/60 font-light italic">Wishlist</span>
-            </h1>
-
-            {wishlistCount > 0 && (
-              <p className="text-secondary text-lg">
-                {wishlistCount} {wishlistCount === 1 ? 'piece' : 'pieces'} in your collection
-              </p>
-            )}
-          </motion.div>
-
-          {wishlistCount > 0 && (
-            <motion.button
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              onClick={() => {
-                if (window.confirm('Remove all items from your wishlist?')) {
-                  clearWishlist()
-                }
-              }}
-              className="group flex items-center gap-2 text-sm font-semibold text-secondary hover:text-red-500 transition-colors cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4" />
-              Clear Wishlist
-            </motion.button>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="border-b border-neutral-200 mb-8 pb-6">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-neutral-400 tracking-wider tabular-nums">
-              <span className="text-neutral-700">{String(wishlistCount).padStart(2, '0')}</span>
-              {' items'}
-            </span>
-
-            <Link
-              href="/"
-              className="group flex items-center gap-2 text-sm font-semibold text-primary hover:text-secondary transition-colors cursor-pointer"
-            >
-              Continue Shopping
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Content */}
-        <AnimatePresence mode="wait">
-          {wishlistCount === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
-              className="py-20 text-center"
-            >
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-neutral-100 mb-6">
-                <Heart className="w-8 h-8 text-neutral-400" strokeWidth={1.5} />
-              </div>
-
-              <h2 className="text-2xl md:text-3xl font-bold text-text mb-3">
-                Your wishlist is empty
-              </h2>
-
-              <p className="text-secondary max-w-md mx-auto mb-10">
-                Start building your collection by saving pieces that inspire you.
-              </p>
-
-              <Link
-                href="/"
-                className="inline-flex items-center gap-3 bg-neutral-900 text-white px-8 py-4 font-semibold hover:bg-neutral-800 transition-all cursor-pointer"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                Explore Collection
-              </Link>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="items"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              {/* Products grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {wishlist.map((product, idx) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05, duration: 0.3 }}
-                  >
-                    <ProductCard
-                      product={product}
-                      id={String(product.id)}
-                      title={product.name}
-                      price={product.price}
-                      image={getWishlistImageURL(product)}
-                      slug={product.slug}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Features section */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="mt-20 pt-12 border-t border-neutral-200"
-        >
-          <div className="flex items-center gap-2 justify-center mb-10">
-            <span className="w-12 h-px bg-neutral-300" />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase text-secondary">
-              Why Wishlist
-            </span>
-            <span className="w-12 h-px bg-neutral-300" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Heart,
-                title: 'Save Forever',
-                description: 'Your selections persist across sessions.',
-              },
-              {
-                icon: ShoppingBag,
-                title: 'Quick Checkout',
-                description: 'Add to bag instantly when ready.',
-              },
-              {
-                icon: ChevronRight,
-                title: 'Keep Exploring',
-                description: 'Easily return to browsing anytime.',
-              },
-            ].map((feature, idx) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + idx * 0.1 }}
-                className="group p-8 bg-white border border-neutral-200 hover:border-neutral-400 transition-all duration-200"
-              >
-                <div className="w-12 h-12 bg-neutral-100 flex items-center justify-center mb-5 group-hover:bg-neutral-900 transition-colors duration-200">
-                  <feature.icon
-                    className="w-5 h-5 text-neutral-600 group-hover:text-white transition-colors duration-200"
-                    strokeWidth={1.5}
+            {/* List */}
+            <div className="flex flex-col">
+              <AnimatePresence mode="popLayout">
+                {wishlist.map((item) => (
+                  <WishlistItemRow
+                    key={item.id}
+                    item={item}
+                    onRemove={removeFromWishlist}
+                    onAddToCart={handleAddToCart}
                   />
-                </div>
-                <h3 className="font-semibold text-text mb-2">{feature.title}</h3>
-                <p className="text-sm text-secondary">{feature.description}</p>
-              </motion.div>
-            ))}
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="mt-10 flex flex-col md:flex-row items-center justify-between border-t border-neutral-100 pt-10">
+              <Link
+                href="/shop"
+                className="flex items-center gap-2 text-sm font-medium hover:gap-4 transition-all duration-300"
+              >
+                Continue Shopping <ChevronRight className="w-4 h-4" />
+              </Link>
+
+              <div className="hidden md:flex items-center gap-8">
+                <p className="text-xs text-neutral-400 max-w-[200px] text-right">
+                  Items will be saved in your browser until they are removed or purchased.
+                </p>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        )}
       </div>
-    </section>
+    </main>
   )
 }

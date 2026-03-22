@@ -11,14 +11,28 @@ interface PlasmaProps {
   mouseInteractive?: boolean
 }
 
-const hexToRgb = (hex: string): [number, number, number] => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!result) return [1, 0.5, 0.2]
-  return [
-    parseInt(result[1], 16) / 255,
-    parseInt(result[2], 16) / 255,
-    parseInt(result[3], 16) / 255,
-  ]
+/** Parses hex (#rrggbb) or rgba(r,g,b,a) / rgb(r,g,b) into a normalised [0-1] RGB triple. */
+const parseColor = (color: string): [number, number, number] => {
+  // rgba / rgb
+  const rgbaMatch = color.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/)
+  if (rgbaMatch) {
+    return [
+      parseFloat(rgbaMatch[1]) / 255,
+      parseFloat(rgbaMatch[2]) / 255,
+      parseFloat(rgbaMatch[3]) / 255,
+    ]
+  }
+  // hex
+  const hexMatch = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color)
+  if (hexMatch) {
+    return [
+      parseInt(hexMatch[1], 16) / 255,
+      parseInt(hexMatch[2], 16) / 255,
+      parseInt(hexMatch[3], 16) / 255,
+    ]
+  }
+  // fallback orange
+  return [1, 0.5, 0.2]
 }
 
 const vertex = `#version 300 es
@@ -107,8 +121,11 @@ export const Plasma: React.FC<PlasmaProps> = ({
   useEffect(() => {
     if (!containerRef.current) return
 
+    // Lifecycle flag — set to true in cleanup so all async callbacks become no-ops
+    let destroyed = false
+
     const useCustomColor = color ? 1.0 : 0.0
-    const customColorRgb = color ? hexToRgb(color) : [1, 1, 1]
+    const customColorRgb = color ? parseColor(color) : ([1, 1, 1] as [number, number, number])
 
     const directionMultiplier = direction === 'reverse' ? -1.0 : 1.0
 
@@ -128,8 +145,8 @@ export const Plasma: React.FC<PlasmaProps> = ({
     const geometry = new Triangle(gl)
 
     const program = new Program(gl, {
-      vertex: vertex,
-      fragment: fragment,
+      vertex,
+      fragment,
       uniforms: {
         iTime: { value: 0 },
         iResolution: { value: new Float32Array([1, 1]) },
@@ -146,9 +163,10 @@ export const Plasma: React.FC<PlasmaProps> = ({
 
     const mesh = new Mesh(gl, { geometry, program })
 
+    // Mouse handler — guarded for null ref and destroyed state
     const handleMouseMove = (e: MouseEvent) => {
-      if (!mouseInteractive) return
-      const rect = containerRef.current!.getBoundingClientRect()
+      if (!mouseInteractive || !containerRef.current || destroyed) return
+      const rect = containerRef.current.getBoundingClientRect()
       mousePos.current.x = e.clientX - rect.left
       mousePos.current.y = e.clientY - rect.top
       const mouseUniform = program.uniforms.uMouse.value as Float32Array
@@ -160,8 +178,10 @@ export const Plasma: React.FC<PlasmaProps> = ({
       containerRef.current.addEventListener('mousemove', handleMouseMove)
     }
 
+    // Size sync — guarded so ResizeObserver firing after unmount is a no-op
     const setSize = () => {
-      const rect = containerRef.current!.getBoundingClientRect()
+      if (destroyed || !containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
       const width = Math.max(1, Math.floor(rect.width))
       const height = Math.max(1, Math.floor(rect.height))
       renderer.setSize(width, height)
@@ -170,18 +190,21 @@ export const Plasma: React.FC<PlasmaProps> = ({
       res[1] = gl.drawingBufferHeight
     }
 
-    const ro = new ResizeObserver(setSize)
+    const ro = new ResizeObserver(() => {
+      if (!destroyed) setSize()
+    })
     ro.observe(containerRef.current)
     setSize()
 
-	    let raf = 0
-	    const t0 = performance.now()
-	    const loop = (t: number) => {
-	      const timeValue = (t - t0) * 0.001
-	      if (direction === 'pingpong') {
-	        const pingpongDuration = 10
-	        const segmentTime = timeValue % pingpongDuration
-	        const isForward = Math.floor(timeValue / pingpongDuration) % 2 === 0
+    let raf = 0
+    const t0 = performance.now()
+    const loop = (t: number) => {
+      if (destroyed) return
+      const timeValue = (t - t0) * 0.001
+      if (direction === 'pingpong') {
+        const pingpongDuration = 10
+        const segmentTime = timeValue % pingpongDuration
+        const isForward = Math.floor(timeValue / pingpongDuration) % 2 === 0
         const u = segmentTime / pingpongDuration
         const smooth = u * u * (3 - 2 * u)
         const pingpongTime = isForward ? smooth * pingpongDuration : (1 - smooth) * pingpongDuration
@@ -196,8 +219,9 @@ export const Plasma: React.FC<PlasmaProps> = ({
     raf = requestAnimationFrame(loop)
 
     return () => {
-      cancelAnimationFrame(raf)
+      destroyed = true
       ro.disconnect()
+      cancelAnimationFrame(raf)
       if (mouseInteractive && containerRef.current) {
         containerRef.current.removeEventListener('mousemove', handleMouseMove)
       }

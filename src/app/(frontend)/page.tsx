@@ -2,9 +2,7 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import './styles.css'
 import { ProductListSection } from '@/app/components/product-list-section'
-import { Header } from '@/app/components/Header'
 import { HeroSlider } from '@/app/components/hero-slider'
-import { Footer } from '@/app/components/footer'
 import { DepthDeckCarousel } from '../components/depth-card-carousel'
 import { CollectionGallery } from '../components/collection-gallery'
 
@@ -34,35 +32,12 @@ export default async function HomePage() {
     description: 'Editorial Selection',
   }))
 
-  const { docs: categories } = await payload.find({
-    collection: 'categories',
-    limit: 100,
-  })
-
-  const categoryItems = await Promise.all(
-    categories.map(async (category) => {
-      const { totalDocs } = await payload.find({
-        collection: 'products',
-        where: { category: { equals: category.id } },
-        limit: 0,
-      })
-
-      return {
-        name: category.name,
-        href: `/category/${category.slug}`,
-        count: totalDocs,
-      }
-    }),
-  )
-
   return (
     <>
-      <Header categories={categoryItems} />
       {heroImages.length > 0 && <HeroSlider slides={heroImages} />}
       <CollectionGallery />
       <ProductListSection />
       <DepthDeckCarousel cards={carouselCards} />
-      <Footer />
     </>
   )
 }
