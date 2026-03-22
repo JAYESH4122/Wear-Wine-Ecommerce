@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import type { Color, Media, Product, Size } from '@/payload-types'
+import type { Category, Color, Media, Product, Size } from '@/payload-types'
 
 type CartImage = number | Media | string | { url?: string | null } | null | undefined
 
@@ -9,22 +9,24 @@ export type CartProduct = {
   id: number | string
   name: string
   slug?: string | null
+  category?: number | Category | null
   price: number
   salePrice?: number | null
-  category?: any
+  variants?: Product['variants'] | null
   images: {
     image: CartImage
     id?: string | null
   }[]
 }
 
-const toCartProduct = (product: CartProduct | any): CartProduct => ({
+const toCartProduct = (product: Product | CartProduct): CartProduct => ({
   id: product.id,
   name: product.name,
   slug: product.slug ?? null,
+  category: 'category' in product ? product.category ?? null : null,
   price: product.price,
   salePrice: product.salePrice ?? null,
-  category: product.category ?? null,
+  variants: 'variants' in product ? product.variants ?? null : null,
   images: Array.isArray(product.images)
     ? product.images.map((img: any) => ({
         image: img?.image,

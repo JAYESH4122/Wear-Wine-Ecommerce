@@ -374,7 +374,7 @@ export const ProductListSection = () => {
           </motion.div>
         ) : (
           <motion.div
-            className="py-20 text-center"
+            className="py-10 lg:py-20 text-center"
             variants={fadeUpVariant}
             initial="hidden"
             whileInView="visible"

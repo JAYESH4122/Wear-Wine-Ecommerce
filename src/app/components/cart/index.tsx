@@ -87,20 +87,18 @@ function CartItemCard({
   const savings = hasDiscount ? (product.price - product.salePrice!) * quantity : 0
 
   const categoryName =
-    typeof product.category === 'object' && (product as any).category?.name
-      ? (product as any).category.name
-      : null
+    typeof product.category === 'object' && product.category?.name ? product.category.name : null
 
-  const variantStock = (product as any).variants?.find((v: any) => {
+  const variantStock = product.variants?.find((variant) => {
     const colorMatch = selectedColor
-      ? typeof v.color === 'object'
-        ? v.color?.id === selectedColor.id
-        : v.color === selectedColor.id
+      ? typeof variant.color === 'object'
+        ? variant.color?.id === selectedColor.id
+        : variant.color === selectedColor.id
       : true
     const sizeMatch = selectedSize
-      ? typeof v.size === 'object'
-        ? v.size?.id === selectedSize.id
-        : v.size === selectedSize.id
+      ? typeof variant.size === 'object'
+        ? variant.size?.id === selectedSize.id
+        : variant.size === selectedSize.id
       : true
     return colorMatch && sizeMatch
   })

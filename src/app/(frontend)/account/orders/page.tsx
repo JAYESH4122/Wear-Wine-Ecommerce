@@ -191,7 +191,7 @@ export default function OrdersPage() {
                     <Package className="w-6 h-6 text-neutral-400" />
                   </div>
                   <h3 className="text-lg font-bold tracking-tight mb-2">No orders yet</h3>
-                  <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">When you place orders, they will appear here. Ready to find something you'll love?</p>
+                  <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">When you place orders, they will appear here. Ready to find something you&apos;ll love?</p>
                   <Link href="/category/all" className="inline-flex items-center justify-center px-6 py-3 bg-black text-white text-sm font-bold rounded-xl hover:bg-neutral-800 transition-colors">
                     Start Shopping
                   </Link>

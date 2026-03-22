@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Didact+Gothic&display=swap');
 
 @theme {
   --font-primary:
@@ -174,8 +175,6 @@
 .swiper-pagination-bullets.swiper-pagination-horizontal {
   margin-top: 0 !important;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Didact+Gothic&display=swap');
 
 @keyframes hfA {
   0%,
