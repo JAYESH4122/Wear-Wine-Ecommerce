@@ -4,7 +4,7 @@ import Image, { StaticImageData } from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { clsx } from 'clsx'
-import { Heart, ShoppingBag, Star, Eye, Check, Truck, HeartIcon } from 'lucide-react'
+import { Heart, ShoppingBag, Star, Eye, Check, Truck, HeartIcon, HeartOff } from 'lucide-react'
 
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
@@ -49,7 +49,9 @@ export const ProductCard = ({
 }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const { isInWishlist, toggleWishlist } = useWishlist()
-  const { addItem } = useCart()
+  const { cart, addItem } = useCart()
+
+  const isInCart = cart.some((item) => String(item.product.id) === String(id))
   const isFavorite = isInWishlist(id)
   const [isLoading, setIsLoading] = useState(false)
   const [isAddedToCart, setIsAddedToCart] = useState(false)
@@ -107,7 +109,7 @@ export const ProductCard = ({
     setIsLoading(false)
     setIsAddedToCart(true)
 
-    setTimeout(() => setIsAddedToCart(false), 2000)
+    setTimeout(() => setIsAddedToCart(false), 3000)
   }
 
   return (
@@ -184,14 +186,12 @@ export const ProductCard = ({
                 className={clsx(
                   'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110',
                   isFavorite
-                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
+                    ? 'bg-black text-white shadow-lg shadow-black/30'
                     : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-lg',
                 )}
                 aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <HeartIcon
-                  className={clsx('w-5 h-5 transition-all', isFavorite && 'fill-current')}
-                />
+                <Heart className={clsx('w-5 h-5 transition-all', isFavorite && 'fill-current')} />
               </button>
               <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                 {isFavorite ? 'Remove' : 'Wishlist'}
@@ -215,7 +215,9 @@ export const ProductCard = ({
           <div
             className={clsx(
               'absolute bottom-4 left-4 right-4 transition-all duration-500 z-10',
-              isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4',
+              isAddedToCart || (isHovered && !isInCart)
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-4 pointer-events-none',
             )}
           >
             <button
@@ -223,17 +225,17 @@ export const ProductCard = ({
               disabled={!isInStock || isLoading || isAddedToCart}
               className={clsx(
                 'w-full py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group/add',
-                isInStock && !isAddedToCart
+                isInStock && !isAddedToCart && !isInCart
                   ? 'bg-black text-white hover:bg-gray-800 hover:shadow-xl hover:shadow-black/25'
-                  : isAddedToCart
-                    ? 'bg-green-500 text-white'
+                  : isAddedToCart || isInCart
+                    ? 'bg-white text-black'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed',
                 isLoading && 'opacity-75 cursor-wait',
               )}
             >
               <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover/add:translate-x-full transition-transform duration-700" />
 
-              {isAddedToCart ? (
+              {isAddedToCart || isInCart ? (
                 <>
                   <Check className="w-4 h-4 animate-bounce" />
                   Added
