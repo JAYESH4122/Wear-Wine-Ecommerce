@@ -4,12 +4,11 @@ import Image from 'next/image'
 import { gsap } from 'gsap'
 import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin'
 import { ArrowSlider } from '../arrow-slider'
-import type { Media } from '@/payload-types'
 
 gsap.registerPlugin(DrawSVGPlugin)
 
 export interface HeroSliderProps {
-  slides: Media[]
+  slides: { id: string | number; url?: string | null; alt?: string | null }[]
 }
 
 const HeroSlide = ({
@@ -17,7 +16,7 @@ const HeroSlide = ({
   index,
   isActive,
 }: {
-  slide: Media
+  slide: { id: string | number; url?: string | null; alt?: string | null }
   index: number
   isActive: boolean
 }) => {

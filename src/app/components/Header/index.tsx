@@ -6,17 +6,20 @@ import { usePathname } from 'next/navigation'
 import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, ShoppingBag, User, Menu, X, Heart, ChevronDown, ChevronRight } from 'lucide-react'
-import { navigation, type CategoryItem } from './data'
+import { navigation } from '@/data/navigation'
+import type { CategoryNavItem } from '@/types'
+import { products } from '@/data/products'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import Image from 'next/image'
 import { IconBlack, WearWine } from 'assets'
 import { useAuth } from '@/providers/auth'
 import { AuthModal } from './AuthModal'
-import { LogOut, User as UserIcon, Settings, Package } from 'lucide-react'
+import { LogOut, User as UserIcon, Package } from 'lucide-react'
+import { buildCartAriaLabel, buildSearchCountLabel, buildWishlistAriaLabel, headerUi } from '@/data/ui'
 
 interface HeaderProps {
-  categories?: CategoryItem[]
+  categories?: CategoryNavItem[]
 }
 
 export const Header = ({ categories = [] }: HeaderProps) => {
@@ -43,7 +46,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
   }, [])
 
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchResults, setSearchResults] = useState<typeof products>([])
   const [isSearching, setIsSearching] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   // Scroll handler with useCallback to avoid recreation
@@ -83,9 +86,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      console.log('Searching for:', searchQuery)
-    }
   }
 
   // Debounce search query
@@ -96,29 +96,28 @@ export const Header = ({ categories = [] }: HeaderProps) => {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Fetch search results
+  // Fetch search results locally
   useEffect(() => {
     if (!debouncedQuery.trim()) {
       setSearchResults([])
       return
     }
 
-    const fetchResults = async () => {
-      setIsSearching(true)
-      try {
-        const res = await fetch(`/api/products?q=${encodeURIComponent(debouncedQuery)}&limit=5`)
-        if (res.ok) {
-          const data = await res.json()
-          setSearchResults(data.docs || [])
-        }
-      } catch (err) {
-        console.error('Error searching products:', err)
-      } finally {
-        setIsSearching(false)
-      }
-    }
+    setIsSearching(true)
+    const lowerQuery = debouncedQuery.toLowerCase()
+    
+    // Simulate a tiny delay for UI realism before filtering locally
+    setTimeout(() => {
+      const results = products.filter(
+        (p) => 
+          p.name.toLowerCase().includes(lowerQuery) || 
+          p.category.name.toLowerCase().includes(lowerQuery)
+      ).slice(0, 5) // Limit to 5 results like the API did
+      
+      setSearchResults(results)
+      setIsSearching(false)
+    }, 300)
 
-    fetchResults()
   }, [debouncedQuery])
 
   const closeMenu = () => {
@@ -142,7 +141,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
             <button
               onClick={() => setIsMenuOpen(true)}
               className="lg:hidden p-2 -ml-2 text-text"
-              aria-label="Open menu"
+              aria-label={headerUi.aria.openMenu}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-menu"
             >
@@ -200,7 +199,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   >
                     <Image
                       src={WearWine}
-                      alt="Wear Wine"
+                      alt={headerUi.brand.wordmarkAlt}
                       width={100}
                       height={50}
                       className="w-auto object-contain"
@@ -242,7 +241,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               <button
                 onClick={() => setIsSearchOpen((prev) => !prev)}
                 className="p-2 text-secondary hover:text-text transition-colors"
-                aria-label={isSearchOpen ? 'Close search' : 'Open search'}
+                aria-label={isSearchOpen ? headerUi.aria.closeSearch : headerUi.aria.openSearch}
                 aria-expanded={isSearchOpen}
               >
                 <Search className="w-5 h-5 cursor-pointer" />
@@ -251,7 +250,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               <Link
                 href="/wishlist"
                 className="hidden sm:flex p-2 text-secondary hover:text-text transition-colors relative group/wishlist"
-                aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ''}`}
+                aria-label={buildWishlistAriaLabel(wishlistCount)}
               >
                 <Heart className="w-5 h-5" />
                 {isWishlistHydrated && wishlistCount > 0 && (
@@ -271,7 +270,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                     }
                   }}
                   className="hidden md:flex p-2 text-secondary hover:text-text transition-colors"
-                  aria-label="Account"
+                  aria-label={headerUi.aria.account}
                 >
                   <User className="w-5 h-5 cursor-pointer" />
                 </button>
@@ -292,10 +291,10 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                       >
                         <div className="px-4 py-3 border-b border-secondary/5 mb-2">
                           <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
-                            Signed in as
+                            {headerUi.aria.signedInAs}
                           </p>
                           <p className="text-sm font-bold text-text truncate">
-                            {(user as any).name || user.email}
+                            {(user as { name?: string; email?: string }).name || user.email}
                           </p>
                         </div>
 
@@ -305,7 +304,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
                         >
                           <UserIcon className="w-4 h-4" />
-                          My Profile
+                          {headerUi.account.myProfile}
                         </Link>
 
                         <Link
@@ -314,7 +313,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
                         >
                           <Package className="w-4 h-4" />
-                          My Orders
+                          {headerUi.account.myOrders}
                         </Link>
 
                         <div className="h-px bg-secondary/5 my-2" />
@@ -327,7 +326,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50 transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
-                          Sign Out
+                          {headerUi.account.signOut}
                         </button>
                       </motion.div>
                     </>
@@ -338,7 +337,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               <Link
                 href="/cart"
                 className="p-2 text-secondary hover:text-text transition-colors relative"
-                aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
+                aria-label={buildCartAriaLabel(cartCount)}
               >
                 <ShoppingBag className="w-5 h-5" />
                 {isCartHydrated && cartCount > 0 && (
@@ -366,13 +365,13 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products..."
+                  placeholder={headerUi.search.placeholder}
                   className="w-full bg-white border text-text border-neutral-200 px-5 py-3 pr-12 text-sm placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 transition-colors"
                 />
                 <button
                   type="submit"
                   className="absolute right-0 top-0 h-full px-4 text-neutral-500 hover:text-neutral-900 transition-colors"
-                  aria-label="Search"
+                  aria-label={headerUi.aria.search}
                 >
                   <Search className="w-4 h-4" />
                 </button>
@@ -388,7 +387,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                     <div className="py-10 flex flex-col items-center justify-center">
                       <div className="w-4 h-4 border border-neutral-200 border-t-black animate-spin mb-2" />
                       <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-neutral-400">
-                        Searching...
+                        {headerUi.search.searching}
                       </span>
                     </div>
                   ) : searchResults.length > 0 ? (
@@ -396,10 +395,10 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                       {/* Compact Header */}
                       <div className="px-4 py-2 bg-neutral-50 border-b border-neutral-100 flex justify-between items-center">
                         <span className="text-[9px] font-black uppercase tracking-[0.25em] text-neutral-400">
-                          Results
+                          {headerUi.search.resultsLabel}
                         </span>
                         <span className="text-[9px] font-medium text-neutral-500 uppercase tracking-widest">
-                          {searchResults.length} Products Found
+                          {buildSearchCountLabel(searchResults.length)}
                         </span>
                       </div>
 
@@ -418,9 +417,9 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                           >
                             {/* Architectural Sharp Image */}
                             <div className="relative w-10 h-14 bg-neutral-100 flex-shrink-0 overflow-hidden rounded-none border border-neutral-100">
-                              {product.images?.[0]?.image?.url ? (
+                              {product.images?.[0]?.url ? (
                                 <Image
-                                  src={product.images[0].image.url}
+                                  src={product.images[0].url}
                                   alt={product.name}
                                   fill
                                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -449,15 +448,18 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                                 {product.salePrice ? (
                                   <div className="flex flex-col items-end">
                                     <span className="text-[11px] font-bold text-black">
-                                      ₹{product.salePrice}
+                                      {headerUi.money.searchCurrencySymbol}
+                                      {product.salePrice}
                                     </span>
                                     <span className="text-[9px] font-medium text-neutral-400 line-through decoration-neutral-300">
-                                      ₹{product.price}
+                                      {headerUi.money.searchCurrencySymbol}
+                                      {product.price}
                                     </span>
                                   </div>
                                 ) : (
                                   <span className="text-[11px] font-bold text-black">
-                                    ₹{product.price}
+                                    {headerUi.money.searchCurrencySymbol}
+                                    {product.price}
                                   </span>
                                 )}
                               </div>
@@ -469,17 +471,17 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                       {/* Action Call to Action */}
                       <div className="border-t border-neutral-100 px-4 py-3 bg-white">
                         <button className="w-full text-[9px] font-black uppercase tracking-[0.3em] text-black hover:opacity-50 transition-opacity">
-                          View all collections
+                          {headerUi.search.viewAllCollections}
                         </button>
                       </div>
                     </div>
                   ) : debouncedQuery ? (
                     <div className="py-16 flex flex-col items-center justify-center">
                       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black">
-                        No Matches Found
+                        {headerUi.search.noMatchesFound}
                       </p>
                       <p className="text-[9px] text-neutral-400 mt-2 uppercase tracking-widest">
-                        Try a different keyword
+                        {headerUi.search.tryDifferentKeyword}
                       </p>
                     </div>
                   ) : null}
@@ -512,23 +514,23 @@ export const Header = ({ categories = [] }: HeaderProps) => {
         )}
         role="dialog"
         aria-modal="true"
-        aria-label="Navigation menu"
+        aria-label={headerUi.aria.navigationMenu}
         aria-hidden={!isMenuOpen}
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-secondary/10">
           <Link href="/" onClick={closeMenu} className="flex items-center gap-2.5">
             <div className="flex items-center justify-center w-7 h-7 bg-primary rounded-full">
-              <span className="text-white font-bold text-xs">W</span>
+              <span className="text-white font-bold text-xs">{headerUi.brand.mobileInitial}</span>
             </div>
             <span className="font-bold tracking-wider text-base uppercase text-text">
-              Wear Wine
+              {headerUi.brand.mobileName}
             </span>
           </Link>
           <button
             onClick={closeMenu}
             className="p-2 -mr-2 text-secondary hover:text-text transition-colors"
-            aria-label="Close menu"
+            aria-label={headerUi.aria.closeMenu}
           >
             <X className="w-5 h-5" />
           </button>
@@ -564,7 +566,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 className="w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider text-text hover:bg-secondary/5 transition-colors"
                 aria-expanded={isCategoriesOpen}
               >
-                Shop
+                {headerUi.shop.label}
                 <ChevronDown
                   className={clsx(
                     'w-4 h-4 text-secondary transition-transform duration-300',
@@ -608,7 +610,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
           {/* Account links */}
           <div className="px-3 py-4 space-y-1">
             <p className="px-3 py-1 text-[10px] font-bold text-secondary/50 uppercase tracking-widest">
-              Account
+              {headerUi.account.accountSection}
             </p>
             {user ? (
               <>
@@ -618,7 +620,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5 transition-colors"
                 >
                   <User className="w-4 h-4 text-secondary" />
-                  My Account
+                  {headerUi.account.myAccount}
                 </Link>
                 <button
                   onClick={() => {
@@ -628,7 +630,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-rose-500 hover:bg-rose-50 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
-                  Sign Out
+                  {headerUi.account.signOut}
                 </button>
               </>
             ) : (
@@ -640,7 +642,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5 transition-colors"
               >
                 <User className="w-4 h-4 text-secondary" />
-                Sign In / Join
+                {headerUi.account.signInJoin}
               </button>
             )}
             <Link
@@ -649,7 +651,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5 transition-colors"
             >
               <Heart className="w-4 h-4 text-secondary" />
-              Wishlist
+              {headerUi.aria.wishlistBase}
               {isWishlistHydrated && wishlistCount > 0 && (
                 <span className="ml-auto text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
                   {wishlistCount}
@@ -662,7 +664,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5 transition-colors"
             >
               <ShoppingBag className="w-4 h-4 text-secondary" />
-              Cart
+              {headerUi.aria.cartBase}
               {isCartHydrated && cartCount > 0 && (
                 <span className="ml-auto text-xs bg-accent/10 text-accent font-semibold px-2 py-0.5 rounded-full">
                   {cartCount}
@@ -676,14 +678,14 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
           {/* Utility links */}
           <div className="px-3 py-4 space-y-1">
-            {['Track Order', 'Help', 'Support'].map((item) => (
+            {headerUi.utilityLinks.map((item) => (
               <Link
-                key={item}
-                href={`/${item.toLowerCase().replace(' ', '-')}`}
+                key={item.href}
+                href={item.href}
                 onClick={closeMenu}
                 className="flex items-center px-3 py-2.5 rounded-xl text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
               >
-                {item}
+                {item.label}
               </Link>
             ))}
           </div>

@@ -1,35 +1,61 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import type { Color, Media, Product, Size } from '@/payload-types'
+import type { Category, Color, Product, ProductVariant, Size } from '@/types'
 
-type CartImage = number | Media | string | { url?: string | null } | null | undefined
+export type CartImage = string | { url?: string | null } | null | undefined
 
 export type CartProduct = {
-  id: number | string
+  id: string
   name: string
   slug?: string | null
   price: number
+  category?: Category
   salePrice?: number | null
   images: {
     image: CartImage
     id?: string | null
   }[]
+  variants?: ProductVariant[]
 }
 
-const toCartProduct = (product: CartProduct): CartProduct => ({
-  id: product.id,
-  name: product.name,
-  slug: product.slug ?? null,
-  price: product.price,
-  salePrice: product.salePrice ?? null,
-  images: Array.isArray(product.images)
-    ? product.images.map((img) => ({
-        image: img?.image,
-        id: img?.id ?? null,
-      }))
-    : [],
-})
+type UrlImage = { url?: string; alt?: string }
+type ImageField = { image?: unknown; id?: string | null }
+
+const isUrlImage = (value: unknown): value is UrlImage =>
+  Boolean(value) && typeof value === 'object' && 'url' in (value as Record<string, unknown>)
+
+const normalizeImages = (value: unknown): CartProduct['images'] => {
+  if (!Array.isArray(value)) return []
+
+  if (value.length > 0 && isUrlImage(value[0])) {
+    return (value as UrlImage[])
+      .map((img) => (typeof img.url === 'string' ? { image: img.url } : null))
+      .filter(Boolean) as CartProduct['images']
+  }
+
+  return (value as ImageField[]).map((img) => ({
+    image: (img as { image?: CartImage })?.image,
+    id: typeof img?.id === 'string' ? img.id : null,
+  }))
+}
+
+const toCartProduct = (input: Product | CartProduct): CartProduct => {
+  const base = input as Partial<CartProduct> & Partial<Product>
+  return {
+    id: String(base.id ?? ''),
+    name: String(base.name ?? ''),
+    slug: typeof base.slug === 'string' ? base.slug : base.slug ?? null,
+    price: typeof base.price === 'number' ? base.price : 0,
+    category:
+      base.category && typeof base.category === 'object' && 'slug' in base.category
+        ? (base.category as Category)
+        : undefined,
+    salePrice: typeof base.salePrice === 'number' ? base.salePrice : base.salePrice ?? null,
+    images: normalizeImages(base.images),
+    variants: Array.isArray(base.variants) ? (base.variants as ProductVariant[]) : undefined,
+  }
+}
 
 const isCartProduct = (value: unknown): value is CartProduct => {
   if (!value || typeof value !== 'object') return false
@@ -53,7 +79,12 @@ interface CartContextType {
   cart: CartItem[]
   cartCount: number
   isHydrated: boolean
-  addItem: (product: Product | CartProduct, quantity?: number, color?: Color, size?: Size) => void
+  addItem: (
+    product: Product | CartProduct,
+    quantity?: number,
+    color?: Color,
+    size?: Size,
+  ) => void
   removeItem: (cartItemId: string) => void
   updateQuantity: (cartItemId: string, quantity: number) => void
   clearCart: () => void
@@ -117,7 +148,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return acc + price * item.quantity
   }, 0)
 
-  const addItem = (product: Product | CartProduct, quantity = 1, color?: Color, size?: Size) => {
+  const addItem = (
+    product: Product | CartProduct,
+    quantity = 1,
+    color?: Color,
+    size?: Size,
+  ) => {
     const normalizedProduct = toCartProduct(product)
     const cartItemId = `${normalizedProduct.id}-${color?.id || 'no-color'}-${size?.id || 'no-size'}`
 

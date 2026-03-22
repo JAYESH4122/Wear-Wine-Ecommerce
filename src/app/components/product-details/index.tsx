@@ -22,7 +22,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Product, Media, Color, Size } from '@/payload-types'
+import type { Color, Product, Size } from '@/types'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 
@@ -126,28 +126,25 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
     { scope: container },
   )
 
-  const allImages = useMemo(
-    () => product.images?.map((item) => item.image as Media).filter(Boolean) ?? [],
-    [product.images],
-  )
+  const allImages = useMemo(() => product.images ?? [], [product.images])
 
   const colors = useMemo(() => {
-    const seen = new Set()
+    const seen = new Set<string>()
     return (product.variants ?? []).reduce((acc: Color[], v) => {
-      if (v.color && typeof v.color === 'object' && !seen.has(v.color.id)) {
+      if (!seen.has(v.color.id)) {
         seen.add(v.color.id)
-        acc.push(v.color as Color)
+        acc.push(v.color)
       }
       return acc
     }, [])
   }, [product.variants])
 
   const sizes = useMemo(() => {
-    const seen = new Set()
+    const seen = new Set<string>()
     return (product.variants ?? []).reduce((acc: Size[], v) => {
-      if (v.size && typeof v.size === 'object' && !seen.has(v.size.id)) {
+      if (!seen.has(v.size.id)) {
         seen.add(v.size.id)
-        acc.push(v.size as Size)
+        acc.push(v.size)
       }
       return acc
     }, [])
@@ -177,7 +174,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
           </Link>
           <span className="mx-2">/</span>
           <span className="text-black">
-            {typeof product.category === 'object' ? (product.category as any).name : 'Product'}
+            {product.category?.name ?? 'Product'}
           </span>
         </nav>
 
@@ -194,8 +191,8 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                   )}
                 >
                   <Image
-                    src={img.url!}
-                    alt={img.alt ?? ''}
+                    src={img.url}
+                    alt={img.alt ?? product.name}
                     fill
                     className="object-cover hover:scale-105 transition-transform duration-1000"
                     priority={idx === 0}
@@ -245,8 +242,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
               </div>
 
               <p className="info-panel-item text-[15px] text-neutral-500 leading-relaxed mb-8 border-b border-neutral-100 pb-8">
-                {product.description ||
-                  'Thoughtfully designed with premium materials for a lasting silhouette and unparalleled comfort.'}
+                {product.description}
               </p>
 
               {/* Color */}
@@ -473,9 +469,9 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
               {relatedProducts.map((rp) => (
                 <Link key={rp.id} href={`/products/${rp.slug}`} className="group">
                   <div className="relative aspect-[3/4] overflow-hidden bg-neutral-50 mb-4 rounded-lg">
-                    {rp.images?.[0] && (
+                    {rp.images?.[0]?.url && (
                       <Image
-                        src={(rp.images[0].image as Media).url!}
+                        src={rp.images[0].url}
                         alt={rp.name}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-105"

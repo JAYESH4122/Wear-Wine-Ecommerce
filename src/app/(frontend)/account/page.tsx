@@ -3,9 +3,10 @@
 import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/providers/auth'
-import { User, Mail, Settings, Shield, Clock } from 'lucide-react'
+import { User, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { accountUi } from '@/data/ui'
 
 export default function ProfilePage() {
   const { user, isLoading, isHydrated } = useAuth()
@@ -14,16 +15,11 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (isHydrated && !isLoading && !user) {
-      router.push('/login')
+      router.push('/')
     }
   }, [user, isLoading, isHydrated, router])
 
-  const navItems = [
-    { name: 'Profile Overview', href: '/account', icon: User },
-    { name: 'My Orders', href: '/account/orders', icon: Clock },
-    { name: 'Security', href: '/account/security', icon: Shield },
-    { name: 'Settings', href: '/account/settings', icon: Settings },
-  ]
+  const navItems = accountUi.navItems
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -53,14 +49,18 @@ export default function ProfilePage() {
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 sticky top-24">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-xl uppercase">
-            {isHydrated && user ? user.name?.[0] || user.email?.[0] || 'U' : '?'}
+            {isHydrated && user
+              ? user.name?.[0] || user.email?.[0] || accountUi.avatar.fallbackLetter
+              : accountUi.avatar.unauthenticatedPlaceholder}
           </div>
           <div>
             <h2 className="font-bold text-neutral-900 truncate">
-              {isHydrated && user ? user.name || 'User' : 'Loading...'}
+              {isHydrated && user
+                ? user.name || accountUi.user.fallbackName
+                : accountUi.user.loadingName}
             </h2>
             <p className="text-xs text-neutral-500 truncate">
-              {isHydrated && user ? user.email : 'Please wait'}
+              {isHydrated && user ? user.email : accountUi.user.loadingEmail}
             </p>
           </div>
         </div>
@@ -119,35 +119,35 @@ export default function ProfilePage() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
 
               <h1 className="text-2xl font-bold tracking-tight mb-2 relative z-10">
-                Personal Information
+                {accountUi.sections.personalInfoTitle}
               </h1>
               <p className="text-neutral-500 text-sm mb-8 relative z-10">
-                Manage your personal details and how we can reach you.
+                {accountUi.sections.personalInfoDescription}
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-                    Full Name
+                    {accountUi.fields.fullName}
                   </label>
                   <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-100 rounded-xl p-4">
                     <User className="w-4 h-4 text-neutral-400" />
                     <span className="text-sm font-semibold text-neutral-900">
-                      {user.name || 'Not provided'}
+                      {user.name || accountUi.user.missingName}
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-                    Email Address
+                    {accountUi.fields.emailAddress}
                   </label>
                   <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-100 rounded-xl p-4">
                     <Mail className="w-4 h-4 text-neutral-400" />
                     <span className="text-sm font-semibold text-neutral-900">{user.email}</span>
-                    {(user as any).isVerified && (
+                    {user.isVerified && (
                       <span className="ml-auto text-[10px] bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Verified
+                        {accountUi.badges.verified}
                       </span>
                     )}
                   </div>
@@ -155,7 +155,7 @@ export default function ProfilePage() {
 
                 <div className="space-y-1.5 md:col-span-2 mt-4">
                   <button className="text-sm font-bold text-primary hover:text-black transition-colors underline underline-offset-4">
-                    Edit Profile Information
+                    {accountUi.actions.editProfile}
                   </button>
                 </div>
               </div>
@@ -165,16 +165,18 @@ export default function ProfilePage() {
               variants={itemVariants}
               className="bg-white rounded-2xl p-8 shadow-sm border border-neutral-100"
             >
-              <h2 className="text-lg font-bold tracking-tight mb-2">Account Preferences</h2>
+              <h2 className="text-lg font-bold tracking-tight mb-2">
+                {accountUi.sections.accountPreferencesTitle}
+              </h2>
               <p className="text-neutral-500 text-sm mb-6">
-                Manage your email formatting and newsletter subscriptions.
+                {accountUi.sections.accountPreferencesDescription}
               </p>
 
               <div className="flex items-center justify-between p-4 border border-neutral-100 rounded-xl bg-neutral-50">
                 <div>
-                  <h3 className="text-sm font-bold text-neutral-900">Newsletter Subscription</h3>
+                  <h3 className="text-sm font-bold text-neutral-900">{accountUi.newsletter.title}</h3>
                   <p className="text-xs text-neutral-500 mt-0.5">
-                    Receive updates about new drops and exclusive offers.
+                    {accountUi.newsletter.description}
                   </p>
                 </div>
                 <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-black">

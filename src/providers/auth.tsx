@@ -1,74 +1,91 @@
 'use client'
 
 import React, { createContext, useContext } from 'react'
-import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react'
-import type { User } from '@/payload-types'
+import type { AuthLoginInput, AuthSignupInput, User } from '@/types'
+import { authStorageKey, createUserFromProvider } from '@/data/auth'
 
 interface AuthContextType {
   user: User | null
   isLoading: boolean
   isHydrated: boolean
-  login: (data: any) => Promise<void>
-  signup: (data: any) => Promise<void>
+  login: (data: AuthLoginInput) => Promise<void>
+  signup: (data: AuthSignupInput) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <SessionProvider>
-      <AuthContextWrapper>{children}</AuthContextWrapper>
-    </SessionProvider>
-  )
+  return <AuthContextWrapper>{children}</AuthContextWrapper>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const AuthContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { data: session, status } = useSession()
   const [isHydrated, setIsHydrated] = React.useState(false)
-  const user = (session?.user as User) || null
-  const isLoading = status === 'loading'
+  const [user, setUser] = React.useState<User | null>(null)
+  const [isLoading, setIsLoading] = React.useState(true)
 
   React.useEffect(() => {
+    const saved = localStorage.getItem(authStorageKey)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as unknown
+        if (parsed && typeof parsed === 'object') {
+          const candidate = parsed as Partial<User>
+          if (typeof candidate.id === 'string' && typeof candidate.email === 'string') {
+            setUser({
+              id: candidate.id,
+              email: candidate.email,
+              name: typeof candidate.name === 'string' ? candidate.name : undefined,
+              isVerified: typeof candidate.isVerified === 'boolean' ? candidate.isVerified : undefined,
+            })
+          }
+        }
+      } catch {
+        // ignore corrupt storage
+      }
+    }
     setIsHydrated(true)
+    setIsLoading(false)
   }, [])
 
-  const login = async (data: any) => {
-    const res = await signIn('credentials', {
-      redirect: false,
-      email: data.email,
-      password: data.password,
-    })
-    
-    // next-auth returns false or error if it fails
-    if (res?.error) {
-      throw new Error(res.error)
+  const persistUser = (nextUser: User | null) => {
+    if (!nextUser) {
+      localStorage.removeItem(authStorageKey)
+      return
     }
+    localStorage.setItem(authStorageKey, JSON.stringify(nextUser))
   }
 
-  const signup = async (data: any) => {
-    // Utilize the native Payload local API route for creation since NextAuth only does sign IN.
-    const response = await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...data,
-        collection: 'users',
-      }),
-    })
+  const login = async (data: AuthLoginInput) => {
+    const nextUser =
+      data.type === 'provider'
+        ? createUserFromProvider(data.provider)
+        : {
+            id: `${authStorageKey}:${data.email}`,
+            email: data.email,
+            name: undefined,
+            isVerified: true,
+          }
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.errors?.[0]?.message || 'Signup failed')
+    setUser(nextUser)
+    persistUser(nextUser)
+  }
+
+  const signup = async (data: AuthSignupInput) => {
+    const nextUser: User = {
+      id: `${authStorageKey}:${data.email}`,
+      email: data.email,
+      name: data.name,
+      isVerified: true,
     }
-
-    // After signup, automatically login using NextAuth credentials fallback
-    await login({ email: data.email, password: data.password })
+    setUser(nextUser)
+    persistUser(nextUser)
   }
 
   const logout = async () => {
-    await signOut({ redirect: false })
+    setUser(null)
+    persistUser(null)
   }
 
   const refreshUser = async () => {}

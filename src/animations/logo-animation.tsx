@@ -1,88 +1,115 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from 'react'
+import gsap from 'gsap'
 
-export const LogoAnimation = () => {
+export const LogoAnimation = ({ onComplete }: { onComplete?: () => void }) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const iconRef = useRef<SVGSVGElement>(null)
-  const nameRef = useRef<HTMLDivElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+  const brandRef = useRef<HTMLDivElement>(null)
   const taglineRef = useRef<HTMLDivElement>(null)
-  const lineLeftRef = useRef<HTMLDivElement>(null)
-  const lineRightRef = useRef<HTMLDivElement>(null)
   const [hasAnimated, setHasAnimated] = useState(false)
 
   useEffect(() => {
-    if (hasAnimated || !iconRef.current) return
+    if (hasAnimated || !svgRef.current) return
 
-    const paths = iconRef.current.querySelectorAll('.draw-path')
-    const fills = iconRef.current.querySelectorAll('.fill-path')
+    const paths = svgRef.current.querySelectorAll('.draw-path')
+    const fills = svgRef.current.querySelectorAll('.fill-path')
+    const brandLetters = brandRef.current ? brandRef.current.querySelectorAll('.brand-letter') : []
+    const taglineWords = taglineRef.current ? taglineRef.current.querySelectorAll('.tagline-word') : []
 
-    gsap.set(paths, { drawSVG: '0%', opacity: 1 })
-    gsap.set(fills, { opacity: 0 })
-    gsap.set(nameRef.current, { opacity: 0, y: 30 })
-    gsap.set(taglineRef.current, { opacity: 0, y: 20 })
-    gsap.set([lineLeftRef.current, lineRightRef.current], { scaleX: 0 })
-
-    const tl = gsap.timeline({
-      onComplete: () => setHasAnimated(true),
+    // Set up stroke dash for path drawing
+    paths.forEach((path) => {
+      const length = (path as SVGPathElement).getTotalLength()
+      gsap.set(path, {
+        strokeDasharray: length,
+        strokeDashoffset: length,
+        opacity: 1,
+      })
     })
 
+    gsap.set(fills, { opacity: 0 })
+    if (brandLetters.length > 0) gsap.set(brandLetters, { opacity: 0, y: 50, rotateX: -90 })
+    if (taglineWords.length > 0) gsap.set(taglineWords, { opacity: 0, y: 20 })
+    gsap.set(containerRef.current, { opacity: 1 })
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setHasAnimated(true)
+        if (onComplete) onComplete()
+      },
+    })
+
+    // Phase 1: Draw icon paths
     tl.to(paths, {
-      drawSVG: '100%',
-      duration: 1.8,
+      strokeDashoffset: 0,
+      duration: 2.2,
       stagger: 0.2,
       ease: 'power2.inOut',
     })
+      // Phase 2: Fill in the icon
       .to(
         fills,
         {
           opacity: 1,
-          duration: 0.6,
-          stagger: 0.1,
+          duration: 0.8,
+          stagger: 0.15,
           ease: 'power2.out',
         },
-        '-=0.8'
+        '-=0.8',
       )
+      // Phase 3: Animate brand letters one by one
       .to(
-        [lineLeftRef.current, lineRightRef.current],
-        {
-          scaleX: 1,
-          duration: 0.8,
-          ease: 'power3.out',
-        },
-        '-=0.3'
-      )
-      .to(
-        nameRef.current,
+        brandLetters,
         {
           opacity: 1,
           y: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-        },
-        '-=0.5'
-      )
-      .to(
-        taglineRef.current,
-        {
-          opacity: 1,
-          y: 0,
+          rotateX: 0,
           duration: 0.6,
+          stagger: 0.08,
+          ease: 'back.out(1.7)',
+        },
+        '-=0.3',
+      )
+      // Phase 4: Animate tagline words
+      .to(
+        taglineWords,
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: 0.1,
           ease: 'power3.out',
         },
-        '-=0.4'
+        '-=0.2',
       )
+      // Hold for a moment
+      .to({}, { duration: 1.5 })
+      // Phase 5: Fade out everything
+      .to(containerRef.current, {
+        opacity: 0,
+        scale: 0.95,
+        filter: 'blur(10px)',
+        duration: 1,
+        ease: 'power2.inOut',
+      })
   }, [hasAnimated])
+
+  const brandName = 'WEARVINE'
+  const tagline = ['Where', 'drip', 'takes', 'root']
 
   return (
     <div
       ref={containerRef}
       className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none px-6"
+      style={{ opacity: 0 }}
     >
+      {/* Logo Icon */}
       <svg
-        ref={iconRef}
+        ref={svgRef}
         viewBox="140 40 170 150"
-        className="w-[120px] h-[100px] lg:w-[180px] lg:h-[150px] mb-6"
+        className="w-[100px] h-[85px] lg:w-[160px] lg:h-[135px] mb-8"
         xmlns="http://www.w3.org/2000/svg"
       >
+        {/* Draw paths (strokes) */}
         <path
           className="draw-path"
           fill="none"
@@ -110,6 +137,8 @@ export const LogoAnimation = () => {
           strokeLinejoin="round"
           d="M225.27,53.18a15.07,15.07,0,0,0-1.91,8.3c.1,1.43.5,7,5,9.89,5.47,3.53,12,0,12.52-.32,4.76-2.69,6.18-7.47,6.7-9.25.46-1.54,1.92-6.49-.63-11.49-.55-1.07-3.05-6-7.74-6.56-3.56-.45-6.42,1.82-9.17,4A17.09,17.09,0,0,0,225.27,53.18Z"
         />
+
+        {/* Fill paths */}
         <path
           className="fill-path"
           fill="white"
@@ -127,22 +156,31 @@ export const LogoAnimation = () => {
         />
       </svg>
 
-      <div className="flex items-center gap-4 mb-4">
-        <div ref={lineLeftRef} className="w-12 h-[1px] bg-white/50 origin-right" />
-        <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
-        <div ref={lineRightRef} className="w-12 h-[1px] bg-white/50 origin-left" />
-      </div>
-
-      <div ref={nameRef}>
-        <h1 className="font-serif text-[clamp(36px,8vw,72px)] font-light tracking-[0.08em] text-white leading-none">
-          WEARVINE
+      {/* Brand Name */}
+      <div ref={brandRef} className="mb-3" style={{ perspective: '1000px' }}>
+        <h1 className="font-serif text-[clamp(32px,7vw,64px)] font-light tracking-[0.12em] text-white leading-none flex">
+          {brandName.split('').map((letter, i) => (
+            <span
+              key={i}
+              className="brand-letter inline-block"
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              {letter}
+            </span>
+          ))}
         </h1>
       </div>
 
-      <div ref={taglineRef} className="mt-4">
-        <p className="text-[clamp(10px,2vw,14px)] tracking-[0.35em] text-white/60 uppercase font-light">
-          Where drip takes root
-        </p>
+      {/* Tagline */}
+      <div ref={taglineRef} className="flex gap-2">
+        {tagline.map((word, i) => (
+          <span
+            key={i}
+            className="tagline-word text-[clamp(9px,1.8vw,13px)] tracking-[0.3em] text-white/50 uppercase font-light"
+          >
+            {word}
+          </span>
+        ))}
       </div>
     </div>
   )

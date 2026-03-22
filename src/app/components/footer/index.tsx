@@ -5,7 +5,7 @@ import Link from 'next/link'
 import React from 'react'
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, Clock } from 'lucide-react'
 import { Plasma } from '../react-bits/plasma'
-import { footerData } from './data'
+import { footerData } from '@/data/footer'
 
 const socialIconMap: Record<string, React.ReactNode> = {
   Facebook: <Facebook size={16} />,
