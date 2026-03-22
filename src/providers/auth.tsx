@@ -7,6 +7,7 @@ import type { User } from '@/payload-types'
 interface AuthContextType {
   user: User | null
   isLoading: boolean
+  isHydrated: boolean
   login: (data: any) => Promise<void>
   signup: (data: any) => Promise<void>
   logout: () => Promise<void>
@@ -25,8 +26,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const AuthContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { data: session, status } = useSession()
+  const [isHydrated, setIsHydrated] = React.useState(false)
   const user = (session?.user as User) || null
   const isLoading = status === 'loading'
+
+  React.useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   const login = async (data: any) => {
     const res = await signIn('credentials', {
@@ -68,7 +74,7 @@ const AuthContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshUser = async () => {}
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, isLoading, isHydrated, login, signup, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

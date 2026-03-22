@@ -44,6 +44,7 @@ const isWishlistItem = (value: unknown): value is WishlistItem => {
 interface WishlistContextType {
   wishlist: WishlistItem[]
   wishlistCount: number
+  isHydrated: boolean
   isInWishlist: (productId: string) => boolean
   toggleWishlist: (product: WishlistItem) => void
   removeFromWishlist: (productId: string) => void
@@ -108,6 +109,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value={{
         wishlist,
         wishlistCount: wishlist.length,
+        isHydrated,
         isInWishlist,
         toggleWishlist,
         removeFromWishlist,
