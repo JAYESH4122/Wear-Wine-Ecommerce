@@ -4,7 +4,7 @@ import Image, { StaticImageData } from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { clsx } from 'clsx'
-import { Heart, ShoppingBag, Star, Eye, Check, Truck, HeartIcon, HeartOff } from 'lucide-react'
+import { Heart, ShoppingBag, Star, Eye, Check, Truck } from 'lucide-react'
 
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
@@ -180,41 +180,33 @@ export const ProductCard = ({
               isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4',
             )}
           >
-            <div className="relative group/btn">
+            <div className="relative group/btn cursor-poiter">
               <button
                 onClick={handleFavoriteClick}
                 className={clsx(
-                  'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110',
+                  'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer',
                   isFavorite
                     ? 'bg-black text-white shadow-lg shadow-black/30'
                     : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-lg',
                 )}
                 aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <Heart className={clsx('w-5 h-5 transition-all', isFavorite && 'fill-current')} />
+                <Heart
+                  className={clsx(
+                    'w-5 h-5 transition-all cursor-pointer',
+                    isFavorite && 'fill-current',
+                  )}
+                />
               </button>
               <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                 {isFavorite ? 'Remove' : 'Wishlist'}
               </span>
             </div>
-
-            {/* <div className="relative group/btn">
-              <button
-                onClick={handleQuickView}
-                className="w-10 h-10 rounded-full bg-white/90 text-gray-700 flex items-center justify-center transition-all duration-300 hover:bg-white hover:scale-110 hover:shadow-lg"
-                aria-label="Quick view"
-              >
-                <Eye className="w-5 h-5" />
-              </button>
-              <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                Quick view
-              </span>
-            </div> */}
           </div>
 
           <div
             className={clsx(
-              'absolute bottom-4 left-4 right-4 transition-all duration-500 z-10',
+              'absolute bottom-4 left-4 right-4 transition-all duration-500 z-10 cursor-pointer',
               isAddedToCart || (isHovered && !isInCart)
                 ? 'opacity-100 translate-y-0'
                 : 'opacity-0 translate-y-4 pointer-events-none',
@@ -224,7 +216,7 @@ export const ProductCard = ({
               onClick={handleAddToCart}
               disabled={!isInStock || isLoading || isAddedToCart}
               className={clsx(
-                'w-full py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group/add',
+                'w-full py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group/add cursor-pointer',
                 isInStock && !isAddedToCart && !isInCart
                   ? 'bg-black text-white hover:bg-gray-800 hover:shadow-xl hover:shadow-black/25'
                   : isAddedToCart || isInCart
