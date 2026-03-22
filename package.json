@@ -20,6 +20,7 @@
     "seed": "tsx ./src/seed/index.ts"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@next/env": "^16.1.6",
     "@payloadcms/db-postgres": "3.79.0",
     "@payloadcms/next": "3.79.0",
