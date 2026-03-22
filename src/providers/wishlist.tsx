@@ -1,12 +1,12 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import type { Media, Product } from '@/payload-types'
+import type { Product } from '@/types'
 
-type WishlistImage = number | Media | string | { url?: string | null } | null | undefined
+export type WishlistImage = string | { url?: string | null } | null | undefined
 
 export type WishlistItem = {
-  id: number | string
+  id: string
   name: string
   slug?: string | null
   price: number
@@ -17,19 +17,38 @@ export type WishlistItem = {
   }[]
 }
 
-const toWishlistItem = (product: WishlistItem): WishlistItem => ({
-  id: product.id,
-  name: product.name,
-  slug: product.slug ?? null,
-  price: product.price,
-  salePrice: product.salePrice ?? null,
-  images: Array.isArray(product.images)
-    ? product.images.map((img) => ({
-        image: img?.image,
-        id: img?.id ?? null,
-      }))
-    : [],
-})
+type UrlImage = { url?: string; alt?: string }
+type ImageField = { image?: unknown; id?: string | null }
+
+const isUrlImage = (value: unknown): value is UrlImage =>
+  Boolean(value) && typeof value === 'object' && 'url' in (value as Record<string, unknown>)
+
+const normalizeImages = (value: unknown): WishlistItem['images'] => {
+  if (!Array.isArray(value)) return []
+
+  if (value.length > 0 && isUrlImage(value[0])) {
+    return (value as UrlImage[])
+      .map((img) => (typeof img.url === 'string' ? { image: img.url } : null))
+      .filter(Boolean) as WishlistItem['images']
+  }
+
+  return (value as ImageField[]).map((img) => ({
+    image: (img as { image?: WishlistImage })?.image,
+    id: typeof img?.id === 'string' ? img.id : null,
+  }))
+}
+
+const toWishlistItem = (input: Product | WishlistItem): WishlistItem => {
+  const base = input as Partial<WishlistItem> & Partial<Product>
+  return {
+    id: String(base.id ?? ''),
+    name: String(base.name ?? ''),
+    slug: typeof base.slug === 'string' ? base.slug : base.slug ?? null,
+    price: typeof base.price === 'number' ? base.price : 0,
+    salePrice: typeof base.salePrice === 'number' ? base.salePrice : base.salePrice ?? null,
+    images: normalizeImages(base.images),
+  }
+}
 
 const isWishlistItem = (value: unknown): value is WishlistItem => {
   if (!value || typeof value !== 'object') return false
@@ -46,7 +65,7 @@ interface WishlistContextType {
   wishlistCount: number
   isHydrated: boolean
   isInWishlist: (productId: string) => boolean
-  toggleWishlist: (product: WishlistItem) => void
+  toggleWishlist: (product: Product | WishlistItem) => void
   removeFromWishlist: (productId: string) => void
   clearWishlist: () => void
 }
@@ -66,8 +85,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (Array.isArray(parsed)) {
           setWishlist(parsed.filter(isWishlistItem).map(toWishlistItem))
         }
-      } catch (error) {
-        console.error('Failed to parse wishlist from localStorage:', error)
+      } catch (_error) {
+        // ignore corrupt storage
       }
     }
     setIsHydrated(true)

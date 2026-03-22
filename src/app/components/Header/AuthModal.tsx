@@ -1,12 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight, Github } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { X, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/providers/auth'
-import { clsx } from 'clsx'
 import Image from 'next/image'
 import { IconBlack } from 'assets'
+import type { AuthLoginInput, AuthSignupInput } from '@/types'
+import { authModalUi } from '@/data/ui'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -41,17 +42,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
     try {
       if (mode === 'login') {
-        await login({ email: formData.email, password: formData.password })
-      } else {
-        await signup({ 
-          email: formData.email, 
+        const input: AuthLoginInput = {
+          type: 'credentials',
+          email: formData.email,
           password: formData.password,
-          name: formData.name
-        })
+        }
+        await login(input)
+      } else {
+        const input: AuthSignupInput = {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+        }
+        await signup(input)
       }
       onClose()
-    } catch (err: any) {
-      setError(err.message || 'An error occurred')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : authModalUi.errors.generic
+      setError(message)
     } finally {
       setIsLoading(false)
     }
@@ -98,10 +106,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                <Image src={IconBlack} alt="Logo" width={24} height={24} className="invert object-contain" />
              </div>
              <h2 className="text-2xl font-bold text-neutral-900 tracking-tight">
-               {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+               {mode === 'login' ? authModalUi.header.loginTitle : authModalUi.header.signupTitle}
              </h2>
              <p className="text-neutral-500 text-sm mt-1">
-               {mode === 'login' ? 'Enter your details to sign in' : 'Join us for a premium experience'}
+               {mode === 'login' ? authModalUi.header.loginSubtitle : authModalUi.header.signupSubtitle}
              </p>
           </div>
 
@@ -109,9 +117,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <div className="grid grid-cols-1 gap-3 mb-8">
             <button
               onClick={() => {
-                import('next-auth/react').then(({ signIn }) => {
-                  signIn('google', { callbackUrl: '/' })
-                })
+                const input: AuthLoginInput = { type: 'provider', provider: 'google' }
+                setIsLoading(true)
+                setError(null)
+                login(input)
+                  .then(() => onClose())
+                  .catch((err: unknown) => {
+                    const message = err instanceof Error ? err.message : authModalUi.errors.generic
+                    setError(message)
+                  })
+                  .finally(() => setIsLoading(false))
               }}
               className="flex items-center justify-center gap-3 w-full py-3 px-4 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors font-semibold text-sm text-neutral-700"
             >
@@ -121,7 +136,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.25.81-.59z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Continue with Google
+              {authModalUi.social.googleCta}
             </button>
           </div>
 
@@ -130,7 +145,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <div className="w-full border-t border-neutral-100"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-              <span className="bg-white px-4 text-neutral-400">Or continue with</span>
+              <span className="bg-white px-4 text-neutral-400">{authModalUi.social.divider}</span>
             </div>
           </div>
 
@@ -138,7 +153,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider ml-1">Full Name</label>
+                <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider ml-1">
+                  {authModalUi.fields.fullNameLabel}
+                </label>
                 <div className="relative group">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors">
                     <User className="w-4 h-4" />
@@ -149,7 +166,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     required
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="John Doe"
+                    placeholder={authModalUi.fields.fullNamePlaceholder}
                     className="w-full bg-neutral-50 border border-neutral-100 px-11 py-3.5 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-black transition-all"
                   />
                 </div>
@@ -157,7 +174,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider ml-1">Email Address</label>
+              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider ml-1">
+                {authModalUi.fields.emailLabel}
+              </label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-black transition-colors">
                   <Mail className="w-4 h-4" />
@@ -168,7 +187,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="name@example.com"
+                  placeholder={authModalUi.fields.emailPlaceholder}
                   className="w-full bg-neutral-50 border border-neutral-100 px-11 py-3.5 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-black transition-all"
                 />
               </div>
@@ -176,10 +195,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between ml-1">
-                <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Password</label>
+                <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  {authModalUi.fields.passwordLabel}
+                </label>
                 {mode === 'login' && (
                   <button type="button" className="text-[10px] font-bold text-neutral-400 hover:text-black transition-colors uppercase tracking-widest">
-                    Forgot?
+                    {authModalUi.fields.forgot}
                   </button>
                 )}
               </div>
@@ -193,7 +214,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="••••••••"
+                  placeholder={authModalUi.fields.passwordPlaceholder}
                   className="w-full bg-neutral-50 border border-neutral-100 px-11 py-3.5 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-black transition-all"
                 />
                 <button
@@ -225,7 +246,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  {mode === 'login' ? 'Sign In' : 'Create Account'}
+                  {mode === 'login' ? authModalUi.actions.signIn : authModalUi.actions.createAccount}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -235,12 +256,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-sm text-neutral-500">
-              {mode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
+              {mode === 'login'
+                ? authModalUi.actions.footerLoginPrompt
+                : authModalUi.actions.footerSignupPrompt}{' '}
               <button
                 onClick={toggleMode}
                 className="text-black font-bold hover:underline underline-offset-4"
               >
-                {mode === 'login' ? 'Sign up' : 'Sign in'}
+                {mode === 'login' ? authModalUi.actions.footerSignupCta : authModalUi.actions.footerSigninCta}
               </button>
             </p>
           </div>

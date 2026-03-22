@@ -6,12 +6,7 @@ import { Package, Search, ChevronRight, Clock, User, Shield, Settings } from 'lu
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/auth'
-
-// Placeholder orders data for demonstration
-const MOCK_ORDERS = [
-  { id: 'ORD-2023-010', date: 'Oct 24, 2023', total: 129.99, status: 'Delivered', items: 2 },
-  { id: 'ORD-2023-089', date: 'Nov 12, 2023', total: 84.50, status: 'Processing', items: 1 },
-]
+import { orders } from '@/data/orders'
 
 export default function OrdersPage() {
   const { user, isLoading: isAuthLoading } = useAuth()
@@ -21,7 +16,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      router.push('/login')
+      router.push('/')
     }
   }, [user, isAuthLoading, router])
 
@@ -145,8 +140,8 @@ export default function OrdersPage() {
               animate="show"
               className="space-y-4"
             >
-              {MOCK_ORDERS.length > 0 ? (
-                MOCK_ORDERS.map((order) => (
+              {orders.length > 0 ? (
+                orders.map((order) => (
                   <motion.div 
                     key={order.id} 
                     variants={itemVariants}
@@ -191,8 +186,8 @@ export default function OrdersPage() {
                     <Package className="w-6 h-6 text-neutral-400" />
                   </div>
                   <h3 className="text-lg font-bold tracking-tight mb-2">No orders yet</h3>
-                  <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">When you place orders, they will appear here. Ready to find something you'll love?</p>
-                  <Link href="/category/all" className="inline-flex items-center justify-center px-6 py-3 bg-black text-white text-sm font-bold rounded-xl hover:bg-neutral-800 transition-colors">
+                  <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">When you place orders, they will appear here. Ready to find something you&apos;ll love?</p>
+                  <Link href="/" className="inline-flex items-center justify-center px-6 py-3 bg-black text-white text-sm font-bold rounded-xl hover:bg-neutral-800 transition-colors">
                     Start Shopping
                   </Link>
                 </motion.div>

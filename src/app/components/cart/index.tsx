@@ -18,8 +18,8 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Media, Product } from '@/payload-types'
 import { useCart, type CartItem, type CartProduct } from '@/providers/cart'
+import { products as localProducts } from '@/data/products'
 
 const btnBase = 'flex items-center justify-center transition-all duration-200 cursor-pointer'
 const btnPrimary = cn(
@@ -78,34 +78,22 @@ function CartItemCard({
   const { product, quantity, selectedColor, selectedSize, cartItemId } = item
 
   const firstImage = product.images?.[0]?.image
-  const imageUrl =
-    typeof firstImage === 'string' ? firstImage : ((firstImage as Media | null)?.url ?? null)
+  const imageUrl = typeof firstImage === 'string' ? firstImage : (firstImage?.url ?? null)
 
   const hasDiscount = product.salePrice != null && product.salePrice < product.price
   const currentPrice = hasDiscount ? product.salePrice! : product.price
   const subtotal = currentPrice * quantity
   const savings = hasDiscount ? (product.price - product.salePrice!) * quantity : 0
 
-  const categoryName =
-    typeof product.category === 'object' && (product as any).category?.name
-      ? (product as any).category.name
-      : null
+  const categoryName = product.category?.name ?? null
 
-  const variantStock = (product as any).variants?.find((v: any) => {
-    const colorMatch = selectedColor
-      ? typeof v.color === 'object'
-        ? v.color?.id === selectedColor.id
-        : v.color === selectedColor.id
-      : true
-    const sizeMatch = selectedSize
-      ? typeof v.size === 'object'
-        ? v.size?.id === selectedSize.id
-        : v.size === selectedSize.id
-      : true
+  const variantStock = product.variants?.find((v) => {
+    const colorMatch = selectedColor ? v.color.id === selectedColor.id : true
+    const sizeMatch = selectedSize ? v.size.id === selectedSize.id : true
     return colorMatch && sizeMatch
   })
   const stock = variantStock?.stock ?? null
-  const sku = variantStock?.sku ?? product.id.toString().slice(-8).toUpperCase()
+  const sku = variantStock?.sku ?? String(product.id).slice(-8).toUpperCase()
 
   return (
     <motion.div
@@ -414,8 +402,7 @@ function RecommendationCard({
   onQuickAdd: (p: CartProduct) => void
 }) {
   const firstImage = product.images?.[0]?.image
-  const imageUrl =
-    typeof firstImage === 'string' ? firstImage : ((firstImage as Media | null)?.url ?? null)
+  const imageUrl = typeof firstImage === 'string' ? firstImage : (firstImage?.url ?? null)
   const hasDiscount = product.salePrice != null && product.salePrice < product.price
   const price = hasDiscount ? product.salePrice! : product.price
 
@@ -703,37 +690,23 @@ export function CartPage() {
   useEffect(() => {
     if (!isHydrated) return
 
-    const controller = new AbortController()
-    const load = async () => {
-      try {
-        const res = await fetch('/api/products?limit=12', { signal: controller.signal })
-        if (!res.ok) return
-        const data = (await res.json()) as { docs?: Product[] }
-        const docs = data?.docs ?? []
+    const cartProductIds = new Set(cart.map((item) => String(item.product.id)))
 
-        const cartProductIds = new Set(cart.map((item) => item.product.id))
+    const mapped: CartProduct[] = localProducts
+      .filter((p) => !cartProductIds.has(String(p.id)))
+      .slice(0, 8)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug ?? null,
+        price: p.price,
+        category: p.category,
+        salePrice: p.salePrice ?? null,
+        images: (p.images ?? []).map((img) => ({ image: img.url })),
+        variants: p.variants,
+      }))
 
-        const mapped: CartProduct[] = docs
-          .filter(
-            (p) => p?.id && p?.name && typeof p?.price === 'number' && !cartProductIds.has(p.id),
-          )
-          .slice(0, 8)
-          .map((p) => ({
-            id: p.id,
-            name: p.name,
-            slug: p.slug ?? null,
-            price: p.price,
-            salePrice: p.salePrice ?? null,
-            images: p.images?.map((img) => ({ image: img?.image, id: img?.id ?? null })) ?? [],
-          }))
-
-        setRecommendations(mapped)
-      } catch {
-        // ignore aborted requests
-      }
-    }
-    load()
-    return () => controller.abort()
+    setRecommendations(mapped)
   }, [cart, isHydrated])
 
   return (

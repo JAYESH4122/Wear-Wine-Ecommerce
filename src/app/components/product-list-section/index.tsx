@@ -8,6 +8,8 @@ import { Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
 import { ProductCard } from '../product-card'
 import { ArrowSlider } from '../arrow-slider'
 import { cn } from '@/lib/utils'
+import { products as localProducts } from '@/data/products'
+import { categories as localCategories } from '@/data/categories'
 
 type Category = { id: string; name: string }
 
@@ -72,55 +74,24 @@ const ToggleButton = ({
   </button>
 )
 
+// ... existing types and variants ...
+
 export const ProductListSection = () => {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [viewMode, setViewMode] = useState<'detailed' | 'images'>('detailed')
   const swiperRef = useRef<SwiperInstance | null>(null)
-  const [dbProducts, setDbProducts] = useState<any[]>([])
-  const [categories, setCategories] = useState<Category[]>([ALL_CATEGORY])
-  const [loading, setLoading] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
 
-  useEffect(() => {
-    const controller = new AbortController()
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch('/api/products?limit=20', { signal: controller.signal })
-        if (!res.ok) throw new Error('Failed to fetch')
-        const data = await res.json()
-        const products: any[] = data.docs || []
-        setDbProducts(products)
-
-        const seen = new Set<string>()
-        const derived: Category[] = []
-        for (const p of products) {
-          const cat = p.category
-          if (cat?.slug && !seen.has(cat.slug)) {
-            seen.add(cat.slug)
-            derived.push({ id: cat.slug, name: cat.name })
-          }
-        }
-        setCategories([ALL_CATEGORY, ...derived])
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Error fetching products:', error)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProducts()
-    return () => controller.abort()
-  }, [])
+  const categories = useMemo(() => [ALL_CATEGORY, ...localCategories], [])
 
   const formattedProducts: Product[] = useMemo(
     () =>
-      dbProducts.map((p) => ({
-        id: String(p.id ?? p._id),
-        title: p.name ?? 'Untitled Product',
-        price: p.salePrice ?? p.price ?? 0,
+      localProducts.map((p) => ({
+        id: p.id,
+        title: p.name,
+        price: p.salePrice ?? p.price,
         originalPrice: p.salePrice ? p.price : undefined,
-        image: p.images?.[0]?.image?.url ?? '/placeholder.jpg',
+        image: p.images?.[0]?.url ?? '/placeholder.jpg',
         badge: p.tags?.[0]?.name ?? (p.salePrice ? 'Sale' : undefined),
         rating: 5.0,
         reviews: Math.floor(Math.random() * 50) + 10,
@@ -128,7 +99,7 @@ export const ProductListSection = () => {
         categorySlug: p.category?.slug,
         slug: p.slug,
       })),
-    [dbProducts],
+    [],
   )
 
   const filteredProducts = useMemo(
@@ -277,21 +248,7 @@ export const ProductListSection = () => {
         </motion.div>
 
         {/* Content */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="aspect-[3/4] bg-neutral-100 animate-pulse"
-                variants={fadeUpVariant}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: false, margin: '-60px' }}
-                custom={i * 0.1}
-              />
-            ))}
-          </div>
-        ) : filteredProducts.length > 0 ? (
+        {filteredProducts.length > 0 ? (
           <motion.div
             className="relative"
             variants={fadeUpVariant}
