@@ -35,7 +35,7 @@ const BREAKPOINTS = {
 }
 
 const fadeUpVariant = {
-  hidden: { opacity: 0, y: -100 },
+  hidden: { opacity: 0, y: -10 },
   visible: (delay = 0) => ({
     opacity: 1,
     y: 0,
@@ -46,27 +46,6 @@ const fadeUpVariant = {
     },
   }),
 }
-
-const NavButton = ({ direction, onClick }: { direction: 'prev' | 'next'; onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className="w-10 h-10 flex items-center justify-center cursor-pointer text-neutral-600 border border-neutral-200 bg-white backdrop-blur-sm transition-all duration-200 hover:border-neutral-400 hover:text-neutral-900"
-    aria-label={direction === 'prev' ? 'Previous' : 'Next'}
-  >
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 12 12"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {direction === 'prev' ? <path d="M8 2L4 6L8 10" /> : <path d="M4 2L8 6L4 10" />}
-    </svg>
-  </button>
-)
 
 const ToggleButton = ({
   active,
@@ -252,8 +231,32 @@ export const ProductListSection = () => {
             </span>
 
             <div className="hidden md:flex items-center gap-1">
-              <NavButton direction="prev" onClick={() => swiperRef.current?.slidePrev()} />
-              <NavButton direction="next" onClick={() => swiperRef.current?.slideNext()} />
+              <div className="  z-30 flex  gap-2">
+                {(['prev', 'next'] as const).map((dir) => (
+                  <button
+                    key={dir}
+                    onClick={() =>
+                      dir === 'prev'
+                        ? swiperRef.current?.slidePrev()
+                        : swiperRef.current?.slideNext()
+                    }
+                    className="w-11 h-11 flex items-center justify-center cursor-pointer text-white/70 border border-white/15 bg-black backdrop-blur-md transition-all duration-300 hover:border-white/40 hover:bg-black/50"
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      {dir === 'prev' ? <path d="M8 2L4 6L8 10" /> : <path d="M4 2L8 6L4 10" />}
+                    </svg>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex items-center border border-neutral-200 bg-neutral-50">
