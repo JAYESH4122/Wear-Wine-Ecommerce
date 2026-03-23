@@ -153,11 +153,11 @@ export const ProductListSection = () => {
         {/* Header */}
         <motion.div
           className="flex flex-col md:flex-row md:items-end justify-between lg:mb-8 mb-4 gap-6"
-          variants={fadeUpVariant}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: '-80px' }}
-          custom={0}
+          // variants={fadeUpVariant}
+          // initial="hidden"
+          // whileInView="visible"
+          // viewport={{ once: false, margin: '-80px' }}
+          // custom={0}
         >
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
@@ -183,11 +183,11 @@ export const ProductListSection = () => {
         {/* Controls */}
         <motion.div
           className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200"
-          variants={fadeUpVariant}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: '-80px' }}
-          custom={0.15}
+          // variants={fadeUpVariant}
+          // initial="hidden"
+          // whileInView="visible"
+          // viewport={{ once: false, margin: '-80px' }}
+          // custom={0.15}
         >
           <LayoutGroup>
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
@@ -204,9 +204,9 @@ export const ProductListSection = () => {
                 >
                   {selectedCategory === cat.id && (
                     <motion.div
-                      layoutId="active-category"
+                      // layoutId="active-category"
                       className="absolute inset-0 bg-neutral-900"
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                      // transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2">{cat.name}</span>
@@ -248,22 +248,22 @@ export const ProductListSection = () => {
         {filteredProducts.length > 0 ? (
           <motion.div
             className="relative"
-            variants={fadeUpVariant}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: false, margin: '-80px' }}
-            custom={0.2}
+            // variants={fadeUpVariant}
+            // initial="hidden"
+            // whileInView="visible"
+            // viewport={{ once: false, margin: '-80px' }}
+            // custom={0.2}
           >
-            <AnimatePresence mode="wait">
+            {/* <AnimatePresence mode="wait"> */}
               <motion.div
                 key={`${selectedCategory}-${viewMode}`}
-                initial={{ opacity: 0, y: -100 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -40 }}
-                transition={{
-                  duration: 0.5,
-                  ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
-                }}
+                // initial={{ opacity: 0, y: -100 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // exit={{ opacity: 0, y: -40 }}
+                // transition={{
+                //   duration: 0.5,
+                //   ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
+                // }}
               >
                 <ArrowSlider
                   swiperRef={swiperRef}
@@ -324,16 +324,16 @@ export const ProductListSection = () => {
                   ))}
                 </motion.div>
               </motion.div>
-            </AnimatePresence>
+            {/* </AnimatePresence> */}
           </motion.div>
         ) : (
           <motion.div
             className="py-20 text-center"
-            variants={fadeUpVariant}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: false }}
-            custom={0}
+            // variants={fadeUpVariant}
+            // initial="hidden"
+            // whileInView="visible"
+            // viewport={{ once: false }}
+            // custom={0}
           >
             <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 mb-4">
               <X className="w-6 h-6 text-neutral-400" />

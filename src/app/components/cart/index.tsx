@@ -97,10 +97,10 @@ function CartItemCard({
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+      // layout
+      // initial={{ opacity: 0, y: 12 }}
+      // animate={{ opacity: 1, y: 0 }}
+      // exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
       className="group py-6 border-b border-neutral-100 last:border-b-0"
     >
       {/* Mobile layout */}
@@ -359,7 +359,7 @@ function CartItemsList({
         <div className="col-span-3 text-center">Quantity</div>
         <div className="col-span-3 text-right">Subtotal</div>
       </div>
-      <AnimatePresence mode="popLayout" initial={false}>
+      {/* <AnimatePresence mode="popLayout" initial={false}> */}
         {items.map((item) => (
           <CartItemCard
             key={item.cartItemId}
@@ -368,7 +368,7 @@ function CartItemsList({
             onRemove={onRemove}
           />
         ))}
-      </AnimatePresence>
+      {/* </AnimatePresence> */}
     </div>
   )
 }
@@ -376,8 +376,8 @@ function CartItemsList({
 function EmptyCart() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      // initial={{ opacity: 0, y: 20 }}
+      // animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-24 text-center"
     >
       <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mb-6">
@@ -559,12 +559,12 @@ function CartSummary({ subtotal, itemCount }: { subtotal: number; itemCount: num
           <span className="font-medium text-neutral-900">${subtotal.toFixed(2)}</span>
         </div>
 
-        <AnimatePresence>
+        {/* <AnimatePresence> */}
           {promoApplied && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              // initial={{ opacity: 0, height: 0 }}
+              // animate={{ opacity: 1, height: 'auto' }}
+              // exit={{ opacity: 0, height: 0 }}
               className="flex justify-between items-center text-emerald-600"
             >
               <span className="flex items-center gap-1.5">
@@ -581,7 +581,7 @@ function CartSummary({ subtotal, itemCount }: { subtotal: number; itemCount: num
               <span className="font-medium">-${discount.toFixed(2)}</span>
             </motion.div>
           )}
-        </AnimatePresence>
+        {/* </AnimatePresence> */}
 
         <div className="flex justify-between">
           <span className="text-neutral-500">Shipping</span>

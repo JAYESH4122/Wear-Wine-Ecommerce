@@ -119,6 +119,8 @@ export const Plasma: React.FC<PlasmaProps> = ({
   const mousePos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
+    // Plasma animation disabled
+    /*
     if (!containerRef.current) return
 
     // Lifecycle flag — set to true in cleanup so all async callbacks become no-ops
@@ -229,6 +231,7 @@ export const Plasma: React.FC<PlasmaProps> = ({
         containerRef.current?.removeChild(canvas)
       } catch {}
     }
+    */
   }, [color, speed, direction, scale, opacity, mouseInteractive])
 
   return <div ref={containerRef} className="w-full h-full relative overflow-hidden" />

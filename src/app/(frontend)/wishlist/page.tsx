@@ -35,10 +35,10 @@ function WishlistItemRow({
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, x: -10 }}
+      // layout
+      // initial={{ opacity: 0 }}
+      // animate={{ opacity: 1 }}
+      // exit={{ opacity: 0, x: -10 }}
       className="grid grid-cols-1 md:grid-cols-12 items-center gap-4 py-6 border-b border-neutral-200 group"
     >
       {/* Product Column */}
@@ -186,9 +186,9 @@ export default function WishlistPage() {
       <div className="container mx-auto px-4 pt-12 max-w-6xl">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-4xl font-light tracking-tight text-neutral-900">
+            <p className="text-4xl font-light tracking-tight text-neutral-900">
               {wishlistUi.page.title}
-            </h1>
+            </p>
             <p className="text-neutral-500 text-sm mt-2">
               {isHydrated ? (
                 buildWishlistCountSummary(wishlistCount)
@@ -233,7 +233,7 @@ export default function WishlistPage() {
 
             {/* List */}
             <div className="flex flex-col">
-              <AnimatePresence mode="popLayout">
+              {/* <AnimatePresence mode="popLayout"> */}
                 {wishlist.map((item) => (
                   <WishlistItemRow
                     key={item.id}
@@ -242,7 +242,7 @@ export default function WishlistPage() {
                     onAddToCart={handleAddToCart}
                   />
                 ))}
-              </AnimatePresence>
+              {/* </AnimatePresence> */}
             </div>
 
             {/* Footer Actions */}

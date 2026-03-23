@@ -16,7 +16,12 @@ import { IconBlack, WearWine } from 'assets'
 import { useAuth } from '@/providers/auth'
 import { AuthModal } from './AuthModal'
 import { LogOut, User as UserIcon, Package } from 'lucide-react'
-import { buildCartAriaLabel, buildSearchCountLabel, buildWishlistAriaLabel, headerUi } from '@/data/ui'
+import {
+  buildCartAriaLabel,
+  buildSearchCountLabel,
+  buildWishlistAriaLabel,
+  headerUi,
+} from '@/data/ui'
 
 interface HeaderProps {
   categories?: CategoryNavItem[]
@@ -105,19 +110,20 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
     setIsSearching(true)
     const lowerQuery = debouncedQuery.toLowerCase()
-    
+
     // Simulate a tiny delay for UI realism before filtering locally
     setTimeout(() => {
-      const results = products.filter(
-        (p) => 
-          p.name.toLowerCase().includes(lowerQuery) || 
-          p.category.name.toLowerCase().includes(lowerQuery)
-      ).slice(0, 5) // Limit to 5 results like the API did
-      
+      const results = products
+        .filter(
+          (p) =>
+            p.name.toLowerCase().includes(lowerQuery) ||
+            p.category.name.toLowerCase().includes(lowerQuery),
+        )
+        .slice(0, 5) // Limit to 5 results like the API did
+
       setSearchResults(results)
       setIsSearching(false)
     }, 300)
-
   }, [debouncedQuery])
 
   const closeMenu = () => {
@@ -168,11 +174,11 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               <motion.div
                 key={isLogoHovered ? 'hover' : 'rest'}
                 className="flex-shrink-0 flex items-center justify-center"
-                initial={isLogoHovered ? { scale: 0.08 } : false}
-                animate={{ scale: 1 }}
-                transition={
-                  isLogoHovered ? { type: 'spring', stiffness: 1000, damping: 40 } : { duration: 0 }
-                }
+                // initial={isLogoHovered ? { scale: 0.08 } : false}
+                // animate={{ scale: 1 }}
+                // transition={
+                //   isLogoHovered ? { type: 'spring', stiffness: 1000, damping: 40 } : { duration: 0 }
+                // }
                 onAnimationComplete={() => {
                   if (isLogoHovered) setWordmarkVisible(true)
                 }}
@@ -187,27 +193,27 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 />
               </motion.div>
 
-              <AnimatePresence>
-                {wordmarkVisible && (
-                  <motion.div
-                    key="wordmark"
-                    className="overflow-hidden"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ type: 'spring', stiffness: 1500, damping: 40 }}
-                  >
-                    <Image
-                      src={WearWine}
-                      alt={headerUi.brand.wordmarkAlt}
-                      width={100}
-                      height={50}
-                      className="w-auto object-contain"
-                      priority
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* <AnimatePresence> */}
+              {wordmarkVisible && (
+                <motion.div
+                  key="wordmark"
+                  className="overflow-hidden"
+                  // initial={{ opacity: 0, x: -20 }}
+                  // animate={{ opacity: 1, x: 0 }}
+                  // exit={{ opacity: 0, x: -20 }}
+                  // transition={{ type: 'spring', stiffness: 1500, damping: 40 }}
+                >
+                  <Image
+                    src={WearWine}
+                    alt={headerUi.brand.wordmarkAlt}
+                    width={100}
+                    height={50}
+                    className="w-auto object-contain"
+                    priority
+                  />
+                </motion.div>
+              )}
+              {/* </AnimatePresence> */}
             </Link>
 
             {/* Desktop nav */}
@@ -276,62 +282,62 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 </button>
 
                 {/* Desktop Account Dropdown */}
-                <AnimatePresence>
-                  {user && isAccountDropdownOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-[-1]"
+                {/* <AnimatePresence> */}
+                {user && isAccountDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-[-1]"
+                      onClick={() => setIsAccountDropdownOpen(false)}
+                    />
+                    <motion.div
+                      // initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      // animate={{ opacity: 1, y: 0, scale: 1 }}
+                      // exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
+                    >
+                      <div className="px-4 py-3 border-b border-secondary/5 mb-2">
+                        <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
+                          {headerUi.aria.signedInAs}
+                        </p>
+                        <p className="text-sm font-bold text-text truncate">
+                          {(user as { name?: string; email?: string }).name || user.email}
+                        </p>
+                      </div>
+
+                      <Link
+                        href="/account"
                         onClick={() => setIsAccountDropdownOpen(false)}
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
                       >
-                        <div className="px-4 py-3 border-b border-secondary/5 mb-2">
-                          <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
-                            {headerUi.aria.signedInAs}
-                          </p>
-                          <p className="text-sm font-bold text-text truncate">
-                            {(user as { name?: string; email?: string }).name || user.email}
-                          </p>
-                        </div>
+                        <UserIcon className="w-4 h-4" />
+                        {headerUi.account.myProfile}
+                      </Link>
 
-                        <Link
-                          href="/account"
-                          onClick={() => setIsAccountDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
-                        >
-                          <UserIcon className="w-4 h-4" />
-                          {headerUi.account.myProfile}
-                        </Link>
+                      <Link
+                        href="/account/orders"
+                        onClick={() => setIsAccountDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
+                      >
+                        <Package className="w-4 h-4" />
+                        {headerUi.account.myOrders}
+                      </Link>
 
-                        <Link
-                          href="/account/orders"
-                          onClick={() => setIsAccountDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
-                        >
-                          <Package className="w-4 h-4" />
-                          {headerUi.account.myOrders}
-                        </Link>
+                      <div className="h-px bg-secondary/5 my-2" />
 
-                        <div className="h-px bg-secondary/5 my-2" />
-
-                        <button
-                          onClick={() => {
-                            logout()
-                            setIsAccountDropdownOpen(false)
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50 transition-colors"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          {headerUi.account.signOut}
-                        </button>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
+                      <button
+                        onClick={() => {
+                          logout()
+                          setIsAccountDropdownOpen(false)
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        {headerUi.account.signOut}
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+                {/* </AnimatePresence> */}
               </div>
 
               <Link

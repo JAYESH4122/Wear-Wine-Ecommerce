@@ -42,8 +42,8 @@ export default function ProfilePage() {
 
   const sidebar = (
     <motion.aside
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      // initial={{ opacity: 0, x: -20 }}
+      // animate={{ opacity: 1, x: 0 }}
       className="w-full md:w-64 shrink-0"
     >
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 sticky top-24">
@@ -96,9 +96,9 @@ export default function ProfilePage() {
 
       {/* Main Content */}
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
+        // variants={containerVariants}
+        // initial="hidden"
+        // animate="show"
         className="flex-1 space-y-6"
       >
         {!isHydrated || isLoading || !user ? (
@@ -113,7 +113,7 @@ export default function ProfilePage() {
         ) : (
           <>
             <motion.div
-              variants={itemVariants}
+              // variants={itemVariants}
               className="bg-white rounded-2xl p-8 shadow-sm border border-neutral-100 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
@@ -162,7 +162,7 @@ export default function ProfilePage() {
             </motion.div>
 
             <motion.div
-              variants={itemVariants}
+              // variants={itemVariants}
               className="bg-white rounded-2xl p-8 shadow-sm border border-neutral-100"
             >
               <h2 className="text-lg font-bold tracking-tight mb-2">

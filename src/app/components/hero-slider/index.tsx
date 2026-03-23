@@ -36,26 +36,26 @@ const HeroSlide = ({
       }
     }
 
-    const ticker = () => {
-      const t = target.current
-      const c = current.current
-      c.x += (t.x - c.x) * 0.055
-      c.y += (t.y - c.y) * 0.055
+    // const ticker = () => {
+    //   const t = target.current
+    //   const c = current.current
+    //   c.x += (t.x - c.x) * 0.055
+    //   c.y += (t.y - c.y) * 0.055
 
-      if (bgRef.current) {
-        gsap.set(bgRef.current, {
-          x: c.x * 13,
-          y: c.y * 8,
-          scale: isActive ? 1 : 1.06,
-        })
-      }
-    }
+    //   if (bgRef.current) {
+    //     gsap.set(bgRef.current, {
+    //       x: c.x * 13,
+    //       y: c.y * 8,
+    //       scale: isActive ? 1 : 1.06,
+    //     })
+    //   }
+    // }
 
-    gsap.ticker.add(ticker)
+    // gsap.ticker.add(ticker)
     container.addEventListener('mousemove', onMove)
 
     return () => {
-      gsap.ticker.remove(ticker)
+      // gsap.ticker.remove(ticker)
       container.removeEventListener('mousemove', onMove)
     }
   }, [isActive])
@@ -65,20 +65,20 @@ const HeroSlide = ({
     const els = textRef.current.querySelectorAll('[data-animate]')
 
     if (isActive) {
-      gsap.fromTo(
-        els,
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1,
-          stagger: 0.1,
-          ease: 'power3.out',
-          delay: 0.3,
-        }
-      )
+      // gsap.fromTo(
+      //   els,
+      //   { y: 40, opacity: 0 },
+      //   {
+      //     y: 0,
+      //     opacity: 1,
+      //     duration: 1,
+      //     stagger: 0.1,
+      //     ease: 'power3.out',
+      //     delay: 0.3,
+      //   }
+      // )
     } else {
-      gsap.set(els, { y: 40, opacity: 0 })
+      // gsap.set(els, { y: 40, opacity: 0 })
     }
   }, [isActive])
 
@@ -154,21 +154,21 @@ export const HeroSlider = ({ slides }: HeroSliderProps) => {
   useEffect(() => {
     if (!progressRef.current) return
     
-    if (progressTween.current) {
-      progressTween.current.kill()
-    }
+    // if (progressTween.current) {
+    //   progressTween.current.kill()
+    // }
     
-    gsap.set(progressRef.current, { width: '0%' })
-    progressTween.current = gsap.to(progressRef.current, { 
-      width: '100%', 
-      duration: 5, 
-      ease: 'none' 
-    })
+    // gsap.set(progressRef.current, { width: '0%' })
+    // progressTween.current = gsap.to(progressRef.current, { 
+    //   width: '100%', 
+    //   duration: 5, 
+    //   ease: 'none' 
+    // })
 
     return () => {
-      if (progressTween.current) {
-        progressTween.current.kill()
-      }
+      // if (progressTween.current) {
+      //   progressTween.current.kill()
+      // }
     }
   }, [activeIndex])
 

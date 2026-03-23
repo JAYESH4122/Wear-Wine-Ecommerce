@@ -117,7 +117,7 @@ export const ProductCard = ({
 
   return (
     <div
-      className="group relative bg-white rounded-none overflow-hidden transition-all duration-500 hover:shadow-sm hover:-translate-y-2 border border-gray-100"
+      className="group relative bg-white rounded-none overflow-hidden /* transition-all duration-500 hover:shadow-sm hover:-translate-y-2 */ border border-gray-100"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -129,7 +129,7 @@ export const ProductCard = ({
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={clsx(
-              'object-cover transition-all duration-700 ease-out',
+              'object-cover /* transition-all duration-700 ease-out */',
               hoverImage && isHovered ? 'opacity-0 scale-110' : 'opacity-100 scale-100',
             )}
             priority={false}
@@ -142,7 +142,7 @@ export const ProductCard = ({
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={clsx(
-                'object-cover transition-all duration-700 ease-out',
+                'object-cover /* transition-all duration-700 ease-out */',
                 isHovered ? 'opacity-100 scale-110' : 'opacity-0 scale-100',
               )}
             />
@@ -150,7 +150,7 @@ export const ProductCard = ({
 
           <div
             className={clsx(
-              'absolute inset-0 bg-black/5 transition-opacity duration-500',
+              'absolute inset-0 bg-black/5 /* transition-opacity duration-500 */',
               isHovered ? 'opacity-100' : 'opacity-0',
             )}
           />
@@ -179,7 +179,7 @@ export const ProductCard = ({
 
           <div
             className={clsx(
-              'absolute right-4 top-4 flex flex-col gap-2 transition-all duration-500 z-10',
+              'absolute right-4 top-4 flex flex-col gap-2 /* transition-all duration-500 */ z-10',
               isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4',
             )}
           >
@@ -217,7 +217,7 @@ export const ProductCard = ({
 
           <div
             className={clsx(
-              'absolute bottom-4 left-4 right-4 transition-all duration-500 z-10',
+              'absolute bottom-4 left-4 right-4 /* transition-all duration-500 */ z-10',
               isAddedToCart || (isHovered && !isInCart)
                 ? 'opacity-100 translate-y-0'
                 : 'opacity-0 translate-y-4 pointer-events-none',
@@ -240,7 +240,7 @@ export const ProductCard = ({
 
               {isAddedToCart || isInCart ? (
                 <>
-                  <Check className="w-4 h-4 animate-bounce" />
+                  <Check className="w-4 h-4 /* animate-bounce */" />
                   Added
                 </>
               ) : (
@@ -308,17 +308,15 @@ export const ProductCard = ({
                         />
                       </div>
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">
-                      {stockLeft} left
-                    </span>
+                    <span className="text-xs text-gray-500 font-medium">{stockLeft} left</span>
                   </div>
                 )}
 
                 {isHovered && (
-                  <div className="flex items-center gap-1.5 text-xs text-gray-600 animate-fadeIn group/shipping">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-600 /* animate-fadeIn */ group/shipping">
                     <Truck
                       className={clsx(
-                        'w-3.5 h-3.5 transition-all duration-300',
+                        'w-3.5 h-3.5 /* transition-all duration-300 */',
                         isHovered && 'translate-x-0.5 -translate-y-0.5',
                       )}
                     />
@@ -344,7 +342,7 @@ export const ProductCard = ({
                   )}
                 />
                 {isInStock && (
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 animate-ping opacity-75 group-hover/status:animate-none" />
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 /* animate-ping */ opacity-75 group-hover/status:animate-none" />
                 )}
               </span>
               <span
