@@ -34,19 +34,6 @@ const BREAKPOINTS = {
   1280: { slidesPerView: 4, spaceBetween: 24 },
 }
 
-const fadeUpVariant = {
-  hidden: { opacity: 0, y: -10 },
-  visible: (delay = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
-      delay,
-    },
-  }),
-}
-
 const ToggleButton = ({
   active,
   onClick,
@@ -160,12 +147,10 @@ export const ProductListSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <motion.div
-          className="flex flex-col md:flex-row md:items-end justify-between lg:mb-8 mb-4 gap-6"
-          variants={fadeUpVariant}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: '-80px' }}
-          custom={0}
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="max-w-2xl"
         >
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
@@ -189,14 +174,7 @@ export const ProductListSection = () => {
         </motion.div>
 
         {/* Controls */}
-        <motion.div
-          className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200"
-          variants={fadeUpVariant}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: '-80px' }}
-          custom={0.15}
-        >
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200">
           <LayoutGroup>
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
               {categories.map((cat) => (
@@ -274,42 +252,24 @@ export const ProductListSection = () => {
               />
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Content */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="aspect-[3/4] bg-neutral-100 animate-pulse"
-                variants={fadeUpVariant}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: false, margin: '-60px' }}
-                custom={i * 0.1}
-              />
+              <motion.div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse" />
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
-          <motion.div
-            className="relative"
-            variants={fadeUpVariant}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: false, margin: '-80px' }}
-            custom={0.2}
-          >
+          <div className="relative">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${selectedCategory}-${viewMode}`}
-                initial={{ opacity: 0, y: -100 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -40 }}
-                transition={{
-                  duration: 0.5,
-                  ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
-                }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.3 }}
               >
                 <ArrowSlider
                   swiperRef={swiperRef}
@@ -347,14 +307,7 @@ export const ProductListSection = () => {
                 />
 
                 {/* Line pagination */}
-                <motion.div
-                  className="flex gap-2 items-center justify-center mt-8"
-                  variants={fadeUpVariant}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: false }}
-                  custom={0.3}
-                >
+                <div className="flex gap-2 items-center justify-center mt-8">
                   {Array.from({ length: totalSlides }).map((_, i) => (
                     <button
                       key={i}
@@ -368,25 +321,18 @@ export const ProductListSection = () => {
                       aria-label={`Go to slide ${i + 1}`}
                     />
                   ))}
-                </motion.div>
+                </div>
               </motion.div>
             </AnimatePresence>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            className="py-10 lg:py-20 text-center"
-            variants={fadeUpVariant}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: false }}
-            custom={0}
-          >
+          <div className="py-20 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 mb-4">
               <X className="w-6 h-6 text-neutral-400" />
             </div>
             <h3 className="text-lg font-medium">No products found</h3>
             <p className="text-neutral-500">Try adjusting your filters.</p>
-          </motion.div>
+          </div>
         )}
       </div>
     </section>
