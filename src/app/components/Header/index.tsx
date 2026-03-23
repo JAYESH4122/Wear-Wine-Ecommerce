@@ -183,7 +183,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   alt=""
                   width={30}
                   height={30}
-                  className="object-contain !w-3 !h-3 lg:!w-10 lg:!h-10"
+                  className="object-contain !w-3 !h-3 lg:!w-5 lg:!h-5"
                   priority
                 />
               </motion.div>
@@ -203,7 +203,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                       alt="Wear Wine"
                       width={120}
                       height={50}
-                      className="w-auto object-contain w-20! h-3! lg:w-40! lg:h-10!"
+                      className="w-auto object-contain w-20! h-3! lg:w-30! lg:h-5!"
                       priority
                     />
                   </motion.div>
