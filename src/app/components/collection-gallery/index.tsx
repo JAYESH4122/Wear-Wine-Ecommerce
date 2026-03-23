@@ -46,10 +46,10 @@ const defaultImages: GalleryImage[] = [
 const ImageCard = ({ image, index }: { image: GalleryImage; index: number }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      // initial={{ opacity: 0, y: 16 }}
+      // whileInView={{ opacity: 1, y: 0 }}
+      // viewport={{ once: true }}
+      // transition={{ duration: 0.5, delay: index * 0.1 }}
       className={`group relative bg-neutral-50 overflow-hidden cursor-pointer ${image.gridClass}`}
     >
       {/* Image */}
@@ -88,16 +88,16 @@ export const CollectionGallery = ({ images = defaultImages }) => {
         <header className="mb-8 md:mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
             <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              // initial={{ opacity: 0, y: 10 }}
+              // animate={{ opacity: 1, y: 0 }}
               className="text-xs font-medium tracking-wider uppercase text-neutral-500 mb-3"
             >
               Selected Works
             </motion.p>
             <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              // initial={{ opacity: 0, y: 10 }}
+              // animate={{ opacity: 1, y: 0 }}
+              // transition={{ delay: 0.1 }}
               className="text-4xl md:text-5xl font-light tracking-tight text-neutral-900"
             >
               Premium Collection

@@ -94,15 +94,15 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
               <motion.div
                 key={i}
                 initial={false}
-                animate={{
-                  x: xSpread,
-                  z: -abs * 200,
-                  rotateY: rel * -10,
-                  scale: 1 - abs * 0.08,
-                  opacity: abs > 2 ? 0 : 1,
-                  filter: `blur(${abs * CONSTANTS.BLUR_INTENSITY}px) brightness(${1 - abs * 0.1})`,
-                }}
-                transition={{ type: 'spring', ...SPRING }}
+                // animate={{
+                //   x: xSpread,
+                //   z: -abs * 200,
+                //   rotateY: rel * -10,
+                //   scale: 1 - abs * 0.08,
+                //   opacity: abs > 2 ? 0 : 1,
+                //   filter: `blur(${abs * CONSTANTS.BLUR_INTENSITY}px) brightness(${1 - abs * 0.1})`,
+                // }}
+                // transition={{ type: 'spring', ...SPRING }}
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
                 className={cn(
@@ -114,21 +114,28 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
                   height: isMobile ? CONSTANTS.CARD_HEIGHT_MOBILE : CONSTANTS.CARD_HEIGHT_DESKTOP,
                   borderRadius: CONSTANTS.BORDER_RADIUS,
                   backfaceVisibility: 'hidden',
+                  // Static positioning for disabled animation
+                  transform: `translateX(${xSpread}px) translateZ(${-abs * 200}px) rotateY(${rel * -10}deg) scale(${1 - abs * 0.08})`,
+                  opacity: abs > 2 ? 0 : 1,
+                  filter: `blur(${abs * CONSTANTS.BLUR_INTENSITY}px) brightness(${1 - abs * 0.1})`,
                 }}
               >
                 <motion.img
                   src={card.src}
-                  animate={{ scale: hovered === i ? 1.05 : 1 }}
-                  transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+                  // animate={{ scale: hovered === i ? 1.05 : 1 }}
+                  // transition={{ type: 'spring', stiffness: 100, damping: 20 }}
                   className="w-full h-full object-cover"
+                  style={{
+                    transform: hovered === i ? 'scale(1.05)' : 'scale(1)'
+                  }}
                 />
 
-                <AnimatePresence>
+                {/* <AnimatePresence> */}
                   {isCenter && (
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
+                      // initial={{ opacity: 0 }}
+                      // animate={{ opacity: 1 }}
+                      // exit={{ opacity: 0 }}
                       className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white"
                     >
                       <p className="text-[12px] font-mono tracking-widest text-black md:text-white">
@@ -137,7 +144,7 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
                       </p>
                     </motion.div>
                   )}
-                </AnimatePresence>
+                {/* </AnimatePresence> */}
               </motion.div>
             )
           })}

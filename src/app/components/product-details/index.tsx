@@ -26,29 +26,29 @@ import type { Product, Media, Color, Size } from '@/payload-types'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 
-gsap.registerPlugin(useGSAP)
+// gsap.registerPlugin(useGSAP)
 
 interface ProductDetailsProps {
   product: Product
   relatedProducts?: Product[]
 }
 
-// ─── Terms Modal Component ──────────────────────────────────────────
 const TermsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => (
-  <AnimatePresence>
+  <>
+    {/* <AnimatePresence> */}
     {isOpen && (
       <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          // initial={{ opacity: 0 }}
+          // animate={{ opacity: 1 }}
+          // exit={{ opacity: 0 }}
           className="absolute inset-0 bg-black/60 backdrop-blur-md"
           onClick={onClose}
         />
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          // initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          // animate={{ opacity: 1, scale: 1, y: 0 }}
+          // exit={{ opacity: 0, scale: 0.9, y: 20 }}
           className="relative z-10 w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl"
         >
           <div className="p-6 border-b border-neutral-100 flex items-center justify-between">
@@ -88,7 +88,8 @@ const TermsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
         </motion.div>
       </div>
     )}
-  </AnimatePresence>
+    {/* </AnimatePresence> */}
+  </>
 )
 
 export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, relatedProducts }) => {
@@ -112,19 +113,19 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
     ? Math.round(((product.price - product.salePrice!) / product.price) * 100)
     : 0
 
-  useGSAP(
-    () => {
-      const tl = gsap.timeline({ defaults: { ease: 'expo.out', duration: 1.5 } })
-      tl.from('.product-image-container', {
-        clipPath: 'inset(100% 0% 0% 0%)',
-        scale: 1.1,
-        opacity: 0,
-        y: 80,
-        stagger: 0.1,
-      }).from('.info-panel-item', { y: 30, opacity: 0, stagger: 0.07 }, '-=1.2')
-    },
-    { scope: container },
-  )
+  // useGSAP(
+  //   () => {
+  //     const tl = gsap.timeline({ defaults: { ease: 'expo.out', duration: 1.5 } })
+  //     tl.from('.product-image-container', {
+  //       clipPath: 'inset(100% 0% 0% 0%)',
+  //       scale: 1.1,
+  //       opacity: 0,
+  //       y: 80,
+  //       stagger: 0.1,
+  //     }).from('.info-panel-item', { y: 30, opacity: 0, stagger: 0.07 }, '-=1.2')
+  //   },
+  //   { scope: container },
+  // )
 
   const allImages = useMemo(
     () => product.images?.map((item) => item.image as Media).filter(Boolean) ?? [],
@@ -336,9 +337,9 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                 <AnimatePresence>
                   {showError && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
+                      // initial={{ opacity: 0, y: -10 }}
+                      // animate={{ opacity: 1, y: 0 }}
+                      // exit={{ opacity: 0 }}
                       className="mt-3 flex items-center gap-2 text-rose-600"
                     >
                       <AlertCircle className="w-4 h-4" />
@@ -426,12 +427,12 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                         )}
                       />
                     </button>
-                    <AnimatePresence>
+                    {/* <AnimatePresence> */}
                       {openAccordion === item.id && (
                         <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
+                          // initial={{ height: 0, opacity: 0 }}
+                          // animate={{ height: 'auto', opacity: 1 }}
+                          // exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
                           <p className="pb-5 text-[15px] text-neutral-500 leading-relaxed">
@@ -439,7 +440,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                           </p>
                         </motion.div>
                       )}
-                    </AnimatePresence>
+                    {/* </AnimatePresence> */}
                   </div>
                 ))}
               </div>
@@ -494,20 +495,20 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
       {/* Modals */}
       <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
 
-      <AnimatePresence>
+      {/* <AnimatePresence> */}
         {showSizeChart && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              // initial={{ opacity: 0 }}
+              // animate={{ opacity: 1 }}
+              // exit={{ opacity: 0 }}
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
               onClick={() => setShowSizeChart(false)}
             />
             <motion.div
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 50, opacity: 0 }}
+              // initial={{ y: 50, opacity: 0 }}
+              // animate={{ y: 0, opacity: 1 }}
+              // exit={{ y: 50, opacity: 0 }}
               className="relative bg-white p-10 max-w-md w-full shadow-2xl rounded-2xl"
             >
               <button
@@ -532,7 +533,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      {/* </AnimatePresence> */}
     </div>
   )
 }

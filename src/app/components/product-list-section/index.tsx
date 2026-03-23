@@ -146,11 +146,8 @@ export const ProductListSection = () => {
     <section className="relative py-20 bg-background overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="max-w-2xl"
+        <div
+          className="flex flex-row items-end justify-between lg:mb-8 mb-4 gap-6"
         >
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
@@ -171,11 +168,11 @@ export const ProductListSection = () => {
             View All Products
             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
-        </motion.div>
+        </div>
 
         {/* Controls */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200">
-          <LayoutGroup>
+          {/* <LayoutGroup> */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
               {categories.map((cat) => (
                 <button
@@ -189,17 +186,17 @@ export const ProductListSection = () => {
                   )}
                 >
                   {selectedCategory === cat.id && (
-                    <motion.div
-                      layoutId="active-category"
+                    <div
+                      // layoutId="active-category"
                       className="absolute inset-0 bg-neutral-900"
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                      // transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2">{cat.name}</span>
                 </button>
               ))}
             </div>
-          </LayoutGroup>
+          {/* </LayoutGroup> */}
 
           <div className="flex items-center gap-4">
             <span className="text-sm text-neutral-400 tracking-wider tabular-nums">
@@ -254,76 +251,67 @@ export const ProductListSection = () => {
           </div>
         </div>
 
-        {/* Content */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <motion.div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse" />
+              <div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse" />
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
           <div className="relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${selectedCategory}-${viewMode}`}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ArrowSlider
-                  swiperRef={swiperRef}
-                  renderItem={filteredProducts.map((product) => ({
-                    key: product.id,
-                    element:
-                      viewMode === 'detailed' ? (
-                        <div>
-                          <ProductCard {...product} />
-                        </div>
-                      ) : (
-                        <div className="group relative aspect-square bg-neutral-100 overflow-hidden cursor-pointer">
-                          <NextImage
-                            src={product.image}
-                            alt={product.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                          {product.badge && (
-                            <span className="absolute left-4 top-4 px-3 py-1.5 bg-white text-neutral-900 text-xs font-medium">
-                              {product.badge}
-                            </span>
-                          )}
-                        </div>
-                      ),
-                  }))}
-                  slidesPerView={1}
-                  spaceBetween={16}
-                  breakpoints={BREAKPOINTS}
-                  speed={600}
-                  autoplay={{ delay: 5000, disableOnInteraction: true }}
-                  showPagination={false}
-                  onSlideChange={handleSlideChange}
-                />
+            <div key={`${selectedCategory}-${viewMode}`}>
+              <ArrowSlider
+                swiperRef={swiperRef}
+                renderItem={filteredProducts.map((product) => ({
+                  key: product.id,
+                  element:
+                    viewMode === 'detailed' ? (
+                      <div>
+                        <ProductCard {...product} />
+                      </div>
+                    ) : (
+                      <div className="group relative aspect-square bg-neutral-100 overflow-hidden cursor-pointer">
+                        <NextImage
+                          src={product.image}
+                          alt={product.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        {product.badge && (
+                          <span className="absolute left-4 top-4 px-3 py-1.5 bg-white text-neutral-900 text-xs font-medium">
+                            {product.badge}
+                          </span>
+                        )}
+                      </div>
+                    ),
+                }))}
+                slidesPerView={1}
+                spaceBetween={16}
+                breakpoints={BREAKPOINTS}
+                speed={600}
+                autoplay={{ delay: 5000, disableOnInteraction: true }}
+                showPagination={false}
+                onSlideChange={handleSlideChange}
+              />
 
-                {/* Line pagination */}
-                <div className="flex gap-2 items-center justify-center mt-8">
-                  {Array.from({ length: totalSlides }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => goToSlide(i)}
-                      className={cn(
-                        'h-px transition-all duration-300 cursor-pointer',
-                        i === activeIndex
-                          ? 'w-10 bg-neutral-800'
-                          : 'w-5 bg-neutral-300 hover:bg-neutral-500',
-                      )}
-                      aria-label={`Go to slide ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+              {/* Line pagination */}
+              <div className="flex gap-2 items-center justify-center mt-8">
+                {Array.from({ length: totalSlides }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goToSlide(i)}
+                    className={cn(
+                      'h-px transition-all duration-300 cursor-pointer',
+                      i === activeIndex
+                        ? 'w-10 bg-neutral-800'
+                        : 'w-5 bg-neutral-300 hover:bg-neutral-500',
+                    )}
+                    aria-label={`Go to slide ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="py-20 text-center">

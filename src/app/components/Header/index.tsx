@@ -13,7 +13,8 @@ import Image from 'next/image'
 import { IconBlack, WearWine } from 'assets'
 import { useAuth } from '@/providers/auth'
 import { AuthModal } from './AuthModal'
-import { LogOut, User as UserIcon, Settings, Package } from 'lucide-react'
+import { LogOut, User as UserIcon, Package } from 'lucide-react'
+
 
 interface HeaderProps {
   categories?: CategoryItem[]
@@ -103,6 +104,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
       return
     }
 
+
     const fetchResults = async () => {
       setIsSearching(true)
       try {
@@ -169,11 +171,11 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               <motion.div
                 key={isLogoHovered ? 'hover' : 'rest'}
                 className="flex-shrink-0 flex items-center justify-center"
-                initial={isLogoHovered ? { scale: 0.08 } : false}
-                animate={{ scale: 1 }}
-                transition={
-                  isLogoHovered ? { type: 'spring', stiffness: 1000, damping: 40 } : { duration: 0 }
-                }
+                // initial={isLogoHovered ? { scale: 0.08 } : false}
+                // animate={{ scale: 1 }}
+                // transition={
+                //   isLogoHovered ? { type: 'spring', stiffness: 1000, damping: 40 } : { duration: 0 }
+                // }
                 onAnimationComplete={() => {
                   if (isLogoHovered) setWordmarkVisible(true)
                 }}
@@ -201,9 +203,9 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                     <Image
                       src={WearWine}
                       alt="Wear Wine"
-                      width={120}
+                      width={100}
                       height={50}
-                      className="w-auto object-contain w-20! h-3! lg:w-30! lg:h-5!"
+                      className="w-auto object-contain"
                       priority
                     />
                   </motion.div>
@@ -277,20 +279,20 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 </button>
 
                 {/* Desktop Account Dropdown */}
-                <AnimatePresence>
-                  {user && isAccountDropdownOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-[-1]"
-                        onClick={() => setIsAccountDropdownOpen(false)}
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
-                      >
-                        <div className="px-4 py-3 border-b border-secondary/5 mb-2">
+                {/* <AnimatePresence> */}
+                {user && isAccountDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-[-1]"
+                      onClick={() => setIsAccountDropdownOpen(false)}
+                    />
+                    <motion.div
+                      // initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      // animate={{ opacity: 1, y: 0, scale: 1 }}
+                      // exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
+                    >
+                         <div className="px-4 py-3 border-b border-secondary/5 mb-2">
                           <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
                             Signed in as
                           </p>
@@ -299,7 +301,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                           </p>
                         </div>
 
-                        <Link
+                         <Link
                           href="/account"
                           onClick={() => setIsAccountDropdownOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
@@ -308,7 +310,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                           My Profile
                         </Link>
 
-                        <Link
+                    <Link
                           href="/account/orders"
                           onClick={() => setIsAccountDropdownOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
@@ -317,22 +319,22 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                           My Orders
                         </Link>
 
-                        <div className="h-px bg-secondary/5 my-2" />
+                      <div className="h-px bg-secondary/5 my-2" />
 
-                        <button
-                          onClick={() => {
-                            logout()
-                            setIsAccountDropdownOpen(false)
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50 transition-colors"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Sign Out
-                        </button>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
+                      <button
+                        onClick={() => {
+                          logout()
+                          setIsAccountDropdownOpen(false)
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+                {/* </AnimatePresence> */}
               </div>
 
               <Link

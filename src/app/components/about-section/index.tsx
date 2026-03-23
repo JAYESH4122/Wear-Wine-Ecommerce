@@ -55,20 +55,20 @@ export const AboutSection = () => {
         {/* Header */}
         <div className="max-w-3xl mb-16 md:mb-20">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
+            // initial={{ opacity: 0, y: 20 }}
+            // whileInView={{ opacity: 1, y: 0 }}
+            // viewport={{ once: true }}
+            // transition={{ duration: 0.5 }}
             className="flex items-center gap-4 mb-8"
           >
             <span className="text-xs font-medium tracking-[0.2em] uppercase text-[#52575b]">
               About Us
             </span>
             <motion.span
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              // initial={{ scaleX: 0 }}
+              // whileInView={{ scaleX: 1 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.6, delay: 0.2 }}
               className="flex-1 h-px origin-left"
               style={{
                 background: `linear-gradient(90deg, #52575b40, transparent)`,
@@ -77,28 +77,28 @@ export const AboutSection = () => {
           </motion.div>
 
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            // initial={{ opacity: 0, y: 30 }}
+            // whileInView={{ opacity: 1, y: 0 }}
+            // viewport={{ once: true }}
+            // transition={{ duration: 0.6, delay: 0.1 }}
             className="text-[2.5rem] md:text-[3.5rem] lg:text-[4rem] font-light tracking-tight leading-[1.1] mb-6 text-[#171717]"
           >
             Crafted for the
             <br />
             <motion.span
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              // initial={{ opacity: 0, x: -20 }}
+              // whileInView={{ opacity: 1, x: 0 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.6, delay: 0.3 }}
               className="relative inline-block italic text-[#52575b]"
             >
               Modern Wardrobe
               <motion.span
                 className="absolute -bottom-2 left-0 w-full h-px"
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: 0.5 }}
+                // initial={{ scaleX: 0 }}
+                // whileInView={{ scaleX: 1 }}
+                // viewport={{ once: true }}
+                // transition={{ duration: 0.8, delay: 0.5 }}
                 style={{
                   background: `linear-gradient(90deg, #52575b80, transparent)`,
                 }}
@@ -107,10 +107,10 @@ export const AboutSection = () => {
           </motion.h2>
 
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            // initial={{ opacity: 0, y: 20 }}
+            // whileInView={{ opacity: 1, y: 0 }}
+            // viewport={{ once: true }}
+            // transition={{ duration: 0.5, delay: 0.2 }}
             className="text-base md:text-lg max-w-xl leading-relaxed text-[#52575b]"
           >
             We believe in the power of understated elegance. Each piece in our collection is
@@ -122,10 +122,10 @@ export const AboutSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 mb-16 md:mb-20">
           {/* Image */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            // initial={{ opacity: 0, x: -30 }}
+            // whileInView={{ opacity: 1, x: 0 }}
+            // viewport={{ once: true }}
+            // transition={{ duration: 0.6 }}
             className="group relative aspect-[4/5] overflow-hidden"
             style={{
               background: `linear-gradient(135deg, #1d1b1b20, #05091430)`,
@@ -134,10 +134,10 @@ export const AboutSection = () => {
             {/* Animated gradient overlay */}
             <motion.div
               className="absolute inset-0"
-              initial={{ opacity: 0, x: '-100%' }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
+              // initial={{ opacity: 0, x: '-100%' }}
+              // whileInView={{ opacity: 1, x: 0 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.8 }}
               style={{
                 background: `linear-gradient(45deg, #05091440, transparent)`,
               }}
@@ -163,10 +163,10 @@ export const AboutSection = () => {
 
             {/* Overlay text */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              // initial={{ opacity: 0, y: 20 }}
+              // whileInView={{ opacity: 1, y: 0 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.5, delay: 0.3 }}
               className="absolute bottom-0 left-0 right-0 p-8"
               style={{
                 background: `linear-gradient(to top, #050914CC, #05091480, transparent)`,
@@ -196,10 +196,10 @@ export const AboutSection = () => {
           {/* Values */}
           <div className="flex flex-col justify-center">
             <motion.span
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
+              // initial={{ opacity: 0 }}
+              // whileInView={{ opacity: 1 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.4 }}
               className="text-xs font-medium tracking-[0.2em] uppercase mb-8 text-[#52575b]"
             >
               Our Values
@@ -209,10 +209,10 @@ export const AboutSection = () => {
               {values.map((item, idx) => (
                 <motion.div
                   key={item.number}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  // initial={{ opacity: 0, y: 20 }}
+                  // whileInView={{ opacity: 1, y: 0 }}
+                  // viewport={{ once: true }}
+                  // transition={{ duration: 0.5, delay: idx * 0.1 }}
                   className="group relative py-8 border-b first:border-t cursor-pointer overflow-hidden"
                   style={{ borderColor: `#52575b20` }}
                 >
@@ -302,10 +302,10 @@ export const AboutSection = () => {
 
         {/* Stats */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          // initial={{ opacity: 0, y: 30 }}
+          // whileInView={{ opacity: 1, y: 0 }}
+          // viewport={{ once: true }}
+          // transition={{ duration: 0.6 }}
           className="grid grid-cols-2 lg:grid-cols-4 gap-px"
           style={{
             background: `linear-gradient(90deg, #52575b30, #05091440, #52575b30)`,
@@ -314,11 +314,11 @@ export const AboutSection = () => {
           {stats.map((stat, idx) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              whileHover={{ y: -5 }}
+              // initial={{ opacity: 0, y: 20 }}
+              // whileInView={{ opacity: 1, y: 0 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.5, delay: idx * 0.1 }}
+              // whileHover={{ y: -5 }}
               className="group relative p-8 md:p-10 text-center overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, #ffffff, #ffffffE6)`,
@@ -366,10 +366,10 @@ export const AboutSection = () => {
 
         {/* Bottom decorative line */}
         <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          // initial={{ scaleX: 0 }}
+          // whileInView={{ scaleX: 1 }}
+          // viewport={{ once: true }}
+          // transition={{ duration: 0.8, delay: 0.3 }}
           className="mt-16 md:mt-20 h-px"
           style={{
             background: `linear-gradient(90deg, transparent, #52575b40, #05091460, #52575b40, transparent)`,

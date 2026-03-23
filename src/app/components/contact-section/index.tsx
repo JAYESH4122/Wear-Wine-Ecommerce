@@ -62,30 +62,30 @@ export const ContactSection = () => {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
           <motion.span
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3 }}
+            // initial={{ opacity: 0, y: 12 }}
+            // whileInView={{ opacity: 1, y: 0 }}
+            // viewport={{ once: true }}
+            // transition={{ duration: 0.3 }}
             className="text-xs font-medium tracking-wider uppercase text-neutral-500 block mb-6"
           >
             Get In Touch
           </motion.span>
 
           <motion.h2
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3, delay: 0.1 }}
+            // initial={{ opacity: 0, y: 16 }}
+            // whileInView={{ opacity: 1, y: 0 }}
+            // viewport={{ once: true }}
+            // transition={{ duration: 0.3, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-neutral-900 mb-6"
           >
             We&apos;re Here to Help
           </motion.h2>
 
           <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3, delay: 0.2 }}
+            // initial={{ opacity: 0, y: 12 }}
+            // whileInView={{ opacity: 1, y: 0 }}
+            // viewport={{ once: true }}
+            // transition={{ duration: 0.3, delay: 0.2 }}
             className="text-base text-neutral-500 max-w-2xl mx-auto leading-relaxed"
           >
             Have questions about your order or our collection? Our team is ready to assist you with personalized support and expert guidance.
@@ -98,11 +98,11 @@ export const ContactSection = () => {
             <motion.a
               key={method.label}
               href={method.href}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              whileHover={{ y: -8 }}
+              // initial={{ opacity: 0, y: 20 }}
+              // whileInView={{ opacity: 1, y: 0 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.5, delay: idx * 0.1 }}
+              // whileHover={{ y: -8 }}
               className="group relative bg-gradient-to-br from-white to-neutral-50/80 border border-neutral-200 p-6 md:p-8 hover:border-neutral-300 transition-all duration-500 cursor-pointer overflow-hidden"
             >
               {/* Premium gradient overlays */}
@@ -129,8 +129,8 @@ export const ContactSection = () => {
               <div className="relative z-10">
                 <motion.div 
                   className="w-14 h-14 border border-neutral-200 group-hover:border-white/30 flex items-center justify-center mb-6 transition-all duration-500 bg-gradient-to-br from-white to-neutral-50 group-hover:from-white/10 group-hover:to-white/5"
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ duration: 0.3 }}
+                  // whileHover={{ scale: 1.1, rotate: 5 }}
+                  // transition={{ duration: 0.3 }}
                 >
                   <method.icon
                     className="w-6 h-6 text-neutral-600 group-hover:text-white transition-colors duration-500"
@@ -151,9 +151,9 @@ export const ContactSection = () => {
                 </motion.p>
 
                 <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  whileHover={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2 }}
+                  // initial={{ opacity: 0, x: -10 }}
+                  // whileHover={{ opacity: 1, x: 0 }}
+                  // transition={{ duration: 0.2 }}
                   className="absolute top-2 right-2"
                 >
                   <ArrowUpRight
@@ -166,8 +166,8 @@ export const ContactSection = () => {
               {/* Decorative corner accent */}
               <motion.div 
                 className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-transparent group-hover:border-white/30 transition-all duration-700"
-                initial={{ opacity: 0, scale: 0 }}
-                whileHover={{ opacity: 1, scale: 1 }}
+                // initial={{ opacity: 0, scale: 0 }}
+                // whileHover={{ opacity: 1, scale: 1 }}
               />
             </motion.a>
           ))}
@@ -175,10 +175,10 @@ export const ContactSection = () => {
 
         {/* Divider */}
         <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          // initial={{ scaleX: 0 }}
+          // whileInView={{ scaleX: 1 }}
+          // viewport={{ once: true }}
+          // transition={{ duration: 0.8, ease: "easeOut" }}
           className="border-b border-neutral-200 mb-16 md:mb-20 origin-left"
         />
 
@@ -197,22 +197,22 @@ export const ContactSection = () => {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3, delay: 0.1 }}
+            // initial={{ opacity: 0, y: 12 }}
+            // whiteInView={{ opacity: 1, y: 0 }}
+            // viewport={{ once: true }}
+            // transition={{ duration: 0.3, delay: 0.1 }}
             className="flex items-center gap-3"
           >
             {socialLinks.map((social, idx) => (
               <motion.a
                 key={social.label}
                 href={social.href}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 0.2 + idx * 0.1 }}
-                whileHover={{ y: -4, scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                // initial={{ opacity: 0, scale: 0.8 }}
+                // whileInView={{ opacity: 1, scale: 1 }}
+                // viewport={{ once: true }}
+                // transition={{ duration: 0.4, delay: 0.2 + idx * 0.1 }}
+                // whileHover={{ y: -4, scale: 1.1 }}
+                // whileTap={{ scale: 0.95 }}
                 className="group relative w-14 h-14 border border-neutral-200 bg-gradient-to-br from-white to-neutral-50 hover:border-transparent flex items-center justify-center transition-all duration-300 overflow-hidden"
                 aria-label={social.label}
               >
@@ -240,10 +240,10 @@ export const ContactSection = () => {
 
         {/* CTA Banner */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          // initial={{ opacity: 0, y: 30 }}
+          // whileInView={{ opacity: 1, y: 0 }}
+          // viewport={{ once: true }}
+          // transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-16 md:mt-20 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 text-white relative overflow-hidden group"
         >
           {/* Premium gradient overlays */}
@@ -269,35 +269,35 @@ export const ContactSection = () => {
           <motion.div 
             className="relative p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left"
             initial={false}
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.4 }}
+            // whileHover={{ scale: 1.02 }}
+            // transition={{ duration: 0.4 }}
           >
             <div>
               <motion.span 
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: 0.3 }}
+                // initial={{ opacity: 0, y: 10 }}
+                // whileInView={{ opacity: 1, y: 0 }}
+                // viewport={{ once: true }}
+                // transition={{ duration: 0.3, delay: 0.3 }}
                 className="text-xs font-medium tracking-wider uppercase text-neutral-400 block mb-4"
               >
                 Newsletter
               </motion.span>
 
               <motion.h3
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: 0.4 }}
+                // initial={{ opacity: 0, y: 10 }}
+                // whileInView={{ opacity: 1, y: 0 }}
+                // viewport={{ once: true }}
+                // transition={{ duration: 0.3, delay: 0.4 }}
                 className="text-2xl md:text-3xl lg:text-4xl font-light tracking-tight mb-3"
               >
                 Join Our Community
               </motion.h3>
 
               <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: 0.5 }}
+                // initial={{ opacity: 0, y: 10 }}
+                // whileInView={{ opacity: 1, y: 0 }}
+                // viewport={{ once: true }}
+                // transition={{ duration: 0.3, delay: 0.5 }}
                 className="text-base text-neutral-400 max-w-md leading-relaxed"
               >
                 Subscribe for exclusive offers, early access, and styling inspiration.
@@ -306,19 +306,19 @@ export const ContactSection = () => {
 
             <motion.a
               href="#subscribe"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: 0.5 }}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.96 }}
+              // initial={{ opacity: 0, x: 20 }}
+              // whileInView={{ opacity: 1, x: 0 }}
+              // viewport={{ once: true }}
+              // transition={{ duration: 0.3, delay: 0.5 }}
+              // whileHover={{ scale: 1.08 }}
+              // whileTap={{ scale: 0.96 }}
               className="group/btn inline-flex items-center gap-3 bg-white text-neutral-900 text-sm font-medium tracking-wide uppercase px-12 py-5 hover:bg-neutral-50 transition-all duration-300 cursor-pointer flex-shrink-0 relative overflow-hidden"
             >
               <span className="relative z-10">Subscribe</span>
               <motion.div
-                initial={{ x: -5 }}
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.2 }}
+                // initial={{ x: -5 }}
+                // whileHover={{ x: 5 }}
+                // transition={{ duration: 0.2 }}
                 className="relative z-10"
               >
                 <ChevronRight
@@ -330,9 +330,9 @@ export const ContactSection = () => {
               {/* Button hover effects */}
               <motion.div 
                 className="absolute inset-0 bg-gradient-to-r from-neutral-100 to-white"
-                initial={{ scaleX: 0 }}
-                whileHover={{ scaleX: 1 }}
-                transition={{ duration: 0.4 }}
+                // initial={{ scaleX: 0 }}
+                // whileHover={{ scaleX: 1 }}
+                // transition={{ duration: 0.4 }}
                 style={{ originX: 0 }}
               />
               

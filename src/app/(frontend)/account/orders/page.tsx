@@ -62,8 +62,8 @@ export default function OrdersPage() {
     <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
       {/* Sidebar - Reusable component should ideally be extracted, but placed here for flow sync */}
       <motion.aside 
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
+        // initial={{ opacity: 0, x: -20 }}
+        // animate={{ opacity: 1, x: 0 }}
         className="w-full md:w-64 shrink-0"
       >
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 sticky top-24">
@@ -103,8 +103,8 @@ export default function OrdersPage() {
       {/* Main Content */}
       <div className="flex-1 space-y-6">
         <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          // initial={{ opacity: 0, y: 10 }}
+          // animate={{ opacity: 1, y: 0 }}
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 block w-full bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-neutral-100"
         >
           <div>
@@ -125,13 +125,13 @@ export default function OrdersPage() {
           </div>
         </motion.div>
 
-        <AnimatePresence mode="wait">
+        {/* <AnimatePresence mode="wait"> */}
           {isLoading ? (
             <motion.div 
               key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              // initial={{ opacity: 0 }}
+              // animate={{ opacity: 1 }}
+              // exit={{ opacity: 0 }}
               className="min-h-[40vh] flex flex-col items-center justify-center gap-4 bg-white rounded-2xl border border-neutral-100"
             >
               <div className="w-8 h-8 mx-auto border-4 border-neutral-200 border-t-black rounded-full animate-spin"></div>
@@ -140,16 +140,16 @@ export default function OrdersPage() {
           ) : (
             <motion.div 
               key="content"
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
+              // variants={containerVariants}
+              // initial="hidden"
+              // animate="show"
               className="space-y-4"
             >
               {MOCK_ORDERS.length > 0 ? (
                 MOCK_ORDERS.map((order) => (
                   <motion.div 
                     key={order.id} 
-                    variants={itemVariants}
+                    // variants={itemVariants}
                     className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 hover:border-neutral-300 transition-colors cursor-pointer group"
                   >
                     <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
@@ -186,7 +186,10 @@ export default function OrdersPage() {
                   </motion.div>
                 ))
               ) : (
-                <motion.div variants={itemVariants} className="bg-white rounded-2xl p-12 text-center shadow-sm border border-neutral-100">
+                <motion.div 
+                  // variants={itemVariants} 
+                  className="bg-white rounded-2xl p-12 text-center shadow-sm border border-neutral-100"
+                >
                   <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-neutral-100">
                     <Package className="w-6 h-6 text-neutral-400" />
                   </div>
@@ -199,7 +202,7 @@ export default function OrdersPage() {
               )}
             </motion.div>
           )}
-        </AnimatePresence>
+        {/* </AnimatePresence> */}
       </div>
     </div>
   )
