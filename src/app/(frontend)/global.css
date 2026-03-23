@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Didact+Gothic&display=swap');
 
 @theme {
   --font-primary:
@@ -62,10 +63,10 @@
   --color-border-secondary: #e1e1e1;
 
   /* Fonts */
-  --font-geist: var(--font-geist);
-  --font-general-sans: var(--font-general-sans);
+  /* --font-geist: var(--font-geist);
+  --font-general-sans: var(--font-general-sans); */
 
-  --text-h1: 64px;
+  /* --text-h1: 64px;
   --text-h1--font-weight: 450;
   --text-h1--line-height: 120%;
 
@@ -127,7 +128,7 @@
 
   --text-caption: 12px;
   --text-caption--font-weight: 450;
-  --text-caption--line-height: 150%;
+  --text-caption--line-height: 150%; */
 
   /* Spacing */
   --spacing-sm1: 2px;
@@ -175,9 +176,7 @@
   margin-top: 0 !important;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Didact+Gothic&display=swap');
-
-@keyframes hfA {
+/* @keyframes hfA {
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -225,7 +224,7 @@
   to {
     width: 100%;
   }
-}
+} */
 
 @theme {
   --font-cormorant: 'Cormorant Garamond', serif;
@@ -283,7 +282,7 @@
     transform: rotateY(360deg);
   }
 
-  @keyframes float {
+  /* @keyframes float {
     0%,
     100% {
       transform: translateY(0px) rotateY(0deg);
@@ -295,5 +294,5 @@
 
   .animate-float {
     animation: float 6s ease-in-out infinite;
-  }
+  } */
 }
