@@ -16,7 +16,7 @@ export const heroData: Media[] = [
     type: 'hero',
     createdAt: now,
     updatedAt: now,
-    url: 'https://images.unsplash.com/photo-1529139513364-c05315530182?auto=format&fit=crop&q=80&w=1920&h=1080',
+    url: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c',
   },
   {
     id: -3,
