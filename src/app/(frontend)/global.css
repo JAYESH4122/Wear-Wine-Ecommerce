@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Didact+Gothic&display=swap');
 
 @theme {
   --font-primary:
@@ -226,10 +225,6 @@
   }
 } */
 
-@theme {
-  --font-cormorant: 'Cormorant Garamond', serif;
-  --font-didact: 'Didact Gothic', sans-serif;
-}
 
 @layer base {
   @font-face {
