@@ -1,119 +1,231 @@
 'use client'
 
-import React from 'react'
+import React, { useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
-interface GalleryImage {
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger)
+}
+
+export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs))
+
+export interface GalleryImage {
   id: number
   src: string
   title: string
   label: string
-  gridClass: string
+  description?: string
 }
 
-const defaultImages: GalleryImage[] = [
-  {
-    id: 1,
-    src: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1200&q=80',
-    title: 'New Arrivals',
-    label: 'Spring 2024',
-    gridClass: 'col-span-12 md:col-span-8 row-span-2 md:row-span-4',
-  },
-  {
-    id: 2,
-    src: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80',
-    title: 'Spring Edit',
-    label: 'Editorial',
-    gridClass: 'col-span-6 md:col-span-4 row-span-2',
-  },
-  {
-    id: 3,
-    src: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800&q=80',
-    title: 'Essentials',
-    label: 'Curated',
-    gridClass: 'col-span-6 md:col-span-4 row-span-2',
-  },
-  {
-    id: 4,
-    src: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=1200&q=80',
-    title: 'Minimalist Series',
-    label: 'Collection',
-    gridClass: 'col-span-12 md:col-span-12 row-span-2',
-  },
-]
+interface ImageCardProps {
+  image: GalleryImage
+  index: number
+  className?: string
+}
 
-const ImageCard = ({ image, index }: { image: GalleryImage; index: number }) => {
+/**
+ * ImageCard - Balanced Lighting & GSAP Spotlight
+ */
+export const ImageCard = ({ image, index, className }: ImageCardProps) => {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const lightRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const card = cardRef.current
+    const img = imageRef.current
+    const overlay = overlayRef.current
+    const light = lightRef.current
+    if (!card || !img || !overlay || !light) return
+
+    const ctx = gsap.context(() => {
+      // 1. High-performance mouse tracking
+      const xTo = gsap.quickTo(card, 'rotateY', { duration: 0.7, ease: 'power2.out' })
+      const yTo = gsap.quickTo(card, 'rotateX', { duration: 0.7, ease: 'power2.out' })
+      const lightX = gsap.quickTo(light, 'xPercent', { duration: 0.4, ease: 'power1.out' })
+      const lightY = gsap.quickTo(light, 'yPercent', { duration: 0.4, ease: 'power1.out' })
+
+      const mm = gsap.matchMedia()
+
+      mm.add('(pointer: fine)', () => {
+        const onMouseMove = (e: MouseEvent) => {
+          const { left, top, width, height } = card.getBoundingClientRect()
+          const x = (e.clientX - left) / width - 0.5
+          const y = (e.clientY - top) / height - 0.5
+
+          xTo(x * 8)
+          yTo(y * -8)
+          lightX(x * 100)
+          lightY(y * 100)
+        }
+
+        const onMouseEnter = () => {
+          gsap.to(overlay, { opacity: 0.1, duration: 0.6 })
+          gsap.to(img, {
+            scale: 1.05,
+            filter: 'grayscale(0%) brightness(1)',
+            duration: 0.8,
+            ease: 'power2.out',
+          })
+          gsap.to(light, { opacity: 1, duration: 0.6 })
+        }
+
+        const onMouseLeave = () => {
+          xTo(0)
+          yTo(0)
+          gsap.to(overlay, { opacity: 0.3, duration: 0.6 })
+          gsap.to(img, {
+            scale: 1,
+            filter: 'grayscale(20%) brightness(0.9)',
+            duration: 0.8,
+          })
+          gsap.to(light, { opacity: 0, duration: 0.6 })
+        }
+
+        card.addEventListener('mousemove', onMouseMove)
+        card.addEventListener('mouseenter', onMouseEnter)
+        card.addEventListener('mouseleave', onMouseLeave)
+      })
+
+      // 2. Parallax Scroll Effect
+      gsap.fromTo(
+        img,
+        { yPercent: -5 },
+        {
+          yPercent: 5,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: card,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        },
+      )
+    }, cardRef)
+
+    return () => ctx.revert()
+  }, [])
+
   return (
-    <motion.div
-      // initial={{ opacity: 0, y: 16 }}
-      // whileInView={{ opacity: 1, y: 0 }}
-      // viewport={{ once: true }}
-      // transition={{ duration: 0.5, delay: index * 0.1 }}
-      className={`group relative bg-neutral-50 overflow-hidden cursor-pointer ${image.gridClass}`}
+    <div
+      ref={cardRef}
+      className={cn(
+        'relative w-full h-full overflow-hidden bg-neutral-200 select-none',
+        'cursor-crosshair will-change-transform group',
+        className,
+      )}
+      style={{ transformStyle: 'preserve-3d', perspective: '1200px' }}
     >
-      {/* Image */}
-      <div className="relative w-full h-full">
+      {/* Balanced Image State */}
+      <div
+        ref={imageRef}
+        className="absolute inset-0 w-full h-[110%] -top-[5%] will-change-transform"
+        style={{ filter: 'grayscale(20%) brightness(0.9)' }}
+      >
         <Image
           src={image.src}
           alt={image.title}
           fill
           priority={index === 0}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          className="object-cover"
         />
-
-        {/* Subtle dark overlay at bottom for text legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
       </div>
 
-      {/* Content - Always visible at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-        <p className="text-xs font-medium tracking-wider uppercase text-white/70 mb-1">
+      {/* Subtle Spotlight */}
+      <div
+        ref={lightRef}
+        className="absolute inset-0 pointer-events-none opacity-0 mix-blend-overlay z-10"
+        style={{
+          background:
+            'radial-gradient(circle at center, rgba(255,255,255,0.3) 0%, transparent 80%)',
+          width: '200%',
+          height: '200%',
+          left: '-50%',
+          top: '-50%',
+        }}
+      />
+
+      {/* Softening Overlay (Medium visibility) */}
+      <div
+        ref={overlayRef}
+        className="absolute inset-0 bg-neutral-950 opacity-30 pointer-events-none transition-opacity duration-700 z-[5]"
+      />
+
+      {/* Editorial Content */}
+      <div
+        className="absolute inset-0 p-6 md:p-10 flex flex-col justify-end z-20"
+        style={{ transform: 'translateZ(30px)' }}
+      >
+        <span className="text-[9px] font-mono tracking-[0.5em] uppercase text-white/70 mb-2">
           {image.label}
-        </p>
-        <h3 className="text-base md:text-lg font-medium text-white tracking-tight">
+        </span>
+        <h3 className="text-xl md:text-3xl font-extralight text-white tracking-tighter leading-none">
           {image.title}
         </h3>
+
+        <div className="h-px bg-white/30 w-0 group-hover:w-10 transition-all duration-700 mt-4" />
       </div>
-    </motion.div>
+    </div>
   )
 }
 
-export const CollectionGallery = ({ images = defaultImages }) => {
+/**
+ * CollectionGallery - Seamless & Transparent
+ */
+export const CollectionGallery = ({ images }: { images: GalleryImage[] }) => {
+  const displayImages = useMemo(() => images.slice(0, 4), [images])
+
+  if (displayImages.length < 4) return null
+
   return (
-    <section className="bg-background  py-12 md:py-20 px-4 md:px-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <header className="mb-8 md:mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-          <div>
-            <motion.p
-              // initial={{ opacity: 0, y: 10 }}
-              // animate={{ opacity: 1, y: 0 }}
-              className="text-xs font-medium tracking-wider uppercase text-neutral-500 mb-3"
-            >
-              Selected Works
-            </motion.p>
-            <motion.h2
-              // initial={{ opacity: 0, y: 10 }}
-              // animate={{ opacity: 1, y: 0 }}
-              // transition={{ delay: 0.1 }}
-              className="text-4xl md:text-5xl font-light tracking-tight text-neutral-900"
-            >
-              Premium Collection
-            </motion.h2>
+    <section className="relative w-full py-10 md:py-24 bg-transparent overflow-hidden">
+      <div className="max-w-[1600px] mx-auto">
+        {/* Minimalist Header */}
+        <header className="px-6 mb-12 space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="h-px w-8 bg-neutral-400" />
+            <span className="text-[10px] font-mono tracking-[0.4em] uppercase text-neutral-400">
+              Selected Pieces
+            </span>
           </div>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-text ">
+            Premium <span className="text-neutral-400 italic font-light">Series</span>
+          </h2>
         </header>
 
-        {/* Bento Grid */}
-        <div className="grid grid-cols-12 gap-4 md:gap-6 auto-rows-[180px] md:auto-rows-[160px]">
-          {images.map((img, idx) => (
-            <ImageCard key={img.id} image={img} index={idx} />
-          ))}
+        {/* 12-COLUMN SEAMLESS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-none outline-none">
+          {/* Main Hero: 8/12 Columns */}
+          <div className="md:col-span-8 h-[450px] md:h-[700px]">
+            <ImageCard image={displayImages[0]} index={0} />
+          </div>
+
+          {/* Right Column Stack */}
+          <div className="md:col-span-4 flex flex-col">
+            {/* Top Half */}
+            <div className="h-[300px] md:h-[350px]">
+              <ImageCard image={displayImages[1]} index={1} />
+            </div>
+
+            {/* Bottom Half Split */}
+            <div className="flex h-[300px] md:h-[350px]">
+              <div className="w-1/2">
+                <ImageCard image={displayImages[2]} index={2} />
+              </div>
+              <div className="w-1/2">
+                <ImageCard image={displayImages[3]} index={3} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   )
 }
-
-export default CollectionGallery
