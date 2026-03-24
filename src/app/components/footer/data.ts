@@ -44,9 +44,8 @@ export const footerData: FooterType = {
   },
   socials: [
     { name: 'Facebook', href: 'https://facebook.com' },
-    { name: 'Twitter', href: 'https://twitter.com' },
     { name: 'Instagram', href: 'https://instagram.com' },
-    { name: 'YouTube', href: 'https://youtube.com' },
+    { name: 'WhatsApp', href: 'https://wa.me/15551234567' },
   ],
   contact: {
     title: 'Contact Us',
