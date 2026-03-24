@@ -15,26 +15,63 @@ interface HeroSlideProps {
   slide: Media
   index: number
   isActive: boolean
+  isInitialRender: boolean
 }
 
-const HeroSlide = ({ slide, index, isActive }: HeroSlideProps) => {
+const HeroSlide = ({ slide, index, isActive, isInitialRender }: HeroSlideProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const bgRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const currentPos = useRef({ x: 0, y: 0 })
   const targetPos = useRef({ x: 0, y: 0 })
+  const scrollOffset = useRef(0)
   const rafId = useRef<number>(0)
   const prefersReducedMotion = useRef(false)
+  const hasAnimatedIn = useRef(false)
 
   useEffect(() => {
     prefersReducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   }, [])
 
-  // Optimized mouse parallax - RAF based
+  // Scroll parallax
   useEffect(() => {
     const container = containerRef.current
-    if (!container || !isActive || prefersReducedMotion.current) return
+    const bg = bgRef.current
+    if (!container || !bg || prefersReducedMotion.current) return
+
+    let ticking = false
+
+    const updateTransform = () => {
+      if (!bg) return
+      const scale = 1.05 + scrollOffset.current * 0.0003
+      bg.style.transform = `translate3d(${currentPos.current.x}px, ${scrollOffset.current * 0.3 + currentPos.current.y}px, 0) scale(${scale})`
+    }
+
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const rect = container.getBoundingClientRect()
+        if (rect.bottom > 0 && rect.top < window.innerHeight) {
+          scrollOffset.current = Math.max(0, -rect.top)
+          updateTransform()
+        }
+        ticking = false
+      })
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Mouse parallax
+  useEffect(() => {
+    const container = containerRef.current
+    const bg = bgRef.current
+    if (!container || !bg || !isActive || prefersReducedMotion.current) return
 
     const onMove = (e: MouseEvent) => {
       const r = container.getBoundingClientRect()
@@ -45,14 +82,12 @@ const HeroSlide = ({ slide, index, isActive }: HeroSlideProps) => {
     }
 
     const animate = () => {
-      const t = targetPos.current
-      const c = currentPos.current
-      c.x += (t.x - c.x) * 0.06
-      c.y += (t.y - c.y) * 0.06
+      currentPos.current.x += (targetPos.current.x - currentPos.current.x) * 0.06
+      currentPos.current.y += (targetPos.current.y - currentPos.current.y) * 0.06
 
-      if (bgRef.current) {
-        bgRef.current.style.transform = `translate3d(${c.x}px, ${c.y}px, 0) scale(1.05)`
-      }
+      const scale = 1.05 + scrollOffset.current * 0.0003
+      bg.style.transform = `translate3d(${currentPos.current.x}px, ${scrollOffset.current * 0.3 + currentPos.current.y}px, 0) scale(${scale})`
+
       rafId.current = requestAnimationFrame(animate)
     }
 
@@ -65,55 +100,54 @@ const HeroSlide = ({ slide, index, isActive }: HeroSlideProps) => {
     }
   }, [isActive])
 
-  // Simplified entrance animation
+  // Text animation on slide change
   useEffect(() => {
-    if (!textRef.current || prefersReducedMotion.current) return
+    const text = textRef.current
+    const title = titleRef.current
+    const bg = bgRef.current
+    if (!text || prefersReducedMotion.current) return
+
+    // Skip animation on initial render - CSS handles initial state
+    if (isInitialRender && !hasAnimatedIn.current) {
+      if (isActive) {
+        hasAnimatedIn.current = true
+        gsap.set(text, { opacity: 1, y: 0 })
+        if (title) gsap.set(title, { opacity: 1, y: 0 })
+      }
+      return
+    }
 
     const ctx = gsap.context(() => {
       if (isActive) {
-        // Quick fade in for text container
+        hasAnimatedIn.current = true
         gsap.fromTo(
-          textRef.current,
+          text,
           { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', delay: 0.15 },
+          { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', delay: 0.1 },
         )
-
-        // Simple title animation
-        if (titleRef.current) {
+        if (title) {
           gsap.fromTo(
-            titleRef.current,
+            title,
             { opacity: 0, y: 20 },
-            { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', delay: 0.25 },
+            { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', delay: 0.2 },
           )
         }
-
-        // Background zoom
-        if (bgRef.current) {
-          gsap.fromTo(
-            bgRef.current,
-            { scale: 1.15 },
-            { scale: 1.05, duration: 0.8, ease: 'power2.out' },
-          )
+        if (bg) {
+          gsap.fromTo(bg, { scale: 1.12 }, { scale: 1.05, duration: 0.7, ease: 'power2.out' })
         }
       } else {
-        gsap.to(textRef.current, {
-          opacity: 0,
-          y: -20,
-          duration: 0.3,
-          ease: 'power2.in',
-        })
+        gsap.to(text, { opacity: 0, y: -20, duration: 0.3, ease: 'power2.in' })
       }
     }, containerRef)
 
     return () => ctx.revert()
-  }, [isActive])
+  }, [isActive, isInitialRender])
 
   return (
     <div
       ref={containerRef}
       className="relative w-full h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] xl:h-[90vh] overflow-hidden bg-neutral-950"
     >
-      {/* Background Image */}
       <div
         ref={bgRef}
         className="absolute inset-0 w-full h-full will-change-transform"
@@ -129,38 +163,32 @@ const HeroSlide = ({ slide, index, isActive }: HeroSlideProps) => {
         />
       </div>
 
-      {/* Overlay */}
       <div className="absolute inset-0 z-[2] pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/40" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]" />
       </div>
 
-      {/* Text Content */}
       <div
         ref={textRef}
-        className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 opacity-0"
+        className={cn(
+          'absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6',
+          isActive && isInitialRender ? 'opacity-100' : 'opacity-0',
+        )}
       >
         <div className="w-12 sm:w-16 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent mb-4 sm:mb-6" />
-
         <h1
           ref={titleRef}
-          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light tracking-tight text-white leading-tight drop-shadow-2xl"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-medium tracking-tight text-white leading-tight drop-shadow-2xl"
         >
           {slide.alt ?? 'Collection'}
         </h1>
-
         <div className="w-16 sm:w-20 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent mt-6 sm:mt-8" />
       </div>
     </div>
   )
 }
 
-interface NavButtonProps {
-  direction: 'prev' | 'next'
-  onClick: () => void
-}
-
-const NavButton = ({ direction, onClick }: NavButtonProps) => (
+const NavButton = ({ direction, onClick }: { direction: 'prev' | 'next'; onClick: () => void }) => (
   <button
     type="button"
     onClick={onClick}
@@ -183,13 +211,15 @@ const NavButton = ({ direction, onClick }: NavButtonProps) => (
   </button>
 )
 
-interface PaginationDotProps {
+const PaginationDot = ({
+  isActive,
+  onClick,
+  index,
+}: {
   isActive: boolean
   onClick: () => void
   index: number
-}
-
-const PaginationDot = ({ isActive, onClick, index }: PaginationDotProps) => (
+}) => (
   <button
     type="button"
     onClick={onClick}
@@ -212,47 +242,55 @@ const PaginationDot = ({ isActive, onClick, index }: PaginationDotProps) => (
 export const HeroSlider = ({ slides }: HeroSliderProps) => {
   const swiperRef = useRef<any>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isInitialRender, setIsInitialRender] = useState(true)
 
-  const handlePrev = useCallback(() => {
-    swiperRef.current?.slidePrev()
-  }, [])
+  // Mark initial render complete after first slide change
+  const handleSlideChange = useCallback(
+    (swiper: any) => {
+      setActiveIndex(swiper.realIndex)
+      if (isInitialRender) setIsInitialRender(false)
+    },
+    [isInitialRender],
+  )
 
-  const handleNext = useCallback(() => {
-    swiperRef.current?.slideNext()
-  }, [])
-
-  const handleDotClick = useCallback((index: number) => {
-    swiperRef.current?.slideTo(index)
-  }, [])
-
-  const handleSlideChange = useCallback((swiper: any) => {
-    setActiveIndex(swiper.realIndex)
-  }, [])
+  const handlePrev = useCallback(() => swiperRef.current?.slidePrev(), [])
+  const handleNext = useCallback(() => swiperRef.current?.slideNext(), [])
+  const handleDotClick = useCallback(
+    (index: number) => {
+      swiperRef.current?.slideTo(index)
+      if (isInitialRender) setIsInitialRender(false)
+    },
+    [isInitialRender],
+  )
 
   const renderItems = useMemo(
     () =>
       slides.map((slide, index) => ({
         key: String(slide.id),
-        element: <HeroSlide slide={slide} index={index} isActive={index === activeIndex} />,
+        element: (
+          <HeroSlide
+            slide={slide}
+            index={index}
+            isActive={index === activeIndex}
+            isInitialRender={isInitialRender}
+          />
+        ),
       })),
-    [slides, activeIndex],
+    [slides, activeIndex, isInitialRender],
   )
 
   if (!slides.length) return null
 
   return (
     <div className="relative w-full">
-      {/* Left nav */}
       <div className="absolute left-4 lg:left-[4%] top-1/2 -translate-y-1/2 z-30">
         <NavButton direction="prev" onClick={handlePrev} />
       </div>
 
-      {/* Right nav */}
       <div className="absolute right-4 lg:right-[4%] top-1/2 -translate-y-1/2 z-30">
         <NavButton direction="next" onClick={handleNext} />
       </div>
 
-      {/* Pagination */}
       <div
         className="absolute bottom-6 sm:bottom-8 lg:bottom-[5%] left-1/2 -translate-x-1/2 z-30 flex gap-2 sm:gap-3 items-center"
         role="tablist"
@@ -268,8 +306,7 @@ export const HeroSlider = ({ slides }: HeroSliderProps) => {
         ))}
       </div>
 
-      {/* Mobile swipe hint */}
-      <div className="absolute bottom-20 sm:hidden left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 text-white/40 text-xs">
+      <div className="sm:hidden absolute bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 text-white/40 text-xs">
         <svg
           className="size-3"
           fill="none"
@@ -283,7 +320,6 @@ export const HeroSlider = ({ slides }: HeroSliderProps) => {
         <span>Swipe to explore</span>
       </div>
 
-      {/* Slider */}
       <div className="[&_.arrow-slider-wrapper]:!m-0 [&_.swiper-pagination-external]:!hidden">
         <ArrowSlider
           swiperRef={swiperRef}
