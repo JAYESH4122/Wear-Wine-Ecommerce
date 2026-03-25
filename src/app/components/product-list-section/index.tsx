@@ -216,16 +216,10 @@ export const ProductListSection = () => {
               viewport={{ once: false }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              <Button
-                variant="ghost"
-                size="lg"
-                rightIcon={
-                  <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                }
-                className="group px-0 py-0 text-black relative flex items-center gap-2 lg:px-8 lg:py-4 lg:bg-neutral-900 lg:text-white text-xs font-black uppercase tracking-widest hover:bg-neutral-800 transition-all cursor-pointer"
-              >
+              <button className="group text-black relative flex items-center gap-2 lg:px-8 lg:py-4 lg:bg-neutral-900 lg:text-white text-xs font-black uppercase tracking-widest hover:bg-neutral-800 transition-all cursor-pointer">
                 Shop All
-              </Button>
+                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </button>
             </motion.div>
           </div>
         </div>
