@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
-import { motion, AnimatePresence, LayoutGroup, useInView } from 'framer-motion'
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import type { Swiper as SwiperInstance } from 'swiper'
 import NextImage from 'next/image'
 import { Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
@@ -69,9 +69,6 @@ export const ProductListSection = () => {
   const [categories, setCategories] = useState<Category[]>([ALL_CATEGORY])
   const [loading, setLoading] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
-  const [hasAnimated, setHasAnimated] = useState(false)
-  const animationRef = useRef(null)
-  const isInView = useInView(animationRef, { amount: 0.2, once: true })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -104,12 +101,6 @@ export const ProductListSection = () => {
     fetchProducts()
     return () => controller.abort()
   }, [])
-
-  useEffect(() => {
-    if (isInView) {
-      setHasAnimated(true)
-    }
-  }, [isInView])
 
   const formattedProducts: Product[] = useMemo(
     () =>
@@ -153,86 +144,41 @@ export const ProductListSection = () => {
     swiperRef.current?.slideTo(index * 4)
   }, [])
 
-  const NavButton = ({
-    direction,
-    onClick,
-  }: {
-    direction: 'prev' | 'next'
-    onClick: () => void
-  }) => (
-    <button
-      onClick={onClick}
-      className="w-10 h-10 flex items-center justify-center cursor-pointer text-neutral-600 border border-neutral-200 bg-white backdrop-blur-sm transition-all duration-200 hover:border-neutral-400 hover:text-neutral-900"
-      aria-label={direction === 'prev' ? 'Previous' : 'Next'}
-    >
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 12 12"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {direction === 'prev' ? <path d="M8 2L4 6L8 10" /> : <path d="M4 2L8 6L4 10" />}
-      </svg>
-    </button>
-  )
-
   return (
     <section className="relative py-20 bg-background overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <div className="lg:mb-10 mb-5">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="mb-2"
-          >
-            <span className="text-[11px] font-black uppercase tracking-tighter text-neutral-900">
-              // NEW ARRIVALS
-            </span>
-          </motion.div>
-
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 lg:gap-6">
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="max-w-2xl"
-            >
-              <h2 className="text-4xl md:text-5xl font-light tracking-tight text-neutral-900">
-                <span>Product</span> <span className="text-neutral-500">List</span>
-              </h2>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-            >
-              <button className="group text-black relative flex items-center gap-2 lg:px-8 lg:py-4 lg:bg-neutral-900 lg:text-white text-xs font-black uppercase tracking-widest hover:bg-neutral-800 transition-all cursor-pointer">
-                Shop All
-                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-            </motion.div>
+        <div
+          className="flex flex-row items-end justify-between lg:mb-8 mb-4 gap-6"
+        >
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-12 h-px bg-primary" />
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-secondary">
+                New Arrivals
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tight text-text mb-4">
+              Premium <span className="text-secondary/60 font-bold">Collection</span>
+            </h2>
+            <p className="text-secondary text-lg">
+              Explore our latest pieces designed for modern living.
+            </p>
           </div>
+
+          <Button
+            variant="text"
+            size="sm"
+            rightIcon={<ChevronRight className="w-4 h-4" />}
+            className="text-sm font-semibold text-primary hover:text-secondary"
+          >
+            View All Products
+          </Button>
         </div>
 
         {/* Controls */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200"
-        >
-          <LayoutGroup>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200">
+          {/* <LayoutGroup> */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
               {categories.map((cat) => (
                 <Button
@@ -258,7 +204,7 @@ export const ProductListSection = () => {
                 </Button>
               ))}
             </div>
-          </LayoutGroup>
+          {/* </LayoutGroup> */}
 
           <div className="flex items-center gap-4">
             <span className="text-sm text-neutral-400 tracking-wider tabular-nums">
@@ -314,7 +260,7 @@ export const ProductListSection = () => {
               />
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -324,89 +270,61 @@ export const ProductListSection = () => {
           </div>
         ) : filteredProducts.length > 0 ? (
           <div className="relative">
-            <AnimatePresence mode="wait">
-              <div>
-                <div ref={animationRef}>
-                  <ArrowSlider
-                    swiperRef={swiperRef}
-                    renderItem={filteredProducts.map((product, idx) => ({
-                      key: product.id,
-                      element:
-                        viewMode === 'detailed' ? (
-                          <motion.div
-                            initial={{ opacity: 0, y: 50 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{
-                              duration: 0.1,
+            <div key={`${selectedCategory}-${viewMode}`}>
+              <ArrowSlider
+                swiperRef={swiperRef}
+                renderItem={filteredProducts.map((product) => ({
+                  key: product.id,
+                  element:
+                    viewMode === 'detailed' ? (
+                      <div>
+                        <ProductCard {...product} />
+                      </div>
+                    ) : (
+                      <div className="group relative aspect-square bg-neutral-100 overflow-hidden cursor-pointer">
+                        <NextImage
+                          src={product.image}
+                          alt={product.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        {product.badge && (
+                          <span className="absolute left-4 top-4 px-3 py-1.5 bg-white text-neutral-900 text-xs font-medium">
+                            {product.badge}
+                          </span>
+                        )}
+                      </div>
+                    ),
+                }))}
+                slidesPerView={1}
+                spaceBetween={16}
+                breakpoints={BREAKPOINTS}
+                speed={600}
+                autoplay={{ delay: 5000, disableOnInteraction: true }}
+                showPagination={false}
+                onSlideChange={handleSlideChange}
+              />
 
-                              ease: 'easeOut',
-                            }}
-                            viewport={{
-                              once: false,
-                            }}
-                          >
-                            <ProductCard {...product} />
-                          </motion.div>
-                        ) : (
-                          <div className="group relative aspect-square bg-neutral-100 overflow-hidden cursor-pointer">
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              whileInView={{ opacity: 1 }}
-                              transition={{
-                                duration: 0.5,
-                                delay: idx * 0.12,
-                                ease: 'easeOut',
-                              }}
-                              viewport={{
-                                once: true,
-                                amount: 0.2,
-                              }}
-                            >
-                              <NextImage
-                                src={product.image}
-                                alt={product.title}
-                                fill
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                              />
-                            </motion.div>
-                            {product.badge && (
-                              <span className="absolute left-4 top-4 px-3 py-1.5 bg-white text-neutral-900 text-xs font-medium">
-                                {product.badge}
-                              </span>
-                            )}
-                          </div>
-                        ),
-                    }))}
-                    slidesPerView={1}
-                    spaceBetween={16}
-                    breakpoints={BREAKPOINTS}
-                    speed={600}
-                    autoplay={{ delay: 5000, disableOnInteraction: true }}
-                    loop={true}
-                    showPagination={false}
-                    onSlideChange={handleSlideChange}
+              {/* Line pagination */}
+              <div className="flex gap-2 items-center justify-center mt-8">
+                {Array.from({ length: totalSlides }).map((_, i) => (
+                  <Button
+                    key={i}
+                    onClick={() => goToSlide(i)}
+                    variant="text"
+                    size="icon"
+                    aria-label={`Go to slide ${i + 1}`}
+                    className={cn(
+                      'h-px w-5 rounded-none p-0',
+                      i === activeIndex
+                        ? 'w-10 bg-neutral-800'
+                        : 'bg-neutral-300 hover:bg-neutral-500',
+                    )}
                   />
-                </div>
-
-                {/* Line pagination */}
-                <div className="flex gap-2 items-center justify-center mt-8">
-                  {Array.from({ length: totalSlides }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => goToSlide(i)}
-                      className={cn(
-                        'h-px transition-all duration-300 cursor-pointer',
-                        i === activeIndex
-                          ? 'w-10 bg-neutral-800'
-                          : 'w-5 bg-neutral-300 hover:bg-neutral-500',
-                      )}
-                      aria-label={`Go to slide ${i + 1}`}
-                    />
-                  ))}
-                </div>
+                ))}
               </div>
-            </AnimatePresence>
+            </div>
           </div>
         ) : (
           <div className="py-20 text-center">

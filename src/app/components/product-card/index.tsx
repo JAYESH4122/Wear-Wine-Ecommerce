@@ -4,20 +4,17 @@ import Image, { StaticImageData } from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { clsx } from 'clsx'
-import { Heart, ShoppingBag, Check, Loader2, Star, Truck } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Heart, ShoppingBag, Star, Eye, Check, Truck } from 'lucide-react'
 
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import type { CartProduct } from '@/providers/cart'
 import type { WishlistItem } from '@/providers/wishlist'
 import { Button } from '@/components/ui/button/Button'
-import { Categories } from '@/collections/categories'
 
 type ProductCardProps = {
   id: string
   title: string
-  category: string
   price: number
   image: StaticImageData | string
   hoverImage?: StaticImageData | string
@@ -26,16 +23,17 @@ type ProductCardProps = {
   rating?: number
   reviews?: number
   slug?: string | null
+  isNew?: boolean
   isInStock?: boolean
-  product?: WishlistItem | CartProduct
+  product?: WishlistItem | CartProduct // Optional full product object (or minimal wishlist/cart-safe shape)
   onAddToCart?: (id: string) => void
   onFavorite?: (id: string) => void
+  onQuickView?: (id: string) => void
 }
 
 export const ProductCard = ({
   id,
   title,
-  category,
   price,
   image,
   hoverImage,
@@ -48,193 +46,287 @@ export const ProductCard = ({
   product,
   onAddToCart,
   onFavorite,
+  onQuickView,
 }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isAdded, setIsAdded] = useState(false)
-
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { cart, addItem } = useCart()
 
   const isInCart = cart.some((item) => String(item.product.id) === String(id))
   const isFavorite = isInWishlist(id)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isAddedToCart, setIsAddedToCart] = useState(false)
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const discountPercentage = originalPrice
+    ? Math.round(((originalPrice - price) / originalPrice) * 100)
+    : 0
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!isInStock || isLoading) return
 
-    setIsLoading(true)
-    if (onAddToCart) {
-      await onAddToCart(id)
-    } else {
-      const cartProduct = (product as CartProduct) || {
+    const productToWishlist: WishlistItem =
+      product ??
+      ({
         id,
         name: title,
         slug: slug ?? null,
         price,
-        images: [{ image: typeof image === 'string' ? image : image.src }],
+        salePrice: originalPrice ?? null,
+        images: [
+          {
+            image: typeof image === 'string' ? image : image.src,
+          },
+        ],
+      } satisfies WishlistItem)
+
+    toggleWishlist(productToWishlist)
+    onFavorite?.(id)
+  }
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsLoading(true)
+
+    if (onAddToCart) {
+      await onAddToCart(id)
+    } else {
+      const cartProduct: CartProduct = {
+        id,
+        name: title,
+        slug: slug ?? null,
+        price: originalPrice ?? price,
+        salePrice: originalPrice ? price : null,
+        images: [
+          {
+            image: typeof image === 'string' ? image : image.src,
+          },
+        ],
       }
       addItem(cartProduct, 1)
     }
+
     setIsLoading(false)
-    setIsAdded(true)
-    setTimeout(() => setIsAdded(false), 2000)
+    setIsAddedToCart(true)
+
+    setTimeout(() => setIsAddedToCart(false), 3000)
   }
 
   return (
-    <motion.div
-      className="group relative flex flex-col h-full bg-white font-sans"
+    <div
+      className="group relative bg-white rounded-none overflow-hidden /* transition-all duration-500 hover:shadow-sm hover:-translate-y-2 */ border border-gray-100"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      initial="initial"
-      whileHover="hover"
     >
-      {/* --- IMAGE SECTION --- */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#F2F2F2]">
-        <Link href={`/product/${slug || id}`} className="block h-full w-full">
-          <motion.div
-            className="h-full w-full"
-            variants={{
-              initial: { scale: 1 },
-              hover: { scale: 1.05 },
-            }}
-            transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
-          >
+      <Link href={`/product/${slug || id}`} className="block cursor-pointer">
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
+          <Image
+            src={image}
+            alt={title}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className={clsx(
+              'object-cover /* transition-all duration-700 ease-out */',
+              hoverImage && isHovered ? 'opacity-0 scale-110' : 'opacity-100 scale-100',
+            )}
+            priority={false}
+          />
+
+          {hoverImage && (
             <Image
-              src={image}
+              src={hoverImage}
               alt={title}
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={clsx(
-                'object-cover transition-opacity duration-700',
-                hoverImage && isHovered ? 'opacity-0' : 'opacity-100',
+                'object-cover /* transition-all duration-700 ease-out */',
+                isHovered ? 'opacity-100 scale-110' : 'opacity-0 scale-100',
               )}
-              sizes="(max-width: 768px) 100vw, 33vw"
             />
-            {hoverImage && (
-              <Image
-                src={hoverImage}
-                alt={title}
-                fill
-                className={clsx(
-                  'object-cover absolute inset-0 transition-opacity duration-700',
-                  isHovered ? 'opacity-100' : 'opacity-0',
-                )}
-                sizes="(max-width: 768px) 100vw, 33vw"
-              />
+          )}
+
+          <div
+            className={clsx(
+              'absolute inset-0 bg-black/5 /* transition-opacity duration-500 */',
+              isHovered ? 'opacity-100' : 'opacity-0',
             )}
-          </motion.div>
-        </Link>
+          />
 
-        {/* Badges */}
-        <div className="absolute top-0 left-0 p-3 flex flex-col gap-1.5 z-10 pointer-events-none">
-          {/* Main Product Badge (e.g. NEW, HOT) */}
-          {badge && (
-            <span className="self-start bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1.5 shadow-sm">
-              {badge}
-            </span>
-          )}
-        </div>
+          <div className="absolute left-4 top-4 flex flex-col gap-2 z-10">
+            {badge && (
+              <span className="px-3 py-1.5 bg-white text-gray-900 text-xs font-semibold shadow-lg">
+                {badge}
+              </span>
+            )}
 
-        {/* Wishlist Icon */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.button
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              onClick={(e) => {
-                e.preventDefault()
-                toggleWishlist((product as WishlistItem) || { id, name: title, price })
-                onFavorite?.(id)
-              }}
-              className="absolute top-4 right-4 z-20"
-            >
-              <div className="p-2 flex justify-center items-center bg-white/80 backdrop-blur-sm border border-black/5 hover:bg-white transition-colors shadow-sm w-!12 h-!12">
-                <Heart
-                  className={clsx(
-                    'w-6.5 h-6.5 transition-all duration-300',
-                    isFavorite ? 'fill-red-500 stroke-red-500' : 'stroke-black/60',
-                  )}
-                  strokeWidth={1.5}
-                />
-              </div>
-            </motion.button>
-          )}
-        </AnimatePresence>
+            {discountPercentage > 0 && (
+              <span className="px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold shadow-lg">
+                -{discountPercentage}% OFF
+              </span>
+            )}
+          </div>
 
-        {/* Slide-Up Quick Add */}
-        <AnimatePresence>
-          {isHovered && isInStock && (
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-x-0 bottom-0 z-30"
-            >
-              <button
-                onClick={handleAddToCart}
-                disabled={isLoading}
-                className={clsx(
-                  'w-full py-5.5 flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all duration-500',
-                  isAdded || isInCart
-                    ? 'bg-black text-white'
-                    : 'bg-white/95 backdrop-blur-md text-black hover:bg-black hover:text-white',
-                )}
-              >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : isAdded || isInCart ? (
-                  <>
-                    <Check className="w-4 h-4" /> Added to Cart
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag className="w-4 h-4" /> Add to Cart
-                  </>
-                )}
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* --- PRODUCT INFO SECTION --- */}
-      <div className="pt-2 pb-2 flex flex-col px-4">
-        {/* Title & Rating Row */}
-        <div className="flex justify-between items-center px-1">
-          <Link href={`/product/${slug || id}`} className="flex-1">
-            <h3 className="text-[16px] font-bold text-black uppercase tracking-widest leading-none line-clamp-1">
-              {title}
-            </h3>
-          </Link>
-
-          {rating && (
-            <div className="flex items-center gap-1.5 pl-3">
-              <Star
-                className={clsx(
-                  'w-3.5 h-3.5 fill-yellow-400 text-yellow-400 transition-all duration-300',
-                  isHovered && 'rotate-12',
-                )}
-              />{' '}
-              <span className="text-[13px] font-extrabold text-black">{rating}</span>
+          {!isInStock && (
+            <div className="absolute inset-0 bg-white/90 flex items-center justify-center z-20">
+              <span className="px-4 py-2 bg-gray-900 text-white text-sm font-semibold rounded-full shadow-lg">
+                Out of Stock
+              </span>
             </div>
           )}
+
+          <div
+            className={clsx(
+              'absolute right-4 top-4 flex flex-col gap-2 /* transition-all duration-500 */ z-10',
+              isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4',
+            )}
+          >
+            <div className="relative group/btn cursor-poiter">
+              <Button
+                onClick={handleFavoriteClick}
+                variant="icon"
+                size="icon"
+                leftIcon={
+                  <Heart
+                    className={clsx(
+                      'w-5 h-5 transition-all cursor-pointer',
+                      isFavorite && 'fill-current',
+                    )}
+                  />
+                }
+                aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
+                className={clsx(
+                  'w-10 h-10 rounded-full transition-all duration-300 hover:scale-110',
+                  isFavorite
+                    ? 'bg-black text-white shadow-lg shadow-black/30'
+                    : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-lg',
+                )}
+              />
+              <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                {isFavorite ? 'Remove' : 'Wishlist'}
+              </span>
+            </div>
+          </div>
+
+          <div
+            className={clsx(
+              'absolute bottom-4 left-4 right-4 /* transition-all duration-500 */ z-10',
+              isAddedToCart || (isHovered && !isInCart)
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-4 pointer-events-none',
+            )}
+          >
+            <Button
+              onClick={handleAddToCart}
+              disabled={!isInStock || isLoading || isAddedToCart}
+              variant="primary"
+              size="lg"
+              fullWidth
+              className={clsx(
+                'py-3 rounded-xl font-medium text-sm relative overflow-hidden group/add',
+                isInStock && !isAddedToCart && !isInCart
+                  ? 'bg-black text-white hover:bg-gray-800 hover:shadow-xl hover:shadow-black/25'
+                  : isAddedToCart || isInCart
+                    ? 'bg-white text-black'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed',
+                isLoading && 'opacity-75 cursor-wait',
+              )}
+            >
+              <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover/add:translate-x-full transition-transform duration-700" />
+
+              {isAddedToCart || isInCart ? (
+                <>
+                  <Check className="w-4 h-4 /* animate-bounce */" />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingBag
+                    className={clsx(
+                      'w-4 h-4 transition-transform duration-300 group-hover/add:-translate-y-0.5 group-hover/add:translate-x-0.5',
+                      isLoading && 'animate-spin',
+                    )}
+                  />
+                  {isLoading ? 'Adding...' : 'Add'}
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
-        <span className="text-[12px] uppercase tracking-[0.1em] text-black/40 font-bold m-0">
-          {category}
-        </span>
+        <div className="p-3 space-y-2">
+          <h3
+            className={clsx(
+              'text-base font-medium line-clamp-2 transition-all duration-300',
+              isHovered ? 'text-black translate-x-0.5' : 'text-gray-900',
+            )}
+          >
+            {title}
+          </h3>
 
-        {/* Price & Stock Status Row */}
-        <div className="flex justify-between items-center px-1">
-          <div className="flex items-center gap-3">
-            <span className="text-[17px] font-extrabold text-black tracking-tight">${price}</span>
-            {originalPrice && (
-              <span className="text-[14px] text-black/30 line-through tracking-tighter">
-                ${originalPrice}
-              </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg font-bold text-gray-900">${price}</span>
+              {originalPrice && (
+                <span className="text-xs text-gray-400 line-through">${originalPrice}</span>
+              )}
+            </div>
+
+            {rating && (
+              <div
+                className={clsx(
+                  'flex items-center gap-0.5 transition-all duration-300',
+                  isHovered && 'scale-105',
+                )}
+              >
+                <Star
+                  className={clsx(
+                    'w-3.5 h-3.5 fill-yellow-400 text-yellow-400 transition-all duration-300',
+                    isHovered && 'rotate-12',
+                  )}
+                />
+                <span className="text-xs font-medium text-gray-600">{rating}</span>
+                {reviews && <span className="text-xs text-gray-400">({reviews})</span>}
+              </div>
+            )}
+          </div>
+
+          <div className="min-h-[20px]">
+            {isInStock ? (
+              <>
+                {!isHovered && (
+                  <div className="flex items-center gap-1.5 group/stock">
+                    <div className="flex-1 max-w-[60px]">
+                      <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gray-800 rounded-full transition-all duration-500 group-hover/stock:bg-green-500"
+                          style={{ width: `${Math.random() * 60 + 20}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {Math.floor(Math.random() * 30 + 10)} left
+                    </span>
+                  </div>
+                )}
+
+                {isHovered && (
+                  <div className="flex items-center gap-1.5 text-xs text-gray-600 /* animate-fadeIn */ group/shipping">
+                    <Truck
+                      className={clsx(
+                        'w-3.5 h-3.5 transition-all duration-300',
+                        isHovered && 'translate-x-0.5 -translate-y-0.5',
+                      )}
+                    />
+                    <span className="relative">
+                      Free shipping
+                      <span className="absolute bottom-0 left-0 w-0 h-px bg-gray-600 group-hover/shipping:w-full transition-all duration-300" />
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <span className="text-xs text-red-500">Out of stock</span>
             )}
           </div>
 
@@ -262,30 +354,7 @@ export const ProductCard = ({
             </span>
           </div>
         </div>
-
-        {/* --- STOCK PROGRESS BAR (BOLDER) --- */}
-        {isInStock && (
-          <div className="mt-2 px-1">
-            <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-black/40 font-bold">
-                Limited Availability
-              </span>
-              <span className="text-[10px] font-extrabold text-black uppercase">
-                Only {Math.floor(Math.random() * 8 + 2)} Left
-              </span>
-            </div>
-            {/* 3px Stroke width background */}
-            <div className="h-[3px] w-full bg-gray-100 overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: isHovered ? '75%' : '0%' }} // Starts at 0, fills on hover
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="h-full bg-black"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    </motion.div>
+      </Link>
+    </div>
   )
 }
