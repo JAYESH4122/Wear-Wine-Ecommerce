@@ -224,7 +224,7 @@ export const CollectionGallery = ({ images }: { images: GalleryImage[] }) => {
               Selected Pieces
             </span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-text">
             Premium <span className="text-neutral-400 italic font-light">Series</span>
           </h2>
         </header>
