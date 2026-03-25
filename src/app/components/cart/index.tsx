@@ -268,7 +268,15 @@ export const CartPage = () => {
                     <div className="lg:col-span-5 xl:col-span-4">
                       <div className="lg:sticky lg:top-8 space-y-3">
                         <CartSummary subtotal={subtotal} itemCount={cartCount} />
-                        <StepButton onClick={handleContinue} label="Continue to Address" />
+                        <Button
+                          onClick={handleContinue}
+                          variant="primary"
+                          size="lg"
+                          fullWidth
+                          className="px-6 text-xs tracking-widest uppercase"
+                        >
+                          Continue to Address
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -380,18 +388,6 @@ export const CartPage = () => {
 
 // ── Shared button components ────────────────────────────────────────────────
 
-const StepButton = ({ onClick, label }: { onClick: () => void; label: string }) => (
-  <Button
-    onClick={onClick}
-    variant="primary"
-    size="lg"
-    fullWidth
-    className="px-6 text-xs tracking-widest uppercase"
-  >
-    {label}
-  </Button>
-)
-
 const NavButtons = ({
   onBack,
   onContinue,
@@ -418,7 +414,9 @@ const NavButtons = ({
       size="lg"
       className={cn(
         'flex-1 min-w-0 px-4 text-xs tracking-widest uppercase',
-        isPrimary ? 'bg-neutral-900 text-white hover:bg-neutral-700' : 'bg-neutral-900 text-white hover:bg-neutral-700',
+        isPrimary
+          ? 'bg-neutral-900 text-white hover:bg-neutral-700'
+          : 'bg-neutral-900 text-white hover:bg-neutral-700',
       )}
     >
       {continueLabel}
