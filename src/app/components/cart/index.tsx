@@ -10,6 +10,7 @@ import { CartRecommendations } from './components/CartRecommendations'
 import { CartSummary } from './components/CartSummary'
 import { EmptyCart } from './components/EmptyCart'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button/Button'
 
 type Step = 1 | 2 | 3
 
@@ -177,13 +178,15 @@ export const CartPage = () => {
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-16 max-w-7xl">
         {/* Back link */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-neutral-400 hover:text-neutral-700 transition-colors duration-150 mb-8 group cursor-pointer"
+        <Button
+          asChild
+          variant="back"
+          size="sm"
+          leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+          className="mb-8 text-neutral-400 hover:text-neutral-700"
         >
-          <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-1" />
-          <span className="text-xs font-medium tracking-widest uppercase">Continue Shopping</span>
-        </Link>
+          <Link href="/">Continue Shopping</Link>
+        </Button>
 
         {/* Progress indicator */}
         <div className="mb-8 md:mb-12">
@@ -330,11 +333,14 @@ export const CartPage = () => {
                     Payment Method
                   </p>
                   {PAYMENT_OPTIONS.map(({ value, label, desc }) => (
-                    <button
+                    <Button
                       key={value}
                       onClick={() => setPaymentMethod(value)}
+                      variant="outlined"
+                      size="lg"
+                      fullWidth
                       className={cn(
-                        'w-full flex items-center justify-between px-5 py-4 border text-left transition-all duration-150 cursor-pointer active:scale-[0.99]',
+                        'justify-between px-5 py-4 text-left',
                         paymentMethod === value
                           ? 'border-neutral-900 bg-neutral-50'
                           : 'border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50/50',
@@ -352,7 +358,7 @@ export const CartPage = () => {
                             : 'border-neutral-300',
                         )}
                       />
-                    </button>
+                    </Button>
                   ))}
                 </div>
 
@@ -375,12 +381,15 @@ export const CartPage = () => {
 // ── Shared button components ────────────────────────────────────────────────
 
 const StepButton = ({ onClick, label }: { onClick: () => void; label: string }) => (
-  <button
+  <Button
     onClick={onClick}
-    className="w-full py-3.5 px-6 bg-neutral-900 text-white text-xs font-medium tracking-widest uppercase cursor-pointer hover:bg-neutral-700 active:scale-[0.98] transition-all duration-150"
+    variant="primary"
+    size="lg"
+    fullWidth
+    className="px-6 text-xs tracking-widest uppercase"
   >
     {label}
-  </button>
+  </Button>
 )
 
 const NavButtons = ({
@@ -395,22 +404,24 @@ const NavButtons = ({
   isPrimary?: boolean
 }) => (
   <div className="flex gap-3 pt-2">
-    <button
+    <Button
       onClick={onBack}
-      className="flex-1 min-w-0 py-3.5 px-4 border border-neutral-200 text-neutral-600 text-xs font-medium tracking-widest uppercase cursor-pointer hover:border-neutral-500 hover:text-neutral-900 active:scale-[0.98] transition-all duration-150"
+      variant="outlined"
+      size="lg"
+      className="flex-1 min-w-0 px-4 text-xs tracking-widest uppercase text-neutral-600 hover:text-neutral-900"
     >
       Back
-    </button>
-    <button
+    </Button>
+    <Button
       onClick={onContinue}
+      variant={isPrimary ? 'cta' : 'primary'}
+      size="lg"
       className={cn(
-        'flex-1 min-w-0 py-3.5 px-4 text-xs font-medium tracking-widest uppercase cursor-pointer active:scale-[0.98] transition-all duration-150',
-        isPrimary
-          ? 'bg-neutral-900 text-white hover:bg-neutral-700'
-          : 'bg-neutral-900 text-white hover:bg-neutral-700',
+        'flex-1 min-w-0 px-4 text-xs tracking-widest uppercase',
+        isPrimary ? 'bg-neutral-900 text-white hover:bg-neutral-700' : 'bg-neutral-900 text-white hover:bg-neutral-700',
       )}
     >
       {continueLabel}
-    </button>
+    </Button>
   </div>
 )

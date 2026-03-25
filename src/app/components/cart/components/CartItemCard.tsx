@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import type { Media } from '@/payload-types'
 import type { CartItem } from '@/providers/cart'
 import { QuantitySelector } from './QuantitySelector'
+import { Button } from '@/components/ui/button/Button'
 
 const mediaShell =
   'relative overflow-hidden bg-neutral-50 rounded-sm [perspective:1000px] transform-gpu'
@@ -247,14 +248,15 @@ export const CartItemCard = React.memo(function CartItemCard({
               </Link>
               <p className="mt-0.5 text-[11px] text-neutral-400 font-mono">SKU: {sku}</p>
             </div>
-            <button
+            <Button
               type="button"
               onClick={() => onRemove(cartItemId)}
-              className="p-1.5 -m-1.5 text-neutral-400 hover:text-red-500 transition-colors flex-shrink-0"
+              variant="icon"
+              size="icon"
+              leftIcon={<X className="w-4 h-4" />}
               aria-label="Remove item"
-            >
-              <X className="w-4 h-4" />
-            </button>
+              className="-m-1.5 h-7 w-7 bg-transparent text-neutral-400 hover:text-red-500"
+            />
           </div>
 
           <div className="mt-2 space-y-1">
@@ -427,15 +429,17 @@ export const CartItemCard = React.memo(function CartItemCard({
               )}
             </div>
 
-            <button
+            <Button
               type="button"
               onClick={() => onRemove(cartItemId)}
-              className="mt-3 self-start flex items-center gap-1.5 text-xs text-neutral-400 hover:text-red-500 transition-colors"
+              variant="text"
+              size="sm"
+              leftIcon={<X className="w-3.5 h-3.5" />}
+              className="mt-3 self-start text-xs text-neutral-400 hover:text-red-500"
               aria-label="Remove item"
             >
-              <X className="w-3.5 h-3.5" />
               Remove
-            </button>
+            </Button>
           </div>
         </div>
 

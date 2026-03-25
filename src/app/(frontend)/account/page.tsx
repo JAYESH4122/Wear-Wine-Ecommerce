@@ -6,6 +6,7 @@ import { useAuth } from '@/providers/auth'
 import { User, Mail, Settings, Shield, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button/Button'
 
 export default function ProfilePage() {
   const { user, isLoading, isHydrated } = useAuth()
@@ -154,9 +155,13 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2 mt-4">
-                  <button className="text-sm font-bold text-primary hover:text-black transition-colors underline underline-offset-4">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-sm font-bold text-primary hover:text-black underline underline-offset-4"
+                  >
                     Edit Profile Information
-                  </button>
+                  </Button>
                 </div>
               </div>
             </motion.div>

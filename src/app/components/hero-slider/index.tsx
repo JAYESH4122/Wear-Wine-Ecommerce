@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button/Button'
 import { ArrowSlider } from '../arrow-slider'
 import type { Media } from '@/payload-types'
 
@@ -189,26 +190,28 @@ const HeroSlide = ({ slide, index, isActive, isInitialRender }: HeroSlideProps) 
 }
 
 const NavButton = ({ direction, onClick }: { direction: 'prev' | 'next'; onClick: () => void }) => (
-  <button
+  <Button
     type="button"
     onClick={onClick}
-    className="hidden sm:flex group relative size-12 lg:size-14 items-center justify-center cursor-pointer transition-transform duration-300 hover:scale-110"
+    variant="slider"
+    size="icon"
+    leftIcon={
+      <svg
+        className="relative size-5 lg:size-6 text-white/70 transition-colors duration-300 group-hover:text-white"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d={direction === 'prev' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
+      </svg>
+    }
     aria-label={direction === 'prev' ? 'Previous slide' : 'Next slide'}
-  >
-    <div className="absolute inset-0 bg-white/5 backdrop-blur-sm rounded-full transition-colors duration-300 group-hover:bg-white/20" />
-    <svg
-      className="relative size-5 lg:size-6 text-white/70 transition-colors duration-300 group-hover:text-white"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={direction === 'prev' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
-    </svg>
-  </button>
+    className="hidden sm:flex size-12 lg:size-14 bg-white/5 text-white/70 hover:bg-white/20"
+  />
 )
 
 const PaginationDot = ({
@@ -220,12 +223,14 @@ const PaginationDot = ({
   onClick: () => void
   index: number
 }) => (
-  <button
+  <Button
     type="button"
     onClick={onClick}
-    className="group relative cursor-pointer py-2"
+    variant="text"
+    size="icon"
     aria-label={`Go to slide ${index + 1}`}
     aria-current={isActive ? 'true' : undefined}
+    className="group relative py-2"
   >
     <div
       className={cn(
@@ -236,7 +241,7 @@ const PaginationDot = ({
       )}
     />
     {isActive && <div className="absolute inset-0 bg-white/30 blur-sm" aria-hidden="true" />}
-  </button>
+  </Button>
 )
 
 export const HeroSlider = ({ slides }: HeroSliderProps) => {

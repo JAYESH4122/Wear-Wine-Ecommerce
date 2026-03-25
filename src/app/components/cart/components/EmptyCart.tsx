@@ -3,8 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { ShoppingBag } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { btnPrimary } from './styles'
+import { Button } from '@/components/ui/button/Button'
 
 export const EmptyCart = React.memo(function EmptyCart() {
   return (
@@ -16,9 +15,9 @@ export const EmptyCart = React.memo(function EmptyCart() {
       <p className="text-neutral-500 max-w-sm mb-8">
         Explore our collection and find something you&apos;ll love.
       </p>
-      <Link href="/" className={cn(btnPrimary, 'px-10 py-4 rounded-sm')}>
-        Start Shopping
-      </Link>
+      <Button asChild variant="primary" size="lg" className="px-10 py-4 rounded-sm">
+        <Link href="/">Start Shopping</Link>
+      </Button>
     </div>
   )
 })

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Plus, ShoppingBag } from 'lucide-react'
 import type { Media } from '@/payload-types'
 import type { CartProduct } from '@/providers/cart'
+import { Button } from '@/components/ui/button/Button'
 
 export const RecommendationCard = React.memo(function RecommendationCard({
   product,
@@ -35,14 +36,15 @@ export const RecommendationCard = React.memo(function RecommendationCard({
             <ShoppingBag className="w-6 h-6" />
           </div>
         )}
-        <button
+        <Button
           type="button"
           onClick={() => onQuickAdd(product)}
-          className="absolute bottom-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-neutral-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:scale-110"
+          variant="icon"
+          size="icon"
+          leftIcon={<Plus className="w-4 h-4" />}
           aria-label={`Quick add ${product.name}`}
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+          className="absolute bottom-3 right-3 w-9 h-9 bg-white/90 text-neutral-900 opacity-0 group-hover:opacity-100 hover:bg-white"
+        />
         {hasDiscount && (
           <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
             Sale

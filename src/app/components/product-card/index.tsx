@@ -10,6 +10,7 @@ import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import type { CartProduct } from '@/providers/cart'
 import type { WishlistItem } from '@/providers/wishlist'
+import { Button } from '@/components/ui/button/Button'
 
 type ProductCardProps = {
   id: string
@@ -181,23 +182,26 @@ export const ProductCard = ({
             )}
           >
             <div className="relative group/btn cursor-poiter">
-              <button
+              <Button
                 onClick={handleFavoriteClick}
+                variant="icon"
+                size="icon"
+                leftIcon={
+                  <Heart
+                    className={clsx(
+                      'w-5 h-5 transition-all cursor-pointer',
+                      isFavorite && 'fill-current',
+                    )}
+                  />
+                }
+                aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
                 className={clsx(
-                  'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer',
+                  'w-10 h-10 rounded-full transition-all duration-300 hover:scale-110',
                   isFavorite
                     ? 'bg-black text-white shadow-lg shadow-black/30'
                     : 'bg-white/90 text-gray-700 hover:bg-white hover:shadow-lg',
                 )}
-                aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
-              >
-                <Heart
-                  className={clsx(
-                    'w-5 h-5 transition-all cursor-pointer',
-                    isFavorite && 'fill-current',
-                  )}
-                />
-              </button>
+              />
               <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                 {isFavorite ? 'Remove' : 'Wishlist'}
               </span>
@@ -212,11 +216,14 @@ export const ProductCard = ({
                 : 'opacity-0 translate-y-4 pointer-events-none',
             )}
           >
-            <button
+            <Button
               onClick={handleAddToCart}
               disabled={!isInStock || isLoading || isAddedToCart}
+              variant="primary"
+              size="lg"
+              fullWidth
               className={clsx(
-                'w-full py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group/add cursor-pointer',
+                'py-3 rounded-xl font-medium text-sm relative overflow-hidden group/add',
                 isInStock && !isAddedToCart && !isInCart
                   ? 'bg-black text-white hover:bg-gray-800 hover:shadow-xl hover:shadow-black/25'
                   : isAddedToCart || isInCart
@@ -243,7 +250,7 @@ export const ProductCard = ({
                   {isLoading ? 'Adding...' : 'Add'}
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 

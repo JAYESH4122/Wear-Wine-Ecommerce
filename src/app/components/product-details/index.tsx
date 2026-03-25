@@ -22,6 +22,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button/Button'
 import type { Product, Media, Color, Size } from '@/payload-types'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
@@ -56,12 +57,14 @@ const TermsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
               <FileText className="w-5 h-5 text-neutral-900" />
               <h3 className="text-lg font-bold text-neutral-900">Terms & Conditions</h3>
             </div>
-            <button
+            <Button
               onClick={onClose}
-              className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
-            >
-              <X className="w-5 h-5 text-neutral-500" />
-            </button>
+              variant="icon"
+              size="icon"
+              leftIcon={<X className="w-5 h-5 text-neutral-500" />}
+              aria-label="Close"
+              className="h-9 w-9 bg-transparent hover:bg-neutral-100"
+            />
           </div>
           <div className="p-6 max-h-[60vh] overflow-y-auto text-sm text-neutral-600 space-y-4 leading-relaxed">
             <p className="font-bold text-neutral-900">1. Shipping Policy</p>
@@ -78,12 +81,15 @@ const TermsModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
             <p>Your data is encrypted. We do not store full credit card details on our servers.</p>
           </div>
           <div className="p-6 border-t border-neutral-100">
-            <button
+            <Button
               onClick={onClose}
-              className="w-full py-4 bg-black text-white rounded-xl font-bold hover:bg-neutral-800 transition-colors"
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="py-4 bg-black text-white rounded-xl font-bold hover:bg-neutral-800"
             >
               Accept and Close
-            </button>
+            </Button>
           </div>
         </motion.div>
       </div>
@@ -258,11 +264,14 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                   </p>
                   <div className="flex gap-3">
                     {colors.map((color) => (
-                      <button
+                      <Button
                         key={color.id}
                         onClick={() => setSelectedColor(String(color.id))}
+                        variant="icon"
+                        size="icon"
+                        aria-label={color.name ?? 'Select color'}
                         className={cn(
-                          'w-10 h-10 rounded-full border-2 transition-all p-0.5',
+                          'w-10 h-10 rounded-full border-2 p-0.5 transition-all',
                           selectedColor === String(color.id)
                             ? 'border-black'
                             : 'border-transparent',
@@ -272,7 +281,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                           className="w-full h-full rounded-full border border-neutral-100"
                           style={{ backgroundColor: color.hex ?? '#000' }}
                         />
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -285,27 +294,31 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                     <p className="text-[10px] font-bold uppercase tracking-widest text-black">
                       Size Guide
                     </p>
-                    <button
+                    <Button
                       onClick={() => setShowSizeChart(true)}
-                      className="text-[10px] font-bold underline uppercase tracking-widest text-neutral-400 hover:text-black"
+                      variant="link"
+                      size="sm"
+                      className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black"
                     >
                       View Chart
-                    </button>
+                    </Button>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {sizes.map((size) => (
-                      <button
+                      <Button
                         key={size.id}
                         onClick={() => setSelectedSize(String(size.id))}
+                        variant="outlined"
+                        size="sm"
                         className={cn(
-                          'h-12 text-[11px] font-bold transition-all border',
+                          'h-12 text-[11px] font-bold border',
                           selectedSize === String(size.id)
                             ? 'bg-black text-white border-black'
                             : 'bg-white text-neutral-900 border-neutral-100 hover:border-black',
                         )}
                       >
                         {size.label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -325,12 +338,14 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                   </div>
                   <p className="text-xs text-neutral-500 leading-tight">
                     I agree to the{' '}
-                    <button
+                    <Button
                       onClick={() => setShowTermsModal(true)}
-                      className="text-black font-bold underline"
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-black font-bold underline"
                     >
                       Terms & Conditions
-                    </button>{' '}
+                    </Button>{' '}
                     and understand the return policy.
                   </p>
                 </div>
@@ -354,25 +369,31 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
               {/* Quantity & CTA */}
               <div className="info-panel-item flex flex-col sm:flex-row gap-4 mb-4">
                 <div className="flex items-center border border-neutral-100 h-14 px-4 bg-neutral-50 rounded-lg sm:w-32 justify-between">
-                  <button
+                  <Button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="p-2 hover:text-neutral-500"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
+                    variant="icon"
+                    size="icon"
+                    leftIcon={<Minus className="w-3 h-3" />}
+                    aria-label="Decrease quantity"
+                    className="h-8 w-8 bg-transparent hover:text-neutral-500"
+                  />
                   <span className="text-sm font-medium">{quantity}</span>
-                  <button
+                  <Button
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="p-2 hover:text-neutral-500"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
+                    variant="icon"
+                    size="icon"
+                    leftIcon={<Plus className="w-3 h-3" />}
+                    aria-label="Increase quantity"
+                    className="h-8 w-8 bg-transparent hover:text-neutral-500"
+                  />
                 </div>
 
-                <button
+                <Button
                   onClick={handleAddToCart}
+                  variant="primary"
+                  size="lg"
                   className={cn(
-                    'flex-1 h-14 text-[11px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 rounded-lg',
+                    'flex-1 h-14 text-[11px] font-bold uppercase tracking-[0.2em] rounded-lg',
                     selectedColor && selectedSize && isAgreed
                       ? 'bg-black text-white hover:bg-neutral-800'
                       : 'bg-neutral-100 text-neutral-400 cursor-not-allowed',
@@ -387,16 +408,22 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                       <ShoppingBag className="w-4 h-4" /> Add to Bag
                     </>
                   )}
-                </button>
+                </Button>
               </div>
 
-              <button
+              <Button
                 onClick={() => toggleWishlist(product)}
-                className="info-panel-item w-full py-4 text-[10px] font-bold uppercase tracking-widest text-black border border-neutral-100 hover:bg-neutral-50 transition-all flex items-center justify-center gap-2 mb-12 rounded-lg"
+                variant="outlined"
+                size="lg"
+                leftIcon={
+                  <Heart
+                    className={cn('w-4 h-4 transition-colors', isWishlisted && 'fill-black')}
+                  />
+                }
+                className="info-panel-item w-full py-4 text-[10px] font-bold uppercase tracking-widest text-black border-neutral-100 hover:bg-neutral-50 mb-12 rounded-lg"
               >
-                <Heart className={cn('w-4 h-4 transition-colors', isWishlisted && 'fill-black')} />
                 {isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}
-              </button>
+              </Button>
 
               {/* Accordions */}
               <div className="info-panel-item border-t border-neutral-100">
@@ -415,18 +442,23 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
                   },
                 ].map((item) => (
                   <div key={item.id} className="border-b border-neutral-100">
-                    <button
+                    <Button
                       onClick={() => setOpenAccordion(openAccordion === item.id ? null : item.id)}
-                      className="w-full py-5 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-black text-left"
+                      variant="text"
+                      size="lg"
+                      fullWidth
+                      rightIcon={
+                        <ChevronDown
+                          className={cn(
+                            'w-3 h-3 transition-transform duration-300',
+                            openAccordion === item.id && 'rotate-180',
+                          )}
+                        />
+                      }
+                      className="w-full py-5 justify-between text-[10px] font-bold uppercase tracking-widest text-black text-left"
                     >
                       {item.title}
-                      <ChevronDown
-                        className={cn(
-                          'w-3 h-3 transition-transform duration-300',
-                          openAccordion === item.id && 'rotate-180',
-                        )}
-                      />
-                    </button>
+                    </Button>
                     {/* <AnimatePresence> */}
                       {openAccordion === item.id && (
                         <motion.div
@@ -511,12 +543,14 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({ product, related
               // exit={{ y: 50, opacity: 0 }}
               className="relative bg-white p-10 max-w-md w-full shadow-2xl rounded-2xl"
             >
-              <button
+              <Button
                 onClick={() => setShowSizeChart(false)}
-                className="absolute top-6 right-6 text-neutral-400 hover:text-black"
-              >
-                <X className="w-5 h-5" />
-              </button>
+                variant="icon"
+                size="icon"
+                leftIcon={<X className="w-5 h-5" />}
+                aria-label="Close size chart"
+                className="absolute top-6 right-6 h-9 w-9 bg-transparent text-neutral-400 hover:text-black"
+              />
               <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-8 text-neutral-900">
                 Size Chart
               </h3>

@@ -1,12 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight, Github } from 'lucide-react'
+import { X, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/providers/auth'
-import { clsx } from 'clsx'
 import Image from 'next/image'
 import { IconBlack } from 'assets'
+import { Button } from '@/components/ui/button/Button'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -86,12 +85,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       > */}
       <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
         {/* Close Button */}
-        <button
+        <Button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-neutral-100 hover:bg-neutral-200 transition-colors z-10"
-        >
-          <X className="w-4 h-4 text-neutral-600" />
-        </button>
+          variant="icon"
+          size="icon"
+          leftIcon={<X className="w-4 h-4 text-neutral-600" />}
+          aria-label="Close"
+          className="absolute top-5 right-5 h-9 w-9 bg-neutral-100 hover:bg-neutral-200 z-10"
+        />
 
         <div className="p-8">
           {/* Logo & Header */}
@@ -117,13 +118,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           {/* Social Auth with NextAuth */}
           <div className="grid grid-cols-1 gap-3 mb-8">
-            <button
+            <Button
               onClick={() => {
                 import('next-auth/react').then(({ signIn }) => {
                   signIn('google', { callbackUrl: '/' })
                 })
               }}
-              className="flex items-center justify-center gap-3 w-full py-3 px-4 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors font-semibold text-sm text-neutral-700"
+              variant="outlined"
+              size="lg"
+              fullWidth
+              className="gap-3 py-3 px-4 border-neutral-200 rounded-xl font-semibold text-sm text-neutral-700 hover:bg-neutral-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -144,7 +148,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 />
               </svg>
               Continue with Google
-            </button>
+            </Button>
           </div>
 
           <div className="relative mb-8">
@@ -206,12 +210,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   Password
                 </label>
                 {mode === 'login' && (
-                  <button
+                  <Button
                     type="button"
-                    className="text-[10px] font-bold text-neutral-400 hover:text-black transition-colors uppercase tracking-widest"
+                    variant="link"
+                    size="sm"
+                    className="text-[10px] font-bold text-neutral-400 hover:text-black uppercase tracking-widest"
                   >
                     Forgot?
-                  </button>
+                  </Button>
                 )}
               </div>
               <div className="relative group">
@@ -227,13 +233,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   placeholder="••••••••"
                   className="w-full bg-neutral-50 border border-neutral-100 px-11 py-3.5 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-black transition-all"
                 />
-                <button
+                <Button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+                  variant="icon"
+                  size="icon"
+                  leftIcon={showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent text-neutral-400 hover:text-black"
+                />
               </div>
             </div>
 
@@ -249,32 +257,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               // </motion.div>
             )}
 
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full h-12 bg-black text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+              loading={isLoading}
+              variant="primary"
+              size="lg"
+              fullWidth
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+              className="h-12 bg-black text-white rounded-xl font-bold text-sm hover:bg-neutral-800"
             >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <>
-                  {mode === 'login' ? 'Sign In' : 'Create Account'}
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
+              {mode === 'login' ? 'Sign In' : 'Create Account'}
+            </Button>
           </form>
 
           {/* Footer */}
           <div className="mt-8 text-center">
             <p className="text-sm text-neutral-500">
               {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
-              <button
+              <Button
                 onClick={toggleMode}
+                variant="link"
+                size="sm"
                 className="text-black font-bold hover:underline underline-offset-4"
               >
                 {mode === 'login' ? 'Sign up' : 'Sign in'}
-              </button>
+              </Button>
             </p>
           </div>
         </div>

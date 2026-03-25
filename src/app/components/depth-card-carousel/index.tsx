@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button/Button'
 
 const AUTOPLAY_INTERVAL = 5000
 
@@ -153,11 +154,14 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
         <div className="flex items-center gap-10 hidden md:flex">
           <div className="flex gap-3">
             {cards.map((_, i) => (
-              <button
+              <Button
                 key={i}
                 onClick={() => setActive(i)}
+                variant="text"
+                size="icon"
+                aria-label={`Go to slide ${i + 1}`}
                 className={cn(
-                  'h-1.5 rounded-full transition-all duration-1000 ease-out',
+                  'h-1.5 rounded-full p-0 transition-all duration-1000 ease-out',
                   i === active ? 'w-12 bg-black' : 'w-2 bg-gray-200',
                 )}
               />

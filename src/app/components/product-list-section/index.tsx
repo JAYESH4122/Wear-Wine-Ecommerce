@@ -8,6 +8,7 @@ import { Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
 import { ProductCard } from '../product-card'
 import { ArrowSlider } from '../arrow-slider'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button/Button'
 
 type Category = { id: string; name: string }
 
@@ -45,18 +46,19 @@ const ToggleButton = ({
   icon: React.ElementType
   label: string
 }) => (
-  <button
+  <Button
     onClick={onClick}
-    className={cn(
-      'p-2.5 transition-all duration-200 cursor-pointer',
-      active
-        ? 'bg-white text-neutral-900 border border-neutral-200'
-        : 'text-neutral-400 hover:text-neutral-600 border border-transparent',
-    )}
+    variant="icon"
+    size="icon"
+    leftIcon={<Icon className="w-4 h-4" />}
     aria-label={label}
-  >
-    <Icon className="w-4 h-4" />
-  </button>
+    className={cn(
+      'h-10 w-10 border transition-all duration-200',
+      active
+        ? 'bg-white text-neutral-900 border-neutral-200'
+        : 'bg-transparent text-neutral-400 hover:text-neutral-600 border-transparent',
+    )}
+  />
 )
 
 export const ProductListSection = () => {
@@ -164,10 +166,14 @@ export const ProductListSection = () => {
             </p>
           </div>
 
-          <button className="group flex items-center gap-2 text-sm font-semibold text-primary hover:text-secondary transition-colors cursor-pointer">
+          <Button
+            variant="text"
+            size="sm"
+            rightIcon={<ChevronRight className="w-4 h-4" />}
+            className="text-sm font-semibold text-primary hover:text-secondary"
+          >
             View All Products
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+          </Button>
         </div>
 
         {/* Controls */}
@@ -175,11 +181,13 @@ export const ProductListSection = () => {
           {/* <LayoutGroup> */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
               {categories.map((cat) => (
-                <button
+                <Button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.id)}
+                  variant="ghost"
+                  size="sm"
                   className={cn(
-                    'relative px-5 py-2.5 text-sm font-medium transition-all whitespace-nowrap cursor-pointer',
+                    'relative px-5 py-2.5 text-sm font-medium whitespace-nowrap',
                     selectedCategory === cat.id
                       ? 'text-white'
                       : 'text-secondary border border-neutral-200 hover:border-neutral-400',
@@ -193,7 +201,7 @@ export const ProductListSection = () => {
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2">{cat.name}</span>
-                </button>
+                </Button>
               ))}
             </div>
           {/* </LayoutGroup> */}
@@ -208,28 +216,31 @@ export const ProductListSection = () => {
             <div className="hidden md:flex items-center gap-1">
               <div className="  z-30 flex  gap-2">
                 {(['prev', 'next'] as const).map((dir) => (
-                  <button
+                  <Button
                     key={dir}
                     onClick={() =>
                       dir === 'prev'
                         ? swiperRef.current?.slidePrev()
                         : swiperRef.current?.slideNext()
                     }
-                    className="w-11 h-11 flex items-center justify-center cursor-pointer text-white/70 border border-white/15 bg-black backdrop-blur-md transition-all duration-300 hover:border-white/40 hover:bg-black/50"
-                  >
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 12 12"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      {dir === 'prev' ? <path d="M8 2L4 6L8 10" /> : <path d="M4 2L8 6L4 10" />}
-                    </svg>
-                  </button>
+                    variant="slider"
+                    size="icon"
+                    leftIcon={
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        {dir === 'prev' ? <path d="M8 2L4 6L8 10" /> : <path d="M4 2L8 6L4 10" />}
+                      </svg>
+                    }
+                    className="w-11 h-11 text-white/70 border border-white/15 bg-black backdrop-blur-md hover:border-white/40 hover:bg-black/50"
+                  />
                 ))}
               </div>
             </div>
@@ -298,16 +309,18 @@ export const ProductListSection = () => {
               {/* Line pagination */}
               <div className="flex gap-2 items-center justify-center mt-8">
                 {Array.from({ length: totalSlides }).map((_, i) => (
-                  <button
+                  <Button
                     key={i}
                     onClick={() => goToSlide(i)}
+                    variant="text"
+                    size="icon"
+                    aria-label={`Go to slide ${i + 1}`}
                     className={cn(
-                      'h-px transition-all duration-300 cursor-pointer',
+                      'h-px w-5 rounded-none p-0',
                       i === activeIndex
                         ? 'w-10 bg-neutral-800'
-                        : 'w-5 bg-neutral-300 hover:bg-neutral-500',
+                        : 'bg-neutral-300 hover:bg-neutral-500',
                     )}
-                    aria-label={`Go to slide ${i + 1}`}
                   />
                 ))}
               </div>

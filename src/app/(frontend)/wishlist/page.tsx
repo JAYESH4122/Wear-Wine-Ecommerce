@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import type { Media } from '@/payload-types'
 import { useWishlist, type WishlistItem } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
+import { Button } from '@/components/ui/button/Button'
 
 // --- Helper ---
 function getImageUrl(item: WishlistItem): string | null {
@@ -43,13 +44,14 @@ function WishlistItemRow({
     >
       {/* Product Column */}
       <div className="md:col-span-6 flex items-center gap-4">
-        <button
+        <Button
           onClick={() => onRemove(String(item.id))}
-          className="hidden md:block p-2 text-neutral-400 hover:text-red-500 transition-colors"
+          variant="icon"
+          size="icon"
+          leftIcon={<X className="w-5 h-5" />}
           aria-label="Remove"
-        >
-          <X className="w-5 h-5" />
-        </button>
+          className="hidden md:block h-9 w-9 bg-transparent text-neutral-400 hover:text-red-500"
+        />
 
         <Link
           href={`/products/${item.slug}`}
@@ -76,12 +78,15 @@ function WishlistItemRow({
           >
             {item.name}
           </Link>
-          <button
+          <Button
             onClick={() => onRemove(String(item.id))}
-            className="md:hidden flex items-center gap-1 text-xs text-red-500 mt-2"
+            variant="text"
+            size="sm"
+            leftIcon={<Trash2 className="w-3 h-3" />}
+            className="md:hidden text-xs text-red-500 mt-2"
           >
-            <Trash2 className="w-3 h-3" /> Remove
-          </button>
+            Remove
+          </Button>
         </div>
       </div>
 
@@ -106,13 +111,15 @@ function WishlistItemRow({
 
       {/* Actions Column */}
       <div className="md:col-span-2 flex justify-end">
-        <button
+        <Button
           onClick={() => onAddToCart(item)}
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-neutral-900 text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all active:scale-95"
+          variant="primary"
+          size="sm"
+          leftIcon={<ShoppingBag className="w-3.5 h-3.5" />}
+          className="w-full md:w-auto px-5 py-2.5 text-xs font-bold uppercase tracking-widest bg-neutral-900 text-white hover:bg-neutral-800"
         >
-          <ShoppingBag className="w-3.5 h-3.5" />
           Add To Cart
-        </button>
+        </Button>
       </div>
     </motion.div>
   )
@@ -129,12 +136,14 @@ function EmptyWishlist() {
       <p className="text-neutral-500 mb-8 max-w-xs">
         Save your favorite items here to keep track of what you love.
       </p>
-      <Link
-        href="/shop"
-        className="bg-neutral-900 text-white px-10 py-4 text-sm font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
+      <Button
+        asChild
+        variant="primary"
+        size="lg"
+        className="px-10 py-4 text-sm font-bold uppercase tracking-widest bg-neutral-900 text-white hover:bg-neutral-800"
       >
-        Return To Shop
-      </Link>
+        <Link href="/shop">Return To Shop</Link>
+      </Button>
     </div>
   )
 }
@@ -163,12 +172,15 @@ export default function WishlistPage() {
       {/* Breadcrumb / Top Bar */}
       <div className="border-b border-neutral-100">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-xs uppercase tracking-widest flex items-center gap-2 text-neutral-500 hover:text-black transition-colors"
+          <Button
+            asChild
+            variant="back"
+            size="sm"
+            leftIcon={<ArrowLeft className="w-3 h-3" />}
+            className="text-xs uppercase tracking-widest text-neutral-500 hover:text-black"
           >
-            <ArrowLeft className="w-3 h-3" /> Back to Home
-          </Link>
+            <Link href="/">Back to Home</Link>
+          </Button>
           <div className="text-[10px] uppercase tracking-[0.2em] text-neutral-400">
             Free Shipping on orders over $150
           </div>
@@ -191,12 +203,15 @@ export default function WishlistPage() {
           </div>
 
           {isHydrated && wishlistCount > 0 && (
-            <button
+            <Button
               onClick={() => window.confirm('Clear all items?') && clearWishlist()}
-              className="text-xs uppercase tracking-widest text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-2"
+              variant="text"
+              size="sm"
+              leftIcon={<Trash2 className="w-3 h-3" />}
+              className="text-xs uppercase tracking-widest text-neutral-400 hover:text-red-500"
             >
-              <Trash2 className="w-3 h-3" /> Clear Wishlist
-            </button>
+              Clear Wishlist
+            </Button>
           )}
         </div>
 
@@ -239,12 +254,15 @@ export default function WishlistPage() {
 
             {/* Footer Actions */}
             <div className="mt-10 flex flex-col md:flex-row items-center justify-between border-t border-neutral-100 pt-10">
-              <Link
-                href="/shop"
-                className="flex items-center gap-2 text-sm font-medium hover:gap-4 transition-all duration-300"
+              <Button
+                asChild
+                variant="link"
+                size="sm"
+                rightIcon={<ChevronRight className="w-4 h-4" />}
+                className="text-sm font-medium hover:gap-4"
               >
-                Continue Shopping <ChevronRight className="w-4 h-4" />
-              </Link>
+                <Link href="/shop">Continue Shopping</Link>
+              </Button>
 
               <div className="hidden md:flex items-center gap-8">
                 <p className="text-xs text-neutral-400 max-w-[200px] text-right">

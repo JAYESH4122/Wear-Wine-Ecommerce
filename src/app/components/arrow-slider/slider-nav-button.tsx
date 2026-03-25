@@ -2,8 +2,10 @@
 
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import type { SwiperClass } from 'swiper/react'
-import { ChevronButton } from './chevron-button'
+import { ArrowRight, ArrowRightDark } from 'assets'
+import { Button } from '@/components/ui/button/Button'
 
 interface SliderNavButtonsProps {
   swiperRef: React.RefObject<SwiperClass | null>
@@ -76,24 +78,72 @@ export const SliderNavButtons = ({
 
   return (
     <div className={clsx('flex items-center gap-3', SliderArrowClassname)}>
-      <ChevronButton
+      <Button
         onClick={() => swiperRef.current?.slidePrev()}
         disabled={isPrevDisabled}
-        variant={variant}
-        size={size}
-        className="rotate-180"
+        variant="icon"
+        size="icon"
+        className={clsx(
+          'group relative overflow-hidden rounded-full shadow-xs',
+          size === 'sm' ? 'h-9 w-9' : 'h-12 w-12',
+          variant === 'primary' && 'bg-white hover:bg-neutral-100',
+          variant === 'secondary' && 'bg-black hover:bg-gray-600',
+          variant === 'outlined' && 'bg-transparent border border-black',
+          'rotate-180',
+        )}
         aria-label="Previous slide"
-      />
+      >
+        <span className="pointer-events-none absolute inset-0 flex -translate-x-8 items-center justify-center opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100">
+          <Image
+            src={variant === 'secondary' ? ArrowRight : ArrowRightDark}
+            alt="icon"
+            width={size === 'sm' ? 15 : 20}
+            height={size === 'sm' ? 15 : 20}
+          />
+        </span>
+        <span className="relative flex items-center justify-center transition-all duration-200 ease-out group-hover:translate-x-8 group-hover:opacity-0">
+          <Image
+            src={variant === 'secondary' ? ArrowRight : ArrowRightDark}
+            alt="icon"
+            width={size === 'sm' ? 15 : 20}
+            height={size === 'sm' ? 15 : 20}
+          />
+        </span>
+      </Button>
 
       {children}
 
-      <ChevronButton
+      <Button
         onClick={() => swiperRef.current?.slideNext()}
         disabled={isNextDisabled}
-        variant={variant}
-        size={size}
+        variant="icon"
+        size="icon"
+        className={clsx(
+          'group relative overflow-hidden rounded-full shadow-xs',
+          size === 'sm' ? 'h-9 w-9' : 'h-12 w-12',
+          variant === 'primary' && 'bg-white hover:bg-neutral-100',
+          variant === 'secondary' && 'bg-black hover:bg-gray-600',
+          variant === 'outlined' && 'bg-transparent border border-black',
+        )}
         aria-label="Next slide"
-      />
+      >
+        <span className="pointer-events-none absolute inset-0 flex -translate-x-8 items-center justify-center opacity-0 transition-all duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100">
+          <Image
+            src={variant === 'secondary' ? ArrowRight : ArrowRightDark}
+            alt="icon"
+            width={size === 'sm' ? 15 : 20}
+            height={size === 'sm' ? 15 : 20}
+          />
+        </span>
+        <span className="relative flex items-center justify-center transition-all duration-200 ease-out group-hover:translate-x-8 group-hover:opacity-0">
+          <Image
+            src={variant === 'secondary' ? ArrowRight : ArrowRightDark}
+            alt="icon"
+            width={size === 'sm' ? 15 : 20}
+            height={size === 'sm' ? 15 : 20}
+          />
+        </span>
+      </Button>
     </div>
   )
 }

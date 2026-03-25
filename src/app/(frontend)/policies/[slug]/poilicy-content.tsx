@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { PolicyContentType } from '@/app/components/footer/data'
+import { Button } from '@/components/ui/button/Button'
 
 interface PolicyContentProps {
   policy: PolicyContentType
@@ -18,13 +19,15 @@ export function PolicyContent({ policy }: PolicyContentProps) {
       {/* Header */}
       <header className="border-b border-primary/10">
         <div className="mx-auto max-w-4xl px-6 py-8 md:px-8 md:py-12">
-          <Link
-            href="/"
-            className="group mb-8 inline-flex items-center gap-2 text-sm text-primary/60 transition-colors hover:text-primary"
+          <Button
+            asChild
+            variant="back"
+            size="sm"
+            leftIcon={<ArrowLeft size={16} />}
+            className="mb-8 text-sm text-primary/60 hover:text-primary"
           >
-            <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" />
-            Back to Home
-          </Link>
+            <Link href="/">Back to Home</Link>
+          </Button>
 
           <h1 className="font-serif text-4xl font-light tracking-tight text-primary md:text-5xl">
             {policy.title}
@@ -49,12 +52,14 @@ export function PolicyContent({ policy }: PolicyContentProps) {
       <section className="border-t border-primary/10 bg-primary/[0.02]">
         <div className="mx-auto max-w-4xl px-6 py-12 text-center md:px-8 md:py-16">
           <p className="text-sm text-primary/60">Have questions? We&apos;re here to help.</p>
-          <Link
-            href="mailto:hello@wearwine.com"
-            className="mt-4 inline-block border-b border-primary/30 pb-0.5 text-sm font-medium text-primary transition-colors hover:border-primary"
+          <Button
+            asChild
+            variant="link"
+            size="sm"
+            className="mt-4 border-b border-primary/30 pb-0.5 text-sm font-medium text-primary hover:border-primary"
           >
-            Contact Support
-          </Link>
+            <Link href="mailto:hello@wearwine.com">Contact Support</Link>
+          </Button>
         </div>
       </section>
     </main>
@@ -93,10 +98,22 @@ function FaqAccordion({ faqs }: { faqs: { question: string; answer: string }[] }
 
         return (
           <div key={faq.question} className="group">
-            <button
+            <Button
               onClick={() => setOpenIndex(isOpen ? null : index)}
-              className="flex w-full items-start justify-between gap-4 py-6 text-left transition-colors"
+              variant="text"
+              size="lg"
+              fullWidth
               aria-expanded={isOpen}
+              rightIcon={
+                <ChevronDown
+                  size={20}
+                  className={cn(
+                    'mt-1 shrink-0 text-primary/40 transition-transform duration-300',
+                    isOpen && 'rotate-180',
+                  )}
+                />
+              }
+              className="items-start justify-between gap-4 py-6 text-left"
             >
               <div className="flex items-baseline gap-4">
                 <span className="font-mono text-xs text-primary/30">
@@ -111,14 +128,7 @@ function FaqAccordion({ faqs }: { faqs: { question: string; answer: string }[] }
                   {faq.question}
                 </span>
               </div>
-              <ChevronDown
-                size={20}
-                className={cn(
-                  'mt-1 shrink-0 text-primary/40 transition-transform duration-300',
-                  isOpen && 'rotate-180',
-                )}
-              />
-            </button>
+            </Button>
 
             <div
               className={cn(

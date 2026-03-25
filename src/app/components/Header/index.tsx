@@ -14,6 +14,7 @@ import { IconBlack, WearWine } from 'assets'
 import { useAuth } from '@/providers/auth'
 import { AuthModal } from './AuthModal'
 import { LogOut, User as UserIcon, Package } from 'lucide-react'
+import { Button } from '@/components/ui/button/Button'
 
 
 interface HeaderProps {
@@ -141,15 +142,16 @@ export const Header = ({ categories = [] }: HeaderProps) => {
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-14 lg:h-16">
             {/* Burger - mobile only */}
-            <button
+            <Button
               onClick={() => setIsMenuOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-text"
+              variant="icon"
+              size="icon"
+              leftIcon={<Menu className="w-6 h-6" />}
               aria-label="Open menu"
               aria-expanded={isMenuOpen}
               aria-controls="mobile-menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
+              className="lg:hidden -ml-2 h-10 w-10 bg-transparent text-text"
+            />
 
             <Link
               href="/"
@@ -241,14 +243,15 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
             {/* Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
-              <button
+              <Button
                 onClick={() => setIsSearchOpen((prev) => !prev)}
-                className="p-2 text-secondary hover:text-text transition-colors"
+                variant="icon"
+                size="icon"
+                leftIcon={<Search className="w-5 h-5" />}
                 aria-label={isSearchOpen ? 'Close search' : 'Open search'}
                 aria-expanded={isSearchOpen}
-              >
-                <Search className="w-5 h-5 cursor-pointer" />
-              </button>
+                className="h-9 w-9 bg-transparent text-secondary hover:text-text"
+              />
 
               <Link
                 href="/wishlist"
@@ -264,7 +267,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               </Link>
 
               <div className="relative">
-                <button
+                <Button
                   onClick={() => {
                     if (user) {
                       setIsAccountDropdownOpen(!isAccountDropdownOpen)
@@ -272,11 +275,12 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                       setIsAuthModalOpen(true)
                     }
                   }}
-                  className="hidden md:flex p-2 text-secondary hover:text-text transition-colors"
+                  variant="icon"
+                  size="icon"
+                  leftIcon={<User className="w-5 h-5" />}
                   aria-label="Account"
-                >
-                  <User className="w-5 h-5 cursor-pointer" />
-                </button>
+                  className="hidden md:flex h-9 w-9 bg-transparent text-secondary hover:text-text"
+                />
 
                 {/* Desktop Account Dropdown */}
                 {/* <AnimatePresence> */}
@@ -321,16 +325,18 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
                       <div className="h-px bg-secondary/5 my-2" />
 
-                      <button
+                      <Button
                         onClick={() => {
                           logout()
                           setIsAccountDropdownOpen(false)
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50 transition-colors"
+                        variant="text"
+                        size="sm"
+                        leftIcon={<LogOut className="w-4 h-4" />}
+                        className="w-full justify-start px-4 py-2.5 text-sm text-rose-500 hover:bg-rose-50"
                       >
-                        <LogOut className="w-4 h-4" />
                         Sign Out
-                      </button>
+                      </Button>
                     </motion.div>
                   </>
                 )}
@@ -371,13 +377,14 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   placeholder="Search products..."
                   className="w-full bg-white border text-text border-neutral-200 px-5 py-3 pr-12 text-sm placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 transition-colors"
                 />
-                <button
+                <Button
                   type="submit"
-                  className="absolute right-0 top-0 h-full px-4 text-neutral-500 hover:text-neutral-900 transition-colors"
+                  variant="icon"
+                  size="icon"
+                  leftIcon={<Search className="w-4 h-4" />}
                   aria-label="Search"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
+                  className="absolute right-0 top-0 h-full w-12 rounded-none bg-transparent text-neutral-500 hover:text-neutral-900"
+                />
               </div>
 
               {/* Dropdown for search results */}
@@ -470,9 +477,13 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
                       {/* Action Call to Action */}
                       <div className="border-t border-neutral-100 px-4 py-3 bg-white">
-                        <button className="w-full text-[9px] font-black uppercase tracking-[0.3em] text-black hover:opacity-50 transition-opacity">
+                        <Button
+                          variant="text"
+                          size="sm"
+                          className="w-full text-[9px] font-black uppercase tracking-[0.3em] text-black hover:opacity-50"
+                        >
                           View all collections
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ) : debouncedQuery ? (
@@ -527,13 +538,14 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               Wear Wine
             </span>
           </Link>
-          <button
+          <Button
             onClick={closeMenu}
-            className="p-2 -mr-2 text-secondary hover:text-text transition-colors"
+            variant="icon"
+            size="icon"
+            leftIcon={<X className="w-5 h-5" />}
             aria-label="Close menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
+            className="-mr-2 h-9 w-9 bg-transparent text-secondary hover:text-text"
+          />
         </div>
 
         {/* Scrollable body */}
@@ -561,19 +573,24 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
             {/* Shop / Categories accordion */}
             <div>
-              <button
+              <Button
                 onClick={() => setIsCategoriesOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider text-text hover:bg-secondary/5 transition-colors"
+                variant="text"
+                size="lg"
+                fullWidth
                 aria-expanded={isCategoriesOpen}
+                rightIcon={
+                  <ChevronDown
+                    className={clsx(
+                      'w-4 h-4 text-secondary transition-transform duration-300',
+                      isCategoriesOpen && 'rotate-180',
+                    )}
+                  />
+                }
+                className="w-full justify-between px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider text-text hover:bg-secondary/5"
               >
                 Shop
-                <ChevronDown
-                  className={clsx(
-                    'w-4 h-4 text-secondary transition-transform duration-300',
-                    isCategoriesOpen && 'rotate-180',
-                  )}
-                />
-              </button>
+              </Button>
 
               <div
                 className={clsx(
@@ -622,28 +639,32 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   <User className="w-4 h-4 text-secondary" />
                   My Account
                 </Link>
-                <button
+                <Button
                   onClick={() => {
                     logout()
                     closeMenu()
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-rose-500 hover:bg-rose-50 transition-colors"
+                  variant="text"
+                  size="sm"
+                  leftIcon={<LogOut className="w-4 h-4" />}
+                  className="w-full justify-start gap-3 px-3 py-3 rounded-xl text-sm text-rose-500 hover:bg-rose-50"
                 >
-                  <LogOut className="w-4 h-4" />
                   Sign Out
-                </button>
+                </Button>
               </>
             ) : (
-              <button
+              <Button
                 onClick={() => {
                   setIsAuthModalOpen(true)
                   closeMenu()
                 }}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5 transition-colors"
+                variant="text"
+                size="sm"
+                leftIcon={<User className="w-4 h-4 text-secondary" />}
+                className="w-full justify-start gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5"
               >
-                <User className="w-4 h-4 text-secondary" />
                 Sign In / Join
-              </button>
+              </Button>
             )}
             <Link
               href="/wishlist"

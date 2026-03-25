@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react'
 import { Check, Package, RotateCcw, ShieldCheck, Tag, Truck, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { btnBase } from './styles'
+import { Button } from '@/components/ui/button/Button'
 
 export const CartSummary = React.memo(function CartSummary({
   subtotal,
@@ -55,14 +54,15 @@ export const CartSummary = React.memo(function CartSummary({
             <span className="flex items-center gap-1.5">
               <Tag className="w-4 h-4" />
               Discount (10%)
-              <button
+              <Button
                 type="button"
                 onClick={handleRemovePromo}
-                className="ml-1 text-neutral-400 hover:text-red-500"
+                variant="icon"
+                size="icon"
+                leftIcon={<X className="w-3.5 h-3.5" />}
                 aria-label="Remove promo"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+                className="ml-1 h-5 w-5 bg-transparent text-neutral-400 hover:text-red-500"
+              />
             </span>
             <span className="font-medium">-${discount.toFixed(2)}</span>
           </div>
@@ -108,20 +108,21 @@ export const CartSummary = React.memo(function CartSummary({
             disabled={promoApplied}
             className="flex-1 bg-white border border-neutral-200 px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-sm transition-all"
           />
-          <button
+          <Button
             type="button"
             onClick={handleApply}
             disabled={!promoCode.trim() || promoApplied}
-            className={cn(
-              btnBase,
-              'px-4 py-2.5 text-sm font-medium rounded-sm',
+            variant={promoApplied ? 'secondary' : 'primary'}
+            size="sm"
+            leftIcon={promoApplied ? <Check className="w-4 h-4" /> : undefined}
+            className={
               promoApplied
-                ? 'bg-emerald-600 text-white cursor-default'
-                : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed',
-            )}
+                ? 'bg-emerald-600 text-white hover:bg-emerald-600 cursor-default'
+                : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed'
+            }
           >
-            {promoApplied ? <Check className="w-4 h-4" /> : 'Apply'}
-          </button>
+            {promoApplied ? null : 'Apply'}
+          </Button>
         </div>
         {promoError && <p className="mt-2 text-xs text-red-500">{promoError}</p>}
         {!promoApplied && <p className="mt-2 text-xs text-neutral-400">Try: SAVE10 or WELCOME</p>}

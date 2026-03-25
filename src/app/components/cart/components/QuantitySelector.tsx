@@ -2,8 +2,7 @@
 
 import React from 'react'
 import { Minus, Plus } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { btnBase } from './styles'
+import { Button } from '@/components/ui/button/Button'
 
 export const QuantitySelector = React.memo(function QuantitySelector({
   quantity,
@@ -16,32 +15,28 @@ export const QuantitySelector = React.memo(function QuantitySelector({
 }) {
   return (
     <div className="inline-flex items-center border border-neutral-200 rounded-sm">
-      <button
+      <Button
         type="button"
         onClick={onDecrease}
         disabled={quantity <= 1}
-        className={cn(
-          btnBase,
-          'w-9 h-9 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors',
-        )}
+        className="w-9 h-9 bg-transparent text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 disabled:opacity-30 disabled:cursor-not-allowed"
         aria-label="Decrease quantity"
-      >
-        <Minus className="w-3.5 h-3.5" />
-      </button>
+        variant="icon"
+        size="icon"
+        leftIcon={<Minus className="w-3.5 h-3.5" />}
+      />
       <span className="w-10 text-center text-sm font-medium text-neutral-900 tabular-nums select-none">
         {quantity}
       </span>
-      <button
+      <Button
         type="button"
         onClick={onIncrease}
-        className={cn(
-          btnBase,
-          'w-9 h-9 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors',
-        )}
+        className="w-9 h-9 bg-transparent text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100"
         aria-label="Increase quantity"
-      >
-        <Plus className="w-3.5 h-3.5" />
-      </button>
+        variant="icon"
+        size="icon"
+        leftIcon={<Plus className="w-3.5 h-3.5" />}
+      />
     </div>
   )
 })
