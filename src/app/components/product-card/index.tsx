@@ -203,9 +203,9 @@ export const ProductCard = ({
       {/* --- PRODUCT INFO SECTION --- */}
       <div className="pt-2 pb-2 flex flex-col px-4">
         {/* Title & Rating Row */}
-        <div className="flex justify-between items-center px-1">
+        <div className="flex justify-between items-center">
           <Link href={`/product/${slug || id}`} className="flex-1">
-            <h3 className="text-[16px] font-bold text-black uppercase tracking-widest leading-none line-clamp-1">
+            <h3 className="text-[16px] font-bold text-black uppercase tracking-widest leading-none line-clamp-1 p-0 m-0">
               {title}
             </h3>
           </Link>
@@ -223,7 +223,7 @@ export const ProductCard = ({
           )}
         </div>
 
-        <span className="text-[12px] uppercase tracking-[0.1em] text-black/40 font-bold m-0">
+        <span className="text-[12px] uppercase tracking-[0.1em] text-black/40 font-bold mx-0 my-2 ">
           {category}
         </span>
 
