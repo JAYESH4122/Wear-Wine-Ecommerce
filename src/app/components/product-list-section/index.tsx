@@ -193,7 +193,7 @@ export const ProductListSection = () => {
             className="mb-2"
           >
             <span className="text-[11px] font-black uppercase tracking-tighter text-neutral-900">
-              // NEW ARRIVALS
+              NEW ARRIVALS
             </span>
           </motion.div>
 
