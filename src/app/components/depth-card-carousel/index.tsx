@@ -123,20 +123,20 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
               >
                 <motion.img
                   src={card.src}
-                  // animate={{ scale: hovered === i ? 1.05 : 1 }}
-                  // transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+                  animate={{ scale: hovered === i ? 1.05 : 1 }}
+                  transition={{ type: 'spring', stiffness: 100, damping: 20 }}
                   className="w-full h-full object-cover"
                   style={{
-                    transform: hovered === i ? 'scale(1.05)' : 'scale(1)'
+                    transform: hovered === i ? 'scale(1.05)' : 'scale(1)',
                   }}
                 />
 
-                {/* <AnimatePresence> */}
+                <AnimatePresence>
                   {isCenter && (
                     <motion.div
-                      // initial={{ opacity: 0 }}
-                      // animate={{ opacity: 1 }}
-                      // exit={{ opacity: 0 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                       className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white"
                     >
                       <p className="text-[12px] font-mono tracking-widest text-black md:text-white">
@@ -145,7 +145,7 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
                       </p>
                     </motion.div>
                   )}
-                {/* </AnimatePresence> */}
+                </AnimatePresence>
               </motion.div>
             )
           })}
