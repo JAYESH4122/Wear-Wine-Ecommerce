@@ -194,7 +194,7 @@ export const ProductCard = ({
               exit={{ opacity: 0, x: 10 }}
               onClick={handleWishlistToggle}
               onTouchEnd={handleWishlistToggle}
-              className="absolute top-4 right-4 z-20"
+              className="absolute top-4 right-4 z-20 cursor-pointer"
             >
               <div className="p-2 flex justify-center items-center bg-white/80 backdrop-blur-sm border border-black/5 hover:bg-white transition-colors shadow-sm w-12 h-12">
                 <Heart
@@ -217,14 +217,14 @@ export const ProductCard = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-x-0 bottom-0 z-30"
+              className="absolute inset-x-0 bottom-0 z-30 cursor-pointer"
             >
               <button
                 onClick={handleAddToCart}
                 onTouchEnd={handleAddToCart}
                 disabled={isLoading}
                 className={clsx(
-                  'w-full py-5 flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all duration-500',
+                  'w-full py-5.5 flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all duration-500 cursor-pointer',
                   isAdded || isInCart
                     ? 'bg-black text-white'
                     : 'bg-white/95 backdrop-blur-md text-black hover:bg-black hover:text-white',

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ShoppingBag, User, Menu, X, Heart, ChevronDown, ChevronRight } from 'lucide-react'
+import { Search, ShoppingBag, User, X, Heart, ChevronDown, ChevronRight } from 'lucide-react'
 import { navigation, type CategoryItem } from './data'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
@@ -16,9 +16,40 @@ import { AuthModal } from './AuthModal'
 import { LogOut, User as UserIcon, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button/Button'
 
-
 interface HeaderProps {
   categories?: CategoryItem[]
+}
+
+/**
+ * Animated Menu Icon exactly from the first code
+ */
+const AnimatedMenuIcon = ({ isOpen }: { isOpen: boolean }) => {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <motion.path
+        animate={isOpen ? { d: 'M 5 5 L 19 19' } : { d: 'M 4 7 L 20 7' }}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        transition={{ duration: 0.3 }}
+      />
+      <motion.path
+        d="M 4 12 L 20 12"
+        animate={isOpen ? { opacity: 0, x: -10 } : { opacity: 1, x: 0 }}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        transition={{ duration: 0.2 }}
+      />
+      <motion.path
+        animate={isOpen ? { d: 'M 5 19 L 19 5' } : { d: 'M 4 17 L 20 17' }}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        transition={{ duration: 0.3 }}
+      />
+    </svg>
+  )
 }
 
 export const Header = ({ categories = [] }: HeaderProps) => {
@@ -34,8 +65,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
-  const [isLogoHovered, setIsLogoHovered] = useState(false)
-  const [wordmarkVisible, setWordmarkVisible] = useState(true)
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -48,7 +77,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  // Scroll handler with useCallback to avoid recreation
+
   const handleScroll = useCallback(() => {
     setIsScrolled(window.scrollY > 20)
   }, [])
@@ -58,7 +87,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [handleScroll])
 
-  // Lock body scroll when menu is open
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden'
@@ -70,14 +98,12 @@ export const Header = ({ categories = [] }: HeaderProps) => {
     }
   }, [isMenuOpen])
 
-  // Focus search input when opened
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       searchInputRef.current.focus()
     }
   }, [isSearchOpen])
 
-  // Close menu on route change
   useEffect(() => {
     setIsMenuOpen(false)
     setIsCategoriesOpen(false)
@@ -90,7 +116,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
     }
   }
 
-  // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery)
@@ -98,13 +123,11 @@ export const Header = ({ categories = [] }: HeaderProps) => {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Fetch search results
   useEffect(() => {
     if (!debouncedQuery.trim()) {
       setSearchResults([])
       return
     }
-
 
     const fetchResults = async () => {
       setIsSearching(true)
@@ -131,6 +154,23 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
   return (
     <>
+      {/* FLOATING HAMBURGER - Floating and above the drawer (z-70) */}
+      <div
+        className={clsx(
+          'fixed lg:hidden transition-all duration-500 z-[70]',
+          isScrolled ? 'top-3 left-2' : 'top-5 left-2',
+        )}
+      >
+        <Button
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          variant="icon"
+          size="icon"
+          leftIcon={<AnimatedMenuIcon isOpen={isMenuOpen} />}
+          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+          className="h-10 w-10 bg-transparent text-text"
+        />
+      </div>
+
       <header
         className={clsx(
           'sticky top-0 z-40 transition-all duration-500',
@@ -141,78 +181,48 @@ export const Header = ({ categories = [] }: HeaderProps) => {
       >
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-14 lg:h-16">
-            {/* Burger - mobile only */}
-            <Button
-              onClick={() => setIsMenuOpen(true)}
-              variant="icon"
-              size="icon"
-              leftIcon={<Menu className="w-6 h-6" />}
-              aria-label="Open menu"
-              aria-expanded={isMenuOpen}
-              aria-controls="mobile-menu"
-              className="lg:hidden -ml-2 h-10 w-10 bg-transparent text-text"
-            />
+            {/* Layout Spacer - Keeps logo centered exactly like original code */}
+            <div className="w-10 lg:hidden" aria-hidden="true" />
 
-            <Link
-              href="/"
-              className="flex items-center relative w-100 gap-2"
-              onMouseEnter={() => {
-                if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current)
-                if (!isLogoHovered) {
-                  setIsLogoHovered(true)
-                  setWordmarkVisible(false)
-                }
-              }}
-              onMouseLeave={() => {
-                leaveTimerRef.current = setTimeout(() => {
-                  setIsLogoHovered(false)
-                  setWordmarkVisible(true)
-                }, 10)
-              }}
-            >
+            <Link href="/" className="flex items-center relative  gap-2">
               <motion.div
-                key={isLogoHovered ? 'hover' : 'rest'}
-                className="flex-shrink-0 flex items-center justify-center"
-                // initial={isLogoHovered ? { scale: 0.08 } : false}
-                // animate={{ scale: 1 }}
-                // transition={
-                //   isLogoHovered ? { type: 'spring', stiffness: 1000, damping: 40 } : { duration: 0 }
-                // }
-                onAnimationComplete={() => {
-                  if (isLogoHovered) setWordmarkVisible(true)
-                }}
+                className="relative inline-block overflow-hidden"
+                whileHover="hover"
+                initial="initial"
               >
-                <Image
-                  src={IconBlack}
-                  alt=""
-                  width={30}
-                  height={30}
-                  className="object-contain !w-3 !h-3 lg:!w-5 lg:!h-5"
-                  priority
-                />
-              </motion.div>
+                {/* Your logo */}
+                <div className="relative z-10 flex items-center gap-2">
+                  <Image
+                    src={IconBlack}
+                    alt=""
+                    width={30}
+                    height={30}
+                    className="w-3 h-3 lg:w-8 lg:h-6"
+                  />
+                  <Image
+                    src={WearWine}
+                    alt="Wear Wine"
+                    width={100}
+                    height={50}
+                    className="h-3 lg:h-5 w-full"
+                  />
+                </div>
 
-              <AnimatePresence>
-                {wordmarkVisible && (
-                  <motion.div
-                    key="wordmark"
-                    className="overflow-hidden"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ type: 'spring', stiffness: 1500, damping: 40 }}
-                  >
-                    <Image
-                      src={WearWine}
-                      alt="Wear Wine"
-                      width={100}
-                      height={50}
-                      className="w-auto object-contain"
-                      priority
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                {/* Shine layer */}
+                <motion.div
+                  variants={{
+                    initial: { x: '-120%', y: '-120%' },
+                    hover: { x: '120%', y: '120%' },
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    ease: 'easeInOut',
+                  }}
+                  className="pointer-events-none absolute inset-0 z-20"
+                >
+                  <div className="w-2/3 h-full bg-gradient-to-br from-transparent via-white to-transparent opacity-100 blur-[2px]" />
+                </motion.div>
+              </motion.div>
             </Link>
 
             {/* Desktop nav */}
@@ -250,12 +260,12 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 leftIcon={<Search className="w-5 h-5" />}
                 aria-label={isSearchOpen ? 'Close search' : 'Open search'}
                 aria-expanded={isSearchOpen}
-                className="h-9 w-9 bg-transparent text-secondary hover:text-text"
+                className="h-9 w-9 bg-transparent text-secondary hover:text-text cursor-pointer"
               />
 
               <Link
                 href="/wishlist"
-                className="hidden sm:flex p-2 text-secondary hover:text-text transition-colors relative group/wishlist"
+                className="hidden sm:flex p-2 text-secondary hover:text-text transition-colors relative group/wishlist cusor-pointer"
                 aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ''}`}
               >
                 <Heart className="w-5 h-5" />
@@ -279,11 +289,9 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   size="icon"
                   leftIcon={<User className="w-5 h-5" />}
                   aria-label="Account"
-                  className="hidden md:flex h-9 w-9 bg-transparent text-secondary hover:text-text"
+                  className="hidden md:flex h-9 w-9 bg-transparent text-secondary hover:text-text cursor-pointer"
                 />
 
-                {/* Desktop Account Dropdown */}
-                {/* <AnimatePresence> */}
                 {user && isAccountDropdownOpen && (
                   <>
                     <div
@@ -296,32 +304,32 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                       // exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
                     >
-                         <div className="px-4 py-3 border-b border-secondary/5 mb-2">
-                          <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
-                            Signed in as
-                          </p>
-                          <p className="text-sm font-bold text-text truncate">
-                            {(user as any).name || user.email}
-                          </p>
-                        </div>
+                      <div className="px-4 py-3 border-b border-secondary/5 mb-2">
+                        <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
+                          Signed in as
+                        </p>
+                        <p className="text-sm font-bold text-text truncate">
+                          {(user as any).name || user.email}
+                        </p>
+                      </div>
 
-                         <Link
-                          href="/account"
-                          onClick={() => setIsAccountDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
-                        >
-                          <UserIcon className="w-4 h-4" />
-                          My Profile
-                        </Link>
+                      <Link
+                        href="/account"
+                        onClick={() => setIsAccountDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
+                      >
+                        <UserIcon className="w-4 h-4" />
+                        My Profile
+                      </Link>
 
-                    <Link
-                          href="/account/orders"
-                          onClick={() => setIsAccountDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
-                        >
-                          <Package className="w-4 h-4" />
-                          My Orders
-                        </Link>
+                      <Link
+                        href="/account/orders"
+                        onClick={() => setIsAccountDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
+                      >
+                        <Package className="w-4 h-4" />
+                        My Orders
+                      </Link>
 
                       <div className="h-px bg-secondary/5 my-2" />
 
@@ -340,7 +348,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                     </motion.div>
                   </>
                 )}
-                {/* </AnimatePresence> */}
               </div>
 
               <Link
@@ -348,7 +355,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 className="p-2 text-secondary hover:text-text transition-colors relative"
                 aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
               >
-                <ShoppingBag className="w-5 h-5" />
+                <ShoppingBag className="w-5 h-5 cursor-pointer" />
                 {isCartHydrated && cartCount > 0 && (
                   <span className="absolute top-1 right-1 min-w-4 h-4 bg-accent text-white text-[10px] font-bold flex items-center justify-center rounded-full px-1">
                     {cartCount}
@@ -358,7 +365,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
             </div>
           </div>
 
-          {/* Search bar */}
+          {/* Search bar - Untouched functionality */}
           <div
             className={clsx(
               'transition-all duration-300 relative',
@@ -387,7 +394,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 />
               </div>
 
-              {/* Dropdown for search results */}
               {searchQuery.trim() && (
                 <div
                   ref={dropdownRef}
@@ -402,7 +408,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                     </div>
                   ) : searchResults.length > 0 ? (
                     <div className="flex flex-col">
-                      {/* Compact Header */}
                       <div className="px-4 py-2 bg-neutral-50 border-b border-neutral-100 flex justify-between items-center">
                         <span className="text-[9px] font-black uppercase tracking-[0.25em] text-neutral-400">
                           Results
@@ -425,7 +430,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                             }}
                             className="flex items-center gap-4 px-4 py-2.5 hover:bg-neutral-50 transition-colors group"
                           >
-                            {/* Architectural Sharp Image */}
                             <div className="relative w-10 h-14 bg-neutral-100 flex-shrink-0 overflow-hidden rounded-none border border-neutral-100">
                               {product.images?.[0]?.image?.url ? (
                                 <Image
@@ -441,7 +445,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                               )}
                             </div>
 
-                            {/* Minimalist Info Section */}
                             <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
                               <div className="min-w-0">
                                 <h4 className="text-[12px] font-medium text-black truncate tracking-tight group-hover:text-neutral-500 transition-colors uppercase">
@@ -503,11 +506,10 @@ export const Header = ({ categories = [] }: HeaderProps) => {
         </div>
       </header>
 
-      {/* Mobile drawer */}
       {/* Backdrop */}
       <div
         className={clsx(
-          'fixed inset-0 bg-black/40 backdrop-blur-sm z-20 lg:hidden transition-opacity duration-300',
+          'fixed inset-0 bg-black/40 backdrop-blur-sm z-[55] lg:hidden transition-opacity duration-300',
           isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         )}
         onClick={closeMenu}
@@ -518,40 +520,17 @@ export const Header = ({ categories = [] }: HeaderProps) => {
       <div
         id="mobile-menu"
         className={clsx(
-          'fixed top-0 left-0 bottom-0 z-50 w-[85vw] max-w-xs bg-background lg:hidden',
+          'fixed top-0 left-0 bottom-0 z-[60] w-[85vw] max-w-xs bg-background lg:hidden',
           'flex flex-col',
           'transition-transform duration-300 ease-out',
           isMenuOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         role="dialog"
         aria-modal="true"
-        aria-label="Navigation menu"
-        aria-hidden={!isMenuOpen}
       >
-        {/* Drawer header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-secondary/10">
-          <Link href="/" onClick={closeMenu} className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-7 h-7 bg-primary rounded-full">
-              <span className="text-white font-bold text-xs">W</span>
-            </div>
-            <span className="font-bold tracking-wider text-base uppercase text-text">
-              Wear Wine
-            </span>
-          </Link>
-          <Button
-            onClick={closeMenu}
-            variant="icon"
-            size="icon"
-            leftIcon={<X className="w-5 h-5" />}
-            aria-label="Close menu"
-            className="-mr-2 h-9 w-9 bg-transparent text-secondary hover:text-text"
-          />
-        </div>
-
-        {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
           {/* Main nav links */}
-          <nav className="px-3 py-4">
+          <nav className="px-3 py-4 pt-16">
             {navigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -570,58 +549,8 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 </Link>
               )
             })}
-
-            {/* Shop / Categories accordion */}
-            <div>
-              <Button
-                onClick={() => setIsCategoriesOpen((prev) => !prev)}
-                variant="text"
-                size="lg"
-                fullWidth
-                aria-expanded={isCategoriesOpen}
-                rightIcon={
-                  <ChevronDown
-                    className={clsx(
-                      'w-4 h-4 text-secondary transition-transform duration-300',
-                      isCategoriesOpen && 'rotate-180',
-                    )}
-                  />
-                }
-                className="w-full justify-between px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider text-text hover:bg-secondary/5"
-              >
-                Shop
-              </Button>
-
-              <div
-                className={clsx(
-                  'overflow-hidden transition-all duration-300',
-                  isCategoriesOpen ? 'max-h-96' : 'max-h-0',
-                )}
-              >
-                <div className="mx-3 mb-2 rounded-xl bg-secondary/5 overflow-hidden">
-                  {categories.map((category, i) => (
-                    <Link
-                      key={category.name}
-                      href={category.href}
-                      onClick={closeMenu}
-                      className={clsx(
-                        'flex items-center justify-between px-4 py-3 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors',
-                        i !== categories.length - 1 && 'border-b border-secondary/10',
-                      )}
-                    >
-                      <span>{category.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-secondary/60">{category.count}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-secondary/40" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
           </nav>
 
-          {/* Divider */}
           <div className="mx-5 border-t border-secondary/10" />
 
           {/* Account links */}
