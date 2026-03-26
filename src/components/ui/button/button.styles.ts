@@ -26,7 +26,7 @@ const variants: Record<ButtonVariant, string> = {
   icon: 'bg-background-secondary text-content-primary hover:bg-background active:bg-background cursor-pointer',
   link: 'bg-transparent text-content-primary underline underline-offset-4 hover:text-secondary active:text-secondary cursor-pointer',
   cta: 'bg-button-primary text-button-alt hover:bg-button-hover active:bg-button-hover shadow-sm cursor-pointer',
-  back: 'bg-transparent text-content-primary hover:text-secondary active:text-secondary cursor-pointer',
+  back: 'bg-transparent text-xs uppercase tracking-widest text-neutral-500 hover:text-black active:text-black cursor-pointer',
   close:
     'bg-background-secondary text-content-primary hover:bg-background active:bg-background cursor-pointer',
   slider:
