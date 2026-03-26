@@ -3,7 +3,6 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button/Button'
 
 const AUTOPLAY_INTERVAL = 5000
 
@@ -95,15 +94,15 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
               <motion.div
                 key={i}
                 initial={false}
-                // animate={{
-                //   x: xSpread,
-                //   z: -abs * 200,
-                //   rotateY: rel * -10,
-                //   scale: 1 - abs * 0.08,
-                //   opacity: abs > 2 ? 0 : 1,
-                //   filter: `blur(${abs * CONSTANTS.BLUR_INTENSITY}px) brightness(${1 - abs * 0.1})`,
-                // }}
-                // transition={{ type: 'spring', ...SPRING }}
+                animate={{
+                  x: xSpread,
+                  z: -abs * 200,
+                  rotateY: rel * -10,
+                  scale: 1 - abs * 0.08,
+                  opacity: abs > 2 ? 0 : 1,
+                  filter: `blur(${abs * CONSTANTS.BLUR_INTENSITY}px) brightness(${1 - abs * 0.1})`,
+                }}
+                transition={{ type: 'spring', ...SPRING }}
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
                 className={cn(
@@ -115,37 +114,14 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
                   height: isMobile ? CONSTANTS.CARD_HEIGHT_MOBILE : CONSTANTS.CARD_HEIGHT_DESKTOP,
                   borderRadius: CONSTANTS.BORDER_RADIUS,
                   backfaceVisibility: 'hidden',
-                  // Static positioning for disabled animation
-                  transform: `translateX(${xSpread}px) translateZ(${-abs * 200}px) rotateY(${rel * -10}deg) scale(${1 - abs * 0.08})`,
-                  opacity: abs > 2 ? 0 : 1,
-                  filter: `blur(${abs * CONSTANTS.BLUR_INTENSITY}px) brightness(${1 - abs * 0.1})`,
                 }}
               >
                 <motion.img
                   src={card.src}
-                  // animate={{ scale: hovered === i ? 1.05 : 1 }}
-                  // transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+                  animate={{ scale: hovered === i ? 1.05 : 1 }}
+                  transition={{ type: 'spring', stiffness: 100, damping: 20 }}
                   className="w-full h-full object-cover"
-                  style={{
-                    transform: hovered === i ? 'scale(1.05)' : 'scale(1)'
-                  }}
                 />
-
-                {/* <AnimatePresence> */}
-                  {isCenter && (
-                    <motion.div
-                      // initial={{ opacity: 0 }}
-                      // animate={{ opacity: 1 }}
-                      // exit={{ opacity: 0 }}
-                      className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white"
-                    >
-                      <p className="text-[12px] font-mono tracking-widest text-black md:text-white">
-                        {String(active + 1).padStart(2, '0')} /{' '}
-                        {cards.length.toString().padStart(2, '0')}
-                      </p>
-                    </motion.div>
-                  )}
-                {/* </AnimatePresence> */}
               </motion.div>
             )
           })}
@@ -154,14 +130,11 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
         <div className="flex items-center gap-10 hidden md:flex">
           <div className="flex gap-3">
             {cards.map((_, i) => (
-              <Button
+              <button
                 key={i}
                 onClick={() => setActive(i)}
-                variant="text"
-                size="icon"
-                aria-label={`Go to slide ${i + 1}`}
                 className={cn(
-                  'h-1.5 rounded-full p-0 transition-all duration-1000 ease-out',
+                  'h-1.5 rounded-full transition-all duration-1000 ease-out',
                   i === active ? 'w-12 bg-black' : 'w-2 bg-gray-200',
                 )}
               />
