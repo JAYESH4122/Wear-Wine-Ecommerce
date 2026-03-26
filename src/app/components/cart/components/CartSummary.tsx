@@ -115,11 +115,7 @@ export const CartSummary = React.memo(function CartSummary({
             variant={promoApplied ? 'secondary' : 'primary'}
             size="sm"
             leftIcon={promoApplied ? <Check className="w-4 h-4" /> : undefined}
-            className={
-              promoApplied
-                ? 'bg-emerald-600 text-white hover:bg-emerald-600 cursor-default'
-                : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed'
-            }
+            className={promoApplied ? '' : 'disabled:cursor-not-allowed'}
           >
             {promoApplied ? null : 'Apply'}
           </Button>

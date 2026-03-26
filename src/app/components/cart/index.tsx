@@ -341,36 +341,51 @@ export const CartPage = () => {
                     Payment Method
                   </p>
                   {PAYMENT_OPTIONS.map(({ value, label, desc }) => (
-                    <Button
+                    <button
                       key={value}
+                      type="button"
                       onClick={() => setPaymentMethod(value)}
-                      variant="outlined"
-                      size="lg"
-                      fullWidth
                       className={cn(
-                        'justify-between px-5 py-4 text-left',
+                        'w-full text-left border-2 p-4 transition-all duration-200 cursor-pointer group',
+                        'flex items-center gap-4',
                         paymentMethod === value
-                          ? 'border-neutral-900 bg-neutral-50'
-                          : 'border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50/50',
+                          ? 'border-neutral-900 bg-neutral-50 shadow-sm'
+                          : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/60 active:border-neutral-300 active:bg-neutral-50/60',
                       )}
                     >
-                      <div>
-                        <p className="text-sm font-medium text-neutral-900">{label}</p>
-                        <p className="text-xs text-neutral-400 mt-0.5">{desc}</p>
+                      {/* Label */}
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={cn(
+                            'text-sm font-semibold truncate transition-colors duration-200',
+                            paymentMethod === value ? 'text-neutral-900' : 'text-neutral-700',
+                          )}
+                        >
+                          {label}
+                        </p>
+                        <p className="text-xs text-neutral-400 mt-0.5 leading-snug line-clamp-2">
+                          {desc}
+                        </p>
                       </div>
+
+                      {/* Radio on the right */}
                       <div
                         className={cn(
-                          'w-4 h-4 rounded-full border-2 transition-all duration-150 shrink-0 ml-4',
+                          'shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200',
                           paymentMethod === value
                             ? 'border-neutral-900 bg-neutral-900'
-                            : 'border-neutral-300',
+                            : 'border-neutral-300 group-hover:border-neutral-400',
                         )}
-                      />
-                    </Button>
+                      >
+                        {paymentMethod === value && (
+                          <div className="w-2 h-2 rounded-full bg-white" />
+                        )}
+                      </div>
+                    </button>
                   ))}
                 </div>
 
-                <NavButtons onBack={handleBack} continueLabel="Place Order" isPrimary />
+                <NavButtons onBack={handleBack} continueLabel="Place Order" />
               </div>
 
               <div className="lg:col-span-5 xl:col-span-4">
@@ -392,32 +407,25 @@ const NavButtons = ({
   onBack,
   onContinue,
   continueLabel,
-  isPrimary = false,
 }: {
   onBack: () => void
   onContinue?: () => void
   continueLabel: string
-  isPrimary?: boolean
 }) => (
-  <div className="flex gap-3 pt-2">
+  <div className="flex gap-3 pt-2 lg:flex-row flex-col">
     <Button
       onClick={onBack}
-      variant="outlined"
+      variant="secondary"
       size="lg"
-      className="flex-1 min-w-0 px-4 text-xs tracking-widest uppercase text-neutral-600 hover:text-neutral-900"
+      className="flex-1 min-w-0 lg:px-4 py-4 text-xs tracking-widest uppercase"
     >
       Back
     </Button>
     <Button
       onClick={onContinue}
-      variant={isPrimary ? 'cta' : 'primary'}
+      variant="primary"
       size="lg"
-      className={cn(
-        'flex-1 min-w-0 px-4 text-xs tracking-widest uppercase',
-        isPrimary
-          ? 'bg-neutral-900 text-white hover:bg-neutral-700'
-          : 'bg-neutral-900 text-white hover:bg-neutral-700',
-      )}
+      className="flex-1 min-w-0 lg:px-4 py-4 text-xs tracking-widest uppercase"
     >
       {continueLabel}
     </Button>
