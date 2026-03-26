@@ -9,6 +9,7 @@ import { ProductCard } from '../product-card'
 import { ArrowSlider } from '../arrow-slider'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button/Button'
+import { useResponsive } from '@/hooks/use-responsive'
 
 type Category = { id: string; name: string }
 
@@ -72,6 +73,7 @@ export const ProductListSection = () => {
   const [hasAnimated, setHasAnimated] = useState(false)
   const animationRef = useRef(null)
   const isInView = useInView(animationRef, { amount: 0.2, once: true })
+  const { isDesktop } = useResponsive()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -220,13 +222,14 @@ export const ProductListSection = () => {
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <Button
-                variant="primary"
+                variant={isDesktop ? 'primary' : 'ghost'}
+                className={cn(isDesktop ? '' : 'p-0')}
                 size="lg"
                 rightIcon={
                   <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 }
               >
-                Shop All
+                Shop More
               </Button>
             </motion.div>
           </div>
