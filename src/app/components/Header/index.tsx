@@ -544,7 +544,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  {isActive && <span className="w-1 h-1 rounded-full bg-primary" />}
                   {item.name}
                 </Link>
               )
@@ -592,7 +591,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 leftIcon={<User className="w-4 h-4 text-secondary" />}
                 className="w-full justify-start gap-3 px-3 py-3 rounded-xl text-sm text-text hover:bg-secondary/5"
               >
-                Sign In / Join
+                Sign In
               </Button>
             )}
             <Link
@@ -621,23 +620,6 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                 </span>
               )}
             </Link>
-          </div>
-
-          {/* Divider */}
-          <div className="mx-5 border-t border-secondary/10" />
-
-          {/* Utility links */}
-          <div className="px-3 py-4 space-y-1">
-            {['Track Order', 'Help', 'Support'].map((item) => (
-              <Link
-                key={item}
-                href={`/${item.toLowerCase().replace(' ', '-')}`}
-                onClick={closeMenu}
-                className="flex items-center px-3 py-2.5 rounded-xl text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
-              >
-                {item}
-              </Link>
-            ))}
           </div>
         </div>
       </div>
