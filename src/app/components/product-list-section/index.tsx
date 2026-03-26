@@ -53,7 +53,7 @@ const ToggleButton = ({
     leftIcon={<Icon className="w-4 h-4" />}
     aria-label={label}
     className={cn(
-      'h-10 w-10 border transition-all duration-200',
+      'h-10 w-10 border transition-all duration-200 rounded-none',
       active
         ? 'bg-white text-neutral-900 border-neutral-200'
         : 'bg-transparent text-neutral-400 hover:text-neutral-600 border-transparent',
@@ -254,10 +254,10 @@ export const ProductListSection = () => {
                   )}
                 >
                   {selectedCategory === cat.id && (
-                    <div
-                      // layoutId="active-category"
+                    <motion.div
+                      layoutId="active-category"
                       className="absolute inset-0 bg-neutral-900"
-                      // transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2">{cat.name}</span>
@@ -274,7 +274,7 @@ export const ProductListSection = () => {
             </span>
 
             <div className="hidden md:flex items-center gap-1">
-              <div className="  z-30 flex  gap-2">
+              <div className="z-30 flex gap-2">
                 {(['prev', 'next'] as const).map((dir) => (
                   <Button
                     key={dir}
@@ -331,7 +331,16 @@ export const ProductListSection = () => {
         ) : filteredProducts.length > 0 ? (
           <div className="relative">
             <AnimatePresence mode="wait">
-              <div>
+              <motion.div
+                key={`${selectedCategory}-${viewMode}`}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 40 }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
+                }}
+              >
                 <div ref={animationRef}>
                   <ArrowSlider
                     swiperRef={swiperRef}
@@ -340,11 +349,10 @@ export const ProductListSection = () => {
                       element:
                         viewMode === 'detailed' ? (
                           <motion.div
-                            initial={{ opacity: 0, y: 50 }}
+                            initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{
                               duration: 0.1,
-
                               ease: 'easeOut',
                             }}
                             viewport={{
@@ -389,7 +397,6 @@ export const ProductListSection = () => {
                     breakpoints={BREAKPOINTS}
                     speed={600}
                     autoplay={{ delay: 5000, disableOnInteraction: true }}
-                    loop={true}
                     showPagination={false}
                     onSlideChange={handleSlideChange}
                   />
@@ -411,7 +418,7 @@ export const ProductListSection = () => {
                     />
                   ))}
                 </div>
-              </div>
+              </motion.div>
             </AnimatePresence>
           </div>
         ) : (
