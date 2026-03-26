@@ -2,17 +2,15 @@
 
 import Image, { StaticImageData } from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { clsx } from 'clsx'
-import { Heart, ShoppingBag, Check, Loader2, Star, Truck } from 'lucide-react'
+import { Heart, ShoppingBag, Check, Loader2, Star } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import type { CartProduct } from '@/providers/cart'
 import type { WishlistItem } from '@/providers/wishlist'
-import { Button } from '@/components/ui/button/Button'
-import { Categories } from '@/collections/categories'
 
 type ProductCardProps = {
   id: string
@@ -53,13 +51,47 @@ export const ProductCard = ({
   const [isLoading, setIsLoading] = useState(false)
   const [isAdded, setIsAdded] = useState(false)
 
+  const cardRef = useRef<HTMLDivElement>(null)
+  const isTouchDevice = useRef(false)
+
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { cart, addItem } = useCart()
 
   const isInCart = cart.some((item) => String(item.product.id) === String(id))
   const isFavorite = isInWishlist(id)
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  // ─── Tap-away dismissal ───────────────────────────────────────────────────
+  const handleTapAway = useCallback((e: TouchEvent) => {
+    if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+      setIsHovered(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isHovered && isTouchDevice.current) {
+      document.addEventListener('touchstart', handleTapAway, { passive: true })
+    } else {
+      document.removeEventListener('touchstart', handleTapAway)
+    }
+    return () => document.removeEventListener('touchstart', handleTapAway)
+  }, [isHovered, handleTapAway])
+
+  // ─── Desktop hover handlers ───────────────────────────────────────────────
+  const handleMouseEnter = () => {
+    if (!isTouchDevice.current) setIsHovered(true)
+  }
+  const handleMouseLeave = () => {
+    if (!isTouchDevice.current) setIsHovered(false)
+  }
+
+  // ─── Mobile tap handler ───────────────────────────────────────────────────
+  const handleTouchStart = () => {
+    isTouchDevice.current = true
+    setIsHovered((prev) => !prev)
+  }
+
+  // ─── Add to cart ──────────────────────────────────────────────────────────
+  const handleAddToCart = async (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (!isInStock || isLoading) return
@@ -79,18 +111,36 @@ export const ProductCard = ({
     }
     setIsLoading(false)
     setIsAdded(true)
-    setTimeout(() => setIsAdded(false), 2000)
+    // Auto-dismiss the overlay on mobile after adding
+    if (isTouchDevice.current) {
+      setTimeout(() => {
+        setIsAdded(false)
+        setIsHovered(false)
+      }, 1500)
+    } else {
+      setTimeout(() => setIsAdded(false), 2000)
+    }
+  }
+
+  // ─── Wishlist toggle (works for both mouse and touch) ─────────────────────
+  const handleWishlistToggle = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleWishlist((product as WishlistItem) || { id, name: title, price })
+    onFavorite?.(id)
   }
 
   return (
     <motion.div
+      ref={cardRef}
       className="group relative flex flex-col h-full bg-white font-sans"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
       initial="initial"
       whileHover="hover"
     >
-      {/* --- IMAGE SECTION --- */}
+      {/* ── IMAGE SECTION ─────────────────────────────────────────────────── */}
       <div className="relative aspect-[3/4] overflow-hidden bg-[#F2F2F2]">
         <Link href={`/product/${slug || id}`} className="block h-full w-full">
           <motion.div
@@ -127,14 +177,13 @@ export const ProductCard = ({
         </Link>
 
         {/* Badges */}
-        <div className="absolute top-0 left-0 p-3 flex flex-col gap-1.5 z-10 pointer-events-none">
-          {/* Main Product Badge (e.g. NEW, HOT) */}
-          {badge && (
-            <span className="self-start bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1.5 shadow-sm">
+        {badge && (
+          <div className="absolute top-0 left-0 p-3 z-10 pointer-events-none">
+            <span className="bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1.5 shadow-sm">
               {badge}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Wishlist Icon */}
         <AnimatePresence>
@@ -143,17 +192,14 @@ export const ProductCard = ({
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
-              onClick={(e) => {
-                e.preventDefault()
-                toggleWishlist((product as WishlistItem) || { id, name: title, price })
-                onFavorite?.(id)
-              }}
+              onClick={handleWishlistToggle}
+              onTouchEnd={handleWishlistToggle}
               className="absolute top-4 right-4 z-20"
             >
-              <div className="p-2 flex justify-center items-center bg-white/80 backdrop-blur-sm border border-black/5 hover:bg-white transition-colors shadow-sm w-!12 h-!12">
+              <div className="p-2 flex justify-center items-center bg-white/80 backdrop-blur-sm border border-black/5 hover:bg-white transition-colors shadow-sm w-12 h-12">
                 <Heart
                   className={clsx(
-                    'w-6.5 h-6.5 transition-all duration-300',
+                    'w-5 h-5 transition-all duration-300',
                     isFavorite ? 'fill-red-500 stroke-red-500' : 'stroke-black/60',
                   )}
                   strokeWidth={1.5}
@@ -175,9 +221,10 @@ export const ProductCard = ({
             >
               <button
                 onClick={handleAddToCart}
+                onTouchEnd={handleAddToCart}
                 disabled={isLoading}
                 className={clsx(
-                  'w-full py-5.5 flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all duration-500',
+                  'w-full py-5 flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all duration-500',
                   isAdded || isInCart
                     ? 'bg-black text-white'
                     : 'bg-white/95 backdrop-blur-md text-black hover:bg-black hover:text-white',
@@ -200,16 +247,15 @@ export const ProductCard = ({
         </AnimatePresence>
       </div>
 
-      {/* --- PRODUCT INFO SECTION --- */}
+      {/* ── PRODUCT INFO SECTION ──────────────────────────────────────────── */}
       <div className="pt-2 pb-2 flex flex-col px-4">
-        {/* Title & Rating Row */}
+        {/* Title & Rating */}
         <div className="flex justify-between items-center">
           <Link href={`/product/${slug || id}`} className="flex-1">
             <h3 className="text-[16px] font-bold text-black uppercase tracking-widest leading-none line-clamp-1 p-0 m-0">
               {title}
             </h3>
           </Link>
-
           {rating && (
             <div className="flex items-center gap-1.5 pl-3">
               <Star
@@ -217,17 +263,17 @@ export const ProductCard = ({
                   'w-3.5 h-3.5 fill-yellow-400 text-yellow-400 transition-all duration-300',
                   isHovered && 'rotate-12',
                 )}
-              />{' '}
+              />
               <span className="text-[13px] font-extrabold text-black">{rating}</span>
             </div>
           )}
         </div>
 
-        <span className="text-[12px] uppercase tracking-[0.1em] text-black/40 font-bold mx-0 my-2 ">
+        <span className="text-[12px] uppercase tracking-[0.1em] text-black/40 font-bold mx-0 my-2">
           {category}
         </span>
 
-        {/* Price & Stock Status Row */}
+        {/* Price & Stock */}
         <div className="flex justify-between items-center px-1">
           <div className="flex items-center gap-3">
             <span className="text-[17px] font-extrabold text-black tracking-tight">${price}</span>
@@ -237,8 +283,7 @@ export const ProductCard = ({
               </span>
             )}
           </div>
-
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center text-xs">
             <span className="flex items-center gap-1.5">
               <span className={clsx('relative flex h-2 w-2', isInStock && 'group/status')}>
                 <span
@@ -247,9 +292,6 @@ export const ProductCard = ({
                     isInStock ? 'bg-green-500' : 'bg-red-500',
                   )}
                 />
-                {isInStock && (
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 /* animate-ping */ opacity-75 group-hover/status:animate-none" />
-                )}
               </span>
               <span
                 className={clsx(
@@ -263,7 +305,7 @@ export const ProductCard = ({
           </div>
         </div>
 
-        {/* --- STOCK PROGRESS BAR (BOLDER) --- */}
+        {/* Stock Progress Bar */}
         {isInStock && (
           <div className="mt-2 px-1">
             <div className="flex justify-between items-center mb-1.5">
@@ -274,11 +316,10 @@ export const ProductCard = ({
                 Only {Math.floor(Math.random() * 8 + 2)} Left
               </span>
             </div>
-            {/* 3px Stroke width background */}
             <div className="h-[3px] w-full bg-gray-100 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: isHovered ? '75%' : '0%' }} // Starts at 0, fills on hover
+                animate={{ width: isHovered ? '75%' : '0%' }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 className="h-full bg-black"
               />
