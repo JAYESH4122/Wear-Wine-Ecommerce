@@ -219,13 +219,15 @@ export const CollectionGallery = ({ images }: { images: GalleryImage[] }) => {
       <div className="max-w-[1600px] mx-auto px-4 md:px-6">
         <header className="mb-10 md:mb-16 space-y-2">
           <div className="flex items-center gap-3">
-            <div className="h-px w-6 bg-neutral-400" />
-            <span className="text-[10px] font-mono tracking-[0.4em] uppercase text-neutral-400">
-              Selected Pieces
-            </span>
+            <div className="flex items-center gap-3">
+              <div className="h-px w-6 bg-neutral-400" />
+              <span className="text-[11px] font-black uppercase tracking-tighter text-neutral-900">
+                NEW ARRIVALS
+              </span>
+            </div>
           </div>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-text">
-            Premium <span className="text-neutral-400 italic font-light">Series</span>
+                        <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-text">
+            Premium <span className="text-neutral-400">Series</span>
           </h2>
         </header>
 

@@ -192,9 +192,12 @@ export const ProductListSection = () => {
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="mb-2"
           >
-            <span className="text-[11px] font-black uppercase tracking-tighter text-neutral-900">
-              NEW ARRIVALS
-            </span>
+            <div className="flex items-center gap-3">
+              <div className="h-px w-6 bg-neutral-400" />
+              <span className="text-[11px] font-black uppercase tracking-tighter text-neutral-900">
+                COLLECTIONS
+              </span>
+            </div>
           </motion.div>
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 lg:gap-6">
@@ -205,8 +208,8 @@ export const ProductListSection = () => {
               transition={{ duration: 0.5, ease: 'easeOut' }}
               className="max-w-2xl"
             >
-              <h2 className="text-4xl md:text-5xl font-light tracking-tight text-neutral-900">
-                <span>Product</span> <span className="text-neutral-500">List</span>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-text">
+                Product <span className="text-neutral-400">List</span>
               </h2>
             </motion.div>
 
@@ -217,12 +220,11 @@ export const ProductListSection = () => {
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <Button
-                variant="ghost"
+                variant="primary"
                 size="lg"
                 rightIcon={
                   <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 }
-                className="group px-0 py-0 text-black relative flex items-center gap-2 lg:px-8 lg:py-4 lg:bg-neutral-900 lg:text-white text-xs font-black uppercase tracking-widest hover:bg-neutral-800 transition-all cursor-pointer"
               >
                 Shop All
               </Button>
@@ -241,27 +243,25 @@ export const ProductListSection = () => {
           <LayoutGroup>
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
               {categories.map((cat) => (
-                <Button
+                <button
                   key={cat.id}
                   onClick={() => handleCategoryChange(cat.id)}
-                  variant="ghost"
-                  size="sm"
                   className={cn(
-                    'relative px-5 py-2.5 text-sm font-medium whitespace-nowrap',
+                    'relative px-5 py-2 text-sm font-medium whitespace-nowrap border transition-colors duration-200 cursor-pointer',
                     selectedCategory === cat.id
-                      ? 'text-white'
-                      : 'text-secondary border border-neutral-200 hover:border-neutral-400',
+                      ? 'text-button-alt border-button-primary'
+                      : 'text-content-secondary border-border-primary hover:border-content-primary hover:text-content-primary',
                   )}
                 >
                   {selectedCategory === cat.id && (
                     <motion.div
                       layoutId="active-category"
-                      className="absolute inset-0 bg-neutral-900"
+                      className="absolute inset-0 bg-button-primary"
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center gap-2">{cat.name}</span>
-                </Button>
+                  <span className="relative z-10">{cat.name}</span>
+                </button>
               ))}
             </div>
           </LayoutGroup>
@@ -285,21 +285,8 @@ export const ProductListSection = () => {
                     }
                     variant="slider"
                     size="icon"
-                    leftIcon={
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        {dir === 'prev' ? <path d="M8 2L4 6L8 10" /> : <path d="M4 2L8 6L4 10" />}
-                      </svg>
-                    }
-                    className="w-11 h-11 text-white/70 border border-white/15 bg-black backdrop-blur-md hover:border-white/40 hover:bg-black/50"
+                    sliderDirection={dir === 'prev' ? 'left' : 'right'}
+                    className="w-11 h-11 !rounded-none text-white/70 border border-white/15 bg-button-primary backdrop-blur-md hover:border-white/40"
                   />
                 ))}
               </div>

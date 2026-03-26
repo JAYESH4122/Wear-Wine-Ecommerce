@@ -27,4 +27,5 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> 
   rightIcon?: ReactNode
   fullWidth?: boolean
   asChild?: boolean
+  sliderDirection?: 'left' | 'right'
 }

@@ -31,20 +31,7 @@ export const CartRecommendations = React.memo(function CartRecommendations({
             variant="slider"
             size="icon"
             aria-label="Scroll left"
-            leftIcon={
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                aria-hidden
-              >
-                <path d="M8 2L4 6L8 10" />
-              </svg>
-            }
-            className="text-neutral-500 hover:text-neutral-900 border-neutral-200 hover:border-neutral-400"
+            sliderDirection="left"
           />
           <Button
             type="button"
@@ -52,20 +39,7 @@ export const CartRecommendations = React.memo(function CartRecommendations({
             variant="slider"
             size="icon"
             aria-label="Scroll right"
-            leftIcon={
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                aria-hidden
-              >
-                <path d="M4 2L8 6L4 10" />
-              </svg>
-            }
-            className="text-neutral-500 hover:text-neutral-900 border-neutral-200 hover:border-neutral-400"
+            sliderDirection="right"
           />
         </div>
       </div>
