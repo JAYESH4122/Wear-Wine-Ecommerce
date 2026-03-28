@@ -7,6 +7,7 @@ import { ProductInfoPanel } from './product-info-panel'
 import { RelatedProducts } from './related-products'
 import { SizeChartModal } from './size-chart-model'
 import { TermsModal } from './terms-modal'
+import { pdpStaticData } from '@/data/pdp-static'
 import type { ProductDetailsProps, NormalizedColor, NormalizedSize } from './types'
 import type { Media, Color, Size } from '@/payload-types'
 
@@ -16,7 +17,7 @@ export const ProductDetails = ({ product, relatedProducts = [] }: ProductDetails
 
   const categoryName =
     typeof product.category === 'object' && product.category !== null
-      ? (product.category as any).name ?? 'Product'
+      ? ((product.category as any).name ?? 'Product')
       : 'Product'
 
   const hasSale = !!product.salePrice && product.salePrice < product.price
@@ -25,7 +26,7 @@ export const ProductDetails = ({ product, relatedProducts = [] }: ProductDetails
     : 0
 
   const allImages = useMemo(
-    () => (product.images?.map((item) => item.image as Media).filter(Boolean) ?? []),
+    () => product.images?.map((item) => item.image as Media).filter(Boolean) ?? [],
     [product.images],
   )
 
@@ -88,7 +89,11 @@ export const ProductDetails = ({ product, relatedProducts = [] }: ProductDetails
       </div>
 
       <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
-      <SizeChartModal isOpen={showSizeChart} onClose={() => setShowSizeChart(false)} sizes={sizes} />
+      <SizeChartModal
+        isOpen={showSizeChart}
+        onClose={() => setShowSizeChart(false)}
+        imageUrl={pdpStaticData.sizeChart.url}
+      />
     </div>
   )
 }

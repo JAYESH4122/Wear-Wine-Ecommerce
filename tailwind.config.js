@@ -9,6 +9,8 @@ export default {
     extend: {
       fontFamily: {
         primary: ['var(--font-bricolage)', 'sans-serif'],
+        anton: ['var(--font-anton)', 'sans-serif'],
+        sans: ['var(--font-sans)', 'sans-serif'],
       },
     },
   },

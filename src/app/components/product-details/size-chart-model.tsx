@@ -1,15 +1,14 @@
 'use client'
 
 import { X } from 'lucide-react'
-import type { NormalizedSize } from './types'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
-  sizes: NormalizedSize[]
+  imageUrl: string
 }
 
-export const SizeChartModal = ({ isOpen, onClose, sizes }: Props) => {
+export const SizeChartModal = ({ isOpen, onClose, imageUrl }: Props) => {
   if (!isOpen) return null
 
   return (
@@ -33,16 +32,7 @@ export const SizeChartModal = ({ isOpen, onClose, sizes }: Props) => {
           </button>
         </div>
         <div className="p-5">
-          <div className="divide-y divide-neutral-50">
-            {sizes.map((s) => (
-              <div key={s.id} className="flex justify-between items-center py-3">
-                <span className="text-xs font-semibold text-neutral-800">{s.label}</span>
-                <span className="text-[10px] text-neutral-400 uppercase tracking-wider">
-                  Universal Fit
-                </span>
-              </div>
-            ))}
-          </div>
+          <img src={imageUrl} alt="Size chart" className="w-full h-auto object-contain" />
         </div>
         <div className="p-5 border-t border-neutral-100">
           <button

@@ -24,7 +24,7 @@ export const ProductAccordion = ({ items, open, onToggle }: Props) => (
           <button
             onClick={() => onToggle(item.id)}
             aria-expanded={isOpen}
-            className="w-full flex items-center justify-between py-4 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-900 hover:text-neutral-600 transition-colors duration-200 focus-visible:outline-none"
+            className="w-full flex items-center justify-between py-4 text-sm font-sans tracking-[0.18em] text-neutral-900 hover:text-neutral-600 transition-colors duration-200 focus-visible:outline-none"
           >
             {item.title}
             <ChevronDown

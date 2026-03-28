@@ -270,7 +270,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               >
                 <Heart className="w-5 h-5" />
                 {isWishlistHydrated && wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] bg-primary text-[10px] font-bold text-white rounded-full px-1 shadow-sm border-2 border-background">
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] bg-icon-red text-[10px] font-bold text-white rounded-full px-1 shadow-sm border-2 border-background">
                     {wishlistCount}
                   </span>
                 )}
@@ -357,7 +357,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               >
                 <ShoppingBag className="w-5 h-5 cursor-pointer" />
                 {isCartHydrated && cartCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-4 h-4 bg-accent text-white text-[10px] font-bold flex items-center justify-center rounded-full px-1">
+                  <span className="absolute top-1 right-1 min-w-4 h-4 bg-icon-red text-white text-[10px] font-bold flex items-center justify-center rounded-full px-1">
                     {cartCount}
                   </span>
                 )}
@@ -540,7 +540,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
                   onClick={closeMenu}
                   className={clsx(
                     'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-colors',
-                    isActive ? 'text-primary bg-primary/5' : 'text-text hover:bg-secondary/5',
+                    isActive ? 'text-primary bg-primary' : 'text-text hover:bg-secondary/5',
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
@@ -602,7 +602,7 @@ export const Header = ({ categories = [] }: HeaderProps) => {
               <Heart className="w-4 h-4 text-secondary" />
               Wishlist
               {isWishlistHydrated && wishlistCount > 0 && (
-                <span className="ml-auto text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
+                <span className="ml-auto text-xs bg-icon-red text-primary font-semibold px-2 py-0.5 rounded-full">
                   {wishlistCount}
                 </span>
               )}

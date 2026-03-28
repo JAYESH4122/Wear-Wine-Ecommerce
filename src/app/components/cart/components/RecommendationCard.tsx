@@ -46,7 +46,7 @@ export const RecommendationCard = React.memo(function RecommendationCard({
           className="absolute bottom-3 right-3 w-9 h-9 bg-white/90 text-neutral-900 opacity-0 group-hover:opacity-100 hover:bg-white"
         />
         {hasDiscount && (
-          <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
+          <div className="absolute top-2 left-2 bg-icon-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
             Sale
           </div>
         )}

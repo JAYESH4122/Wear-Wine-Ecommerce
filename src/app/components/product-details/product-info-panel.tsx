@@ -14,28 +14,11 @@ import { SizeSelector } from './size-selector'
 import { QuantitySelector } from './quantity-selector'
 import { ProductAccordion } from './product-accordion'
 import { TrustBadges } from './trust-badges'
+import { pdpStaticData } from '@/data/pdp-static'
 import type { Product, NormalizedColor, NormalizedSize } from './types'
 import type { Color, Size } from '@/payload-types'
 
-const ACCORDION_ITEMS = [
-  {
-    id: 'details',
-    title: 'Product Details',
-    content:
-      'Premium construction with high-grade finishes designed for daily versatility and lasting style.',
-  },
-  {
-    id: 'shipping',
-    title: 'Delivery & Returns',
-    content: 'Standard delivery 3–5 business days. Hassle-free returns within 30 days of purchase.',
-  },
-  {
-    id: 'care',
-    title: 'Care Instructions',
-    content:
-      'Follow the care label instructions. We recommend professional cleaning for best results.',
-  },
-]
+// Removed hardcoded ACCORDION_ITEMS as it's now in pdpStaticData
 
 interface Props {
   product: Product
@@ -150,7 +133,7 @@ export const ProductInfoPanel = ({
     <div ref={panelRef} className="flex flex-col gap-0">
       {/* Title & Rating */}
       <div className="panel-item pb-6 border-b border-neutral-100">
-        <h1 className="text-2xl lg:text-3xl font-light text-neutral-900 tracking-tight mb-3 leading-tight">
+        <h1 className="text-2xl lg:text-3xl font-light font-anton text-neutral-900 tracking-tight mb-3 leading-tight">
           {product.name}
         </h1>
         <div className="flex items-center gap-2 mb-4" aria-label="Rating: 5 out of 5">
@@ -181,7 +164,7 @@ export const ProductInfoPanel = ({
       </div>
 
       {/* Description */}
-      <p className="panel-item py-5 text-sm text-neutral-500 leading-relaxed border-b border-neutral-100">
+      <p className="panel-item py-5 text-sm font-sans text-neutral-500 leading-relaxed border-b border-neutral-100">
         {product.description ??
           'Thoughtfully crafted with premium materials for a lasting silhouette and unparalleled comfort.'}
       </p>
@@ -239,34 +222,33 @@ export const ProductInfoPanel = ({
         </div>
       </div>
 
-      {/* Quantity + Add to Cart */}
       <div className="panel-item py-5 flex flex-col sm:flex-row gap-3 border-b border-neutral-100">
         <QuantitySelector value={quantity} onDecrease={decreaseQty} onIncrease={increaseQty} />
         <Button
           onClick={handleAddToCart}
           disabled={isAdded}
           fullWidth
+          variant="primary"
           leftIcon={
             isAdded ? <Check className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5" />
           }
           className={cn(
             'h-12 text-[10px] font-bold uppercase tracking-[0.18em] rounded-none sm:flex-1',
-            isAdded
-              ? 'bg-emerald-600 hover:bg-emerald-600 border-emerald-600 cursor-default'
-              : canAddToCart
-                ? 'bg-neutral-900 hover:bg-neutral-700'
-                : 'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
+            isAdded && 'bg-emerald-600 hover:bg-emerald-600 border-emerald-600 cursor-default',
+            !isAdded &&
+              !canAddToCart &&
+              'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
           )}
         >
-          {isAdded ? 'Added to Bag' : 'Add to Bag'}
+          {isAdded ? pdpStaticData.cta.addedToCart : pdpStaticData.cta.buyNow}
         </Button>
       </div>
 
-      {/* Wishlist */}
       <div className="panel-item py-5 border-b border-neutral-100">
         <Button
           onClick={handleToggleWishlist}
           fullWidth
+          variant="secondary"
           leftIcon={
             <Heart
               className={cn(
@@ -277,18 +259,19 @@ export const ProductInfoPanel = ({
           }
           className={cn(
             'h-12 text-[10px] font-bold uppercase tracking-[0.18em] rounded-none',
-            isWishlisted
-              ? 'bg-neutral-900 text-white border-neutral-900'
-              : 'bg-white text-neutral-900 border-neutral-200 hover:border-neutral-900 hover:bg-neutral-50',
+            isWishlisted && 'bg-neutral-900 text-white border-neutral-900',
           )}
         >
           {isWishlisted ? 'Saved to Wishlist' : 'Add to Wishlist'}
         </Button>
       </div>
-
       {/* Accordions */}
       <div className="panel-item py-2">
-        <ProductAccordion items={ACCORDION_ITEMS} open={openAccordion} onToggle={toggleAccordion} />
+        <ProductAccordion
+          items={pdpStaticData.accordions}
+          open={openAccordion}
+          onToggle={toggleAccordion}
+        />
       </div>
 
       {/* Trust Badges */}

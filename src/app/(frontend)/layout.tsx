@@ -1,6 +1,6 @@
 import React from 'react'
 import './global.css'
-import { Bricolage_Grotesque } from 'next/font/google'
+import { Anton, Bricolage_Grotesque, DM_Sans } from 'next/font/google'
 import { WishlistProvider } from '@/providers/wishlist'
 import { CartProvider } from '@/providers/cart'
 import { AuthProvider } from '@/providers/auth'
@@ -22,15 +22,26 @@ const bricolage = Bricolage_Grotesque({
   weight: ['300', '400', '500', '600', '700', '800'],
 })
 
+const sans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  weight: ['300', '400', '500', '600', '700', '800'],
+})
+
+const anton = Anton({
+  subsets: ['latin'],
+  variable: '--font-anton',
+  weight: ['400'],
+})
+
 export default async function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
 
   const categoryItems = await getHeaderCategories()
 
   return (
-    <html lang="en" className={bricolage.variable} suppressHydrationWarning>
+    <html lang="en" className={`${bricolage.variable} ${sans.variable} ${anton.variable}`} suppressHydrationWarning>
       <body className="antialiased font-bricolage overflow-x-hidden" suppressHydrationWarning>
- 
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>

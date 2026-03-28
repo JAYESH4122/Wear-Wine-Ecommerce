@@ -160,14 +160,13 @@ export const WishlistItemRow = ({
           <div className="flex items-baseline gap-2 mt-2">
             <span
               className={cn(
-                'text-sm font-semibold',
-                hasDiscount ? 'text-red-600' : 'text-neutral-900',
+                'text-sm font-semibold'
               )}
             >
               ${currentPrice.toFixed(2)}
             </span>
             {hasDiscount && (
-              <span className="text-xs text-neutral-400 line-through">
+              <span className="text-xs text-icon-red line-through">
                 ${item.price.toFixed(2)}
               </span>
             )}
@@ -243,13 +242,13 @@ export const WishlistItemRow = ({
 
         {/* Unit Price Column */}
         <div className="col-span-2 flex justify-center items-baseline gap-2">
-          <span className={cn('font-medium', hasDiscount ? 'text-red-600' : 'text-neutral-900')}>
+          <span className='font-medium'>
             ${currentPrice.toFixed(2)}
           </span>
           {hasDiscount && (
-            <span className="text-xs text-neutral-400 line-through">${item.price.toFixed(2)}</span>
+            <span className="text-xs text-icon-red line-through">${item.price.toFixed(2)}</span>
           )}
-        </div>
+        </div>  
 
         {/* Stock Status Column */}
         <div className="col-span-2 flex justify-center">
