@@ -28,35 +28,46 @@ const BADGE_ICONS = [
   },
 ]
 
-export const TrustBadges = () => (
-  <div className="grid grid-cols-3 gap-3 pt-6 border-t border-neutral-100">
-    {pdpStaticData.trustBadges.map((badge, i) => {
-      const style = BADGE_ICONS[i] || BADGE_ICONS[0]
-      return (
-        <div key={i + badge.label} className="flex flex-col items-center text-center gap-1.5">
-          <div
-            className={cn(
-              'w-8 h-8 rounded-full flex items-center justify-center border ring-2',
-              style.bg,
-              style.border,
-              style.ring,
-            )}
-          >
-            <style.icon className={cn('w-3.5 h-3.5', style.color)} aria-hidden />
+interface TrustBadgesProps {
+  badges?: {
+    label: string
+    description?: string | null
+  }[] | null
+}
+
+export const TrustBadges = ({ badges }: TrustBadgesProps) => {
+  const displayBadges = badges || pdpStaticData.trustBadges
+
+  return (
+    <div className="grid grid-cols-3 gap-3 pt-6 border-t border-neutral-100">
+      {displayBadges.map((badge, i) => {
+        const style = BADGE_ICONS[i] || BADGE_ICONS[0]
+        return (
+          <div key={i + badge.label} className="flex flex-col items-center text-center gap-1.5">
+            <div
+              className={cn(
+                'w-8 h-8 rounded-full flex items-center justify-center border ring-2',
+                style.bg,
+                style.border,
+                style.ring,
+              )}
+            >
+              <style.icon className={cn('w-3.5 h-3.5', style.color)} aria-hidden />
+            </div>
+            <span
+              className={cn(
+                'text-[9px] font-bold uppercase tracking-[0.12em] leading-tight',
+                style.color,
+              )}
+            >
+              {badge.label}
+            </span>
+            <span className="text-[9px] text-neutral-400 leading-tight hidden sm:block">
+              {badge.description}
+            </span>
           </div>
-          <span
-            className={cn(
-              'text-[9px] font-bold uppercase tracking-[0.12em] leading-tight',
-              style.color,
-            )}
-          >
-            {badge.label}
-          </span>
-          <span className="text-[9px] text-neutral-400 leading-tight hidden sm:block">
-            {badge.description}
-          </span>
-        </div>
-      )
-    })}
-  </div>
-)
+        )
+      })}
+    </div>
+  )
+}

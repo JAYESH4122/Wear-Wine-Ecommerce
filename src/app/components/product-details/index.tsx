@@ -11,7 +11,7 @@ import { pdpStaticData } from '@/data/pdp-static'
 import type { ProductDetailsProps, NormalizedColor, NormalizedSize } from './types'
 import type { Media, Color, Size } from '@/payload-types'
 
-export const ProductDetails = ({ product, relatedProducts = [] }: ProductDetailsProps) => {
+export const ProductDetails = ({ product, relatedProducts = [], pdpStatic }: ProductDetailsProps) => {
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showSizeChart, setShowSizeChart] = useState(false)
 
@@ -77,6 +77,7 @@ export const ProductDetails = ({ product, relatedProducts = [] }: ProductDetails
                 product={product}
                 colors={colors}
                 sizes={sizes}
+                pdpStatic={pdpStatic}
                 onOpenTerms={() => setShowTermsModal(true)}
                 onOpenSizeChart={() => setShowSizeChart(true)}
               />
@@ -92,7 +93,7 @@ export const ProductDetails = ({ product, relatedProducts = [] }: ProductDetails
       <SizeChartModal
         isOpen={showSizeChart}
         onClose={() => setShowSizeChart(false)}
-        imageUrl={pdpStaticData.sizeChart.url}
+        imageUrl={typeof pdpStatic?.sizeChart?.image === 'object' ? pdpStatic.sizeChart.image?.url ?? '' : ''}
       />
     </div>
   )

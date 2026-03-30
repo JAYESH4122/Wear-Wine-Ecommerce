@@ -1,39 +1,18 @@
 import { Payload } from 'payload'
+import { safeUploadImage } from './utils'
 
 export const seed = async (payload: Payload) => {
   payload.logger.info('Starting Seed...')
 
-  // 1. CLEAR EXISTING DATA
-  await Promise.all([
-    payload.delete({ collection: 'products', where: {} }),
-    payload.delete({ collection: 'categories', where: {} }),
-    payload.delete({ collection: 'colors', where: {} }),
-    payload.delete({ collection: 'sizes', where: {} }),
-    payload.delete({ collection: 'tags', where: {} }),
-    payload.delete({ collection: 'media', where: {} }),
-  ])
+  // 1. DATA CLEARING HANDLED BY INDEX.TS
 
   // 2. HELPER: FETCH & UPLOAD TO YOUR MEDIA COLLECTION
   const uploadImage = async (url: string, altText: string) => {
-    const response = await fetch(url)
-    if (!response.ok) throw new Error(`Failed to fetch ${url}`)
-
-    const arrayBuffer = await response.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    const filename = `${altText.toLowerCase().replace(/ /g, '-')}.jpg`
-
-    return await payload.create({
-      collection: 'media',
-      data: {
-        alt: altText,
-        type: 'product',
-      },
-      file: {
-        data: buffer,
-        name: filename,
-        mimetype: 'image/jpeg',
-        size: buffer.length,
-      },
+    return await safeUploadImage({
+      payload,
+      url,
+      alt: altText,
+      type: 'product',
     })
   }
 
@@ -130,6 +109,11 @@ export const seed = async (payload: Payload) => {
     // A. Fetch image and create Media item
     // We append &q=80&w=1200 to ensure high-quality studio texture
     const media = await uploadImage(`${p.img}?auto=format&fit=crop&q=80&w=1200`, p.name)
+
+    if (!media) {
+      payload.logger.warn(`Skipping product "${p.name}" due to missing media.`)
+      continue
+    }
 
     // B. Create Product and link to the Media entry
     await payload.create({

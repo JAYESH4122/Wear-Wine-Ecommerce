@@ -1,4 +1,5 @@
 import { Payload } from 'payload'
+import { safeUploadImage } from './utils'
 
 export const seedCarousel = async (payload: Payload) => {
   payload.logger.info('Starting Carousel Images Seed...')
@@ -31,30 +32,12 @@ export const seedCarousel = async (payload: Payload) => {
   ]
 
   const uploadCarouselImage = async (url: string, alt: string) => {
-    try {
-      const response = await fetch(url)
-      if (!response.ok) throw new Error(`Failed to fetch ${url}`)
-
-      const arrayBuffer = await response.arrayBuffer()
-      const buffer = Buffer.from(arrayBuffer)
-      const filename = `${alt.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.jpg`
-
-      return await payload.create({
-        collection: 'media',
-        data: {
-          alt,
-          type: 'carousel',
-        },
-        file: {
-          data: buffer,
-          name: filename,
-          mimetype: 'image/jpeg',
-          size: buffer.length,
-        },
-      })
-    } catch (err) {
-      payload.logger.error(`Error uploading image ${alt}: ${err}`)
-    }
+    return await safeUploadImage({
+      payload,
+      url,
+      alt,
+      type: 'carousel',
+    })
   }
 
   for (const img of images) {

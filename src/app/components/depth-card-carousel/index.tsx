@@ -3,6 +3,8 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SectionWrapper } from '../SectionWrapper'
+import type { ContainerPropsType } from '@types-frontend/types'
 
 const AUTOPLAY_INTERVAL = 5000
 
@@ -30,9 +32,10 @@ export interface CarouselCard {
 export interface DepthDeckCarouselProps {
   cards: CarouselCard[]
   className?: string
+  properties?: ContainerPropsType
 }
 
-export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) => {
+export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCarouselProps) => {
   const [active, setActive] = useState(0)
   const [hovered, setHovered] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -59,36 +62,37 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
   }, [goTo])
 
   return (
-    <div
-      className={cn(
-        'relative w-full bg-background select-none overflow-hidden flex flex-col items-center justify-center pb-10 lg:py-15',
-        className,
-      )}
-    >
-      <div className="relative w-full flex flex-col items-center">
-        <motion.div
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          onDragEnd={(_, i) => (i.offset.x > 50 ? goTo(-1) : i.offset.x < -50 && goTo(1))}
-          className="relative w-full flex items-center justify-center cursor-grab active:cursor-grabbing"
-          style={{
-            height: isMobile
-              ? CONSTANTS.CARD_HEIGHT_MOBILE + 100
-              : CONSTANTS.CARD_HEIGHT_DESKTOP + 100,
-            perspective: CONSTANTS.PERSPECTIVE,
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          {cards.map((card, i) => {
-            const rel = ((i - active + cards.length) % cards.length) - Math.floor(cards.length / 2)
-            const abs = Math.abs(rel)
-            const isCenter = rel === 0
+    <SectionWrapper sectionClassName="w-full bg-background" containerProps={properties || {}}>
+      <div
+        className={cn(
+          'relative w-full select-none overflow-hidden flex flex-col items-center justify-center pb-10 lg:py-15',
+          className,
+        )}
+      >
+        <div className="relative w-full flex flex-col items-center">
+          <motion.div
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            onDragEnd={(_, i) => (i.offset.x > 50 ? goTo(-1) : i.offset.x < -50 && goTo(1))}
+            className="relative w-full flex items-center justify-center cursor-grab active:cursor-grabbing"
+            style={{
+              height: isMobile
+                ? CONSTANTS.CARD_HEIGHT_MOBILE + 100
+                : CONSTANTS.CARD_HEIGHT_DESKTOP + 100,
+              perspective: CONSTANTS.PERSPECTIVE,
+              transformStyle: 'preserve-3d',
+            }}
+          >
+            {cards.map((card, i) => {
+              const rel = ((i - active + cards.length) % cards.length) - Math.floor(cards.length / 2)
+              const abs = Math.abs(rel)
+              const isCenter = rel === 0
 
-            const xSpread = isMobile
-              ? rel >= 0
-                ? rel * CONSTANTS.STK_X_SPREAD_MOBILE_RIGHT
-                : rel * CONSTANTS.STK_X_SPREAD_MOBILE_LEFT
-              : rel * CONSTANTS.STK_X_SPREAD_DESKTOP
+              const xSpread = isMobile
+                ? rel >= 0
+                  ? rel * CONSTANTS.STK_X_SPREAD_MOBILE_RIGHT
+                  : rel * CONSTANTS.STK_X_SPREAD_MOBILE_LEFT
+                : rel * CONSTANTS.STK_X_SPREAD_DESKTOP
 
             return (
               <motion.div
@@ -127,21 +131,22 @@ export const DepthDeckCarousel = ({ cards, className }: DepthDeckCarouselProps) 
           })}
         </motion.div>
 
-        <div className="flex items-center gap-10 hidden md:flex">
-          <div className="flex gap-3">
-            {cards.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActive(i)}
-                className={cn(
-                  'h-1.5 rounded-full transition-all duration-1000 ease-out',
-                  i === active ? 'w-12 bg-black' : 'w-2 bg-gray-200',
-                )}
-              />
-            ))}
+          <div className="flex items-center gap-10 hidden md:flex">
+            <div className="flex gap-3">
+              {cards.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActive(i)}
+                  className={cn(
+                    'h-1.5 rounded-full transition-all duration-1000 ease-out',
+                    i === active ? 'w-12 bg-black' : 'w-2 bg-gray-200',
+                  )}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </SectionWrapper>
   )
 }

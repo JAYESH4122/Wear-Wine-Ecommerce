@@ -7,14 +7,10 @@ import { AuthProvider } from '@/providers/auth'
 import { Header } from '@/app/components/Header'
 import type { CategoryItem } from '@/app/components/Header/data'
 import { Footer } from '@/app/components/footer'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
 import { getHeaderCategories } from '@/lib/data/categories'
+import { getGlobal } from '@/lib/api/cms'
+import { Header as HeaderType, Footer as FooterType, SiteSetting as SiteSettingsType } from '@/payload-types'
 
-export const metadata = {
-  description: 'A blank template using Payload in a Next.js app.',
-  title: 'Payload Blank Template',
-}
 
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -34,10 +30,26 @@ const anton = Anton({
   weight: ['400'],
 })
 
+export async function generateMetadata() {
+  const siteSettings = await getGlobal<SiteSettingsType>('site-settings')
+
+  return {
+    title: siteSettings?.seo?.title || siteSettings?.siteName || 'Wear Wine',
+    description: siteSettings?.seo?.description || 'Premium E-commerce experience',
+    icons: {
+      icon: (siteSettings?.logo as any)?.url || '/favicon.ico',
+    },
+  }
+}
+
 export default async function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
 
   const categoryItems = await getHeaderCategories()
+  
+  const headerData = await getGlobal<HeaderType>('header')
+  const footerData = await getGlobal<FooterType>('footer')
+  const siteSettings = await getGlobal<SiteSettingsType>('site-settings')
 
   return (
     <html lang="en" className={`${bricolage.variable} ${sans.variable} ${anton.variable}`} suppressHydrationWarning>
@@ -45,9 +57,11 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
-              <Header categories={categoryItems} />
-              <main>{children}</main>
-              <Footer />
+              <Header categories={categoryItems} cmsData={headerData} siteSettings={siteSettings} />
+              <main id="main-content" tabIndex={-1}>
+                {children}
+              </main>
+              <Footer cmsData={footerData} siteSettings={siteSettings} />
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>

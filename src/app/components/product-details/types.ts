@@ -1,8 +1,9 @@
-import type { Product, Media, Color, Size } from '@/payload-types'
+import type { Product, Media, Color, Size, PdpStatic } from '@/payload-types'
 
 export interface ProductDetailsProps {
   product: Product
   relatedProducts?: Product[]
+  pdpStatic: PdpStatic
 }
 
 export interface NormalizedColor {

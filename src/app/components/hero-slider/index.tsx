@@ -8,8 +8,11 @@ import { Button } from '@/components/ui/button/Button'
 import { ArrowSlider } from '../arrow-slider'
 import type { Media } from '@/payload-types'
 
+import { SectionWrapper } from '../SectionWrapper'
+
 export interface HeroSliderProps {
-  slides: Media[]
+  slides: (Media | { image: Media | string | number })[]
+  properties?: any
 }
 
 interface HeroSlideProps {
@@ -144,6 +147,8 @@ const HeroSlide = ({ slide, index, isActive, isInitialRender }: HeroSlideProps) 
     return () => ctx.revert()
   }, [isActive, isInitialRender])
 
+  if (!slide || typeof slide !== 'object') return null
+
   return (
     <div
       ref={containerRef}
@@ -155,8 +160,8 @@ const HeroSlide = ({ slide, index, isActive, isInitialRender }: HeroSlideProps) 
         style={{ transform: 'translate3d(0, 0, 0) scale(1.05)' }}
       >
         <Image
-          src={slide.url ?? ''}
-          alt={slide.alt ?? ''}
+          src={slide?.url ?? ''}
+          alt={slide?.alt ?? ''}
           fill
           sizes="100vw"
           className="object-cover"
@@ -181,7 +186,7 @@ const HeroSlide = ({ slide, index, isActive, isInitialRender }: HeroSlideProps) 
           ref={titleRef}
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-medium tracking-tight text-white leading-tight drop-shadow-2xl"
         >
-          {slide.alt ?? 'Collection'}
+          {slide?.alt ?? 'Collection'}
         </h1>
         <div className="w-16 sm:w-20 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent mt-6 sm:mt-8" />
       </div>
@@ -244,12 +249,11 @@ const PaginationDot = ({
   </Button>
 )
 
-export const HeroSlider = ({ slides }: HeroSliderProps) => {
+export const HeroSlider = ({ slides, properties }: HeroSliderProps) => {
   const swiperRef = useRef<any>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const [isInitialRender, setIsInitialRender] = useState(true)
 
-  // Mark initial render complete after first slide change
   const handleSlideChange = useCallback(
     (swiper: any) => {
       setActiveIndex(swiper.realIndex)
@@ -270,74 +274,83 @@ export const HeroSlider = ({ slides }: HeroSliderProps) => {
 
   const renderItems = useMemo(
     () =>
-      slides.map((slide, index) => ({
-        key: String(slide.id),
-        element: (
-          <HeroSlide
-            slide={slide}
-            index={index}
-            isActive={index === activeIndex}
-            isInitialRender={isInitialRender}
-          />
-        ),
-      })),
+      slides.map((item, index) => {
+        // Handle both Media object directly and Payload block structure { image: Media }
+        const slide = (item && typeof item === 'object' && 'image' in item) 
+          ? (item.image as Media) 
+          : (item as Media);
+
+        return {
+          key: String(slide?.id ?? index),
+          element: (
+            <HeroSlide
+              slide={slide}
+              index={index}
+              isActive={index === activeIndex}
+              isInitialRender={isInitialRender}
+            />
+          ),
+        }
+      }),
     [slides, activeIndex, isInitialRender],
   )
 
-  if (!slides.length) return null
+  if (!slides?.length) return null
 
   return (
-    <div className="relative w-full">
-      <div className="absolute left-4 lg:left-[4%] top-1/2 -translate-y-1/2 z-30">
-        <NavButton direction="prev" onClick={handlePrev} />
-      </div>
+    <SectionWrapper containerProps={properties} className="!max-w-none !px-0">
+      <div className="relative w-full">
+        <div className="absolute left-4 lg:left-[4%] top-1/2 -translate-y-1/2 z-30">
+          <NavButton direction="prev" onClick={handlePrev} />
+        </div>
 
-      <div className="absolute right-4 lg:right-[4%] top-1/2 -translate-y-1/2 z-30">
-        <NavButton direction="next" onClick={handleNext} />
-      </div>
+        <div className="absolute right-4 lg:right-[4%] top-1/2 -translate-y-1/2 z-30">
+          <NavButton direction="next" onClick={handleNext} />
+        </div>
 
-      <div
-        className="absolute bottom-6 sm:bottom-8 lg:bottom-[5%] left-1/2 -translate-x-1/2 z-30 flex gap-2 sm:gap-3 items-center"
-        role="tablist"
-        aria-label="Slide navigation"
-      >
-        {slides.map((_, i) => (
-          <PaginationDot
-            key={i}
-            index={i}
-            isActive={i === activeIndex}
-            onClick={() => handleDotClick(i)}
-          />
-        ))}
-      </div>
-
-      <div className="sm:hidden absolute bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 text-white/40 text-xs">
-        <svg
-          className="size-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
+        <div
+          className="absolute bottom-6 sm:bottom-8 lg:bottom-[5%] left-1/2 -translate-x-1/2 z-30 flex gap-2 sm:gap-3 items-center"
+          role="tablist"
+          aria-label="Slide navigation"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5l7 7-7 7" />
-        </svg>
-        <span>Swipe to explore</span>
-      </div>
+          {slides.map((_, i) => (
+            <PaginationDot
+              key={i}
+              index={i}
+              isActive={i === activeIndex}
+              onClick={() => handleDotClick(i)}
+            />
+          ))}
+        </div>
 
-      <div className="[&_.arrow-slider-wrapper]:!m-0 [&_.swiper-pagination-external]:!hidden">
-        <ArrowSlider
-          swiperRef={swiperRef}
-          renderItem={renderItems}
-          showPagination={false}
-          autoplay={{ delay: 5000, disableOnInteraction: false }}
-          fade
-          speed={800}
-          slidesPerView={1}
-          loop
-          onSlideChange={handleSlideChange}
-        />
+        <div className="sm:hidden absolute bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 text-white/40 text-xs">
+          <svg
+            className="size-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5l7 7-7 7" />
+          </svg>
+          <span>Swipe to explore</span>
+        </div>
+
+        <div className="[&_.arrow-slider-wrapper]:!m-0 [&_.swiper-pagination-external]:!hidden">
+          <ArrowSlider
+            swiperRef={swiperRef}
+            renderItem={renderItems}
+            showPagination={false}
+            autoplay={{ delay: 5000, disableOnInteraction: false }}
+            fade
+            speed={800}
+            slidesPerView={1}
+            loop
+            onSlideChange={handleSlideChange}
+          />
+        </div>
       </div>
-    </div>
+    </SectionWrapper>
   )
 }

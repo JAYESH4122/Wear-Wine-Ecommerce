@@ -16,8 +16,12 @@ import { AuthModal } from './AuthModal'
 import { LogOut, User as UserIcon, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button/Button'
 
+import type { Header as HeaderCMS, SiteSetting } from '@/payload-types'
+
 interface HeaderProps {
   categories?: CategoryItem[]
+  cmsData?: HeaderCMS | null
+  siteSettings?: SiteSetting | null
 }
 
 /**
@@ -52,7 +56,7 @@ const AnimatedMenuIcon = ({ isOpen }: { isOpen: boolean }) => {
   )
 }
 
-export const Header = ({ categories = [] }: HeaderProps) => {
+export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -227,7 +231,23 @@ export const Header = ({ categories = [] }: HeaderProps) => {
 
             {/* Desktop nav */}
             <nav className="hidden lg:flex items-center gap-2">
-              {navigation.map((item) => {
+              {(cmsData?.navItems?.length
+                ? cmsData.navItems.map((item: any) => {
+                    const link = item.link || {}
+                    const href =
+                      link.url ||
+                      (typeof link.value === 'object'
+                        ? `/${link.value.slug}`
+                        : link.value
+                          ? `/pages/${link.value}`
+                          : '/')
+                    return {
+                      name: item.label,
+                      href,
+                    }
+                  })
+                : navigation
+              ).map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
@@ -531,7 +551,23 @@ export const Header = ({ categories = [] }: HeaderProps) => {
         <div className="flex-1 overflow-y-auto overscroll-contain">
           {/* Main nav links */}
           <nav className="px-3 py-4 pt-16">
-            {navigation.map((item) => {
+            {(cmsData?.navItems?.length
+              ? cmsData.navItems.map((item: any) => {
+                  const link = item.link || {}
+                  const href =
+                    link.url ||
+                    (typeof link.value === 'object'
+                      ? `/${link.value.slug}`
+                      : link.value
+                        ? `/pages/${link.value}`
+                        : '/')
+                  return {
+                    name: item.label,
+                    href,
+                  }
+                })
+              : navigation
+            ).map((item) => {
               const isActive = pathname === item.href
               return (
                 <Link

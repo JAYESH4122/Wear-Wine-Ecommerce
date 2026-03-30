@@ -1,4 +1,5 @@
 import { Payload } from 'payload'
+import { safeUploadImage } from './utils'
 
 export const seedHero = async (payload: Payload) => {
   payload.logger.info('Starting Hero Images Seed...')
@@ -10,7 +11,7 @@ export const seedHero = async (payload: Payload) => {
     },
     {
       alt: 'High Fashion Editorial Street Style',
-      img: 'https://images.unsplash.com/photo-1529139513364-c05315530182?auto=format&fit=crop&q=80&w=1920&h=1080',
+      img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1920&h=1080', // Replaced broken link
     },
     {
       alt: 'Minimalist Black Oversized Hoodie',
@@ -27,30 +28,12 @@ export const seedHero = async (payload: Payload) => {
   ]
 
   const uploadHeroImage = async (url: string, alt: string) => {
-    try {
-      const response = await fetch(url)
-      if (!response.ok) throw new Error(`Failed to fetch ${url}`)
-
-      const arrayBuffer = await response.arrayBuffer()
-      const buffer = Buffer.from(arrayBuffer)
-      const filename = `${alt.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.jpg`
-
-      return await payload.create({
-        collection: 'media',
-        data: {
-          alt,
-          type: 'hero',
-        },
-        file: {
-          data: buffer,
-          name: filename,
-          mimetype: 'image/jpeg',
-          size: buffer.length,
-        },
-      })
-    } catch (err) {
-      payload.logger.error(`Error uploading image ${alt}: ${err}`)
-    }
+    return await safeUploadImage({
+      payload,
+      url,
+      alt,
+      type: 'hero',
+    })
   }
 
   for (const img of images) {

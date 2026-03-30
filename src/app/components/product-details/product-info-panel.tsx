@@ -14,7 +14,6 @@ import { SizeSelector } from './size-selector'
 import { QuantitySelector } from './quantity-selector'
 import { ProductAccordion } from './product-accordion'
 import { TrustBadges } from './trust-badges'
-import { pdpStaticData } from '@/data/pdp-static'
 import type { Product, NormalizedColor, NormalizedSize } from './types'
 import type { Color, Size } from '@/payload-types'
 
@@ -26,6 +25,7 @@ interface Props {
   onOpenSizeChart: () => void
   sizes: NormalizedSize[]
   colors: NormalizedColor[]
+  pdpStatic: any
 }
 
 export const ProductInfoPanel = ({
@@ -34,6 +34,7 @@ export const ProductInfoPanel = ({
   onOpenSizeChart,
   sizes,
   colors,
+  pdpStatic,
 }: Props) => {
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -148,12 +149,12 @@ export const ProductInfoPanel = ({
         </div>
         <div className="flex items-baseline gap-3">
           <span className="text-2xl font-semibold text-neutral-900">
-            ${displayPrice.toFixed(2)}
+            ₹{displayPrice.toLocaleString()}
           </span>
           {hasSale && (
             <>
               <span className="text-sm text-neutral-400 line-through">
-                ${product.price.toFixed(2)}
+                ₹{product.price.toLocaleString()}
               </span>
               <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5">
                 Save {discountPercentage}%
@@ -240,7 +241,7 @@ export const ProductInfoPanel = ({
               'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
           )}
         >
-          {isAdded ? pdpStaticData.cta.addedToCart : pdpStaticData.cta.buyNow}
+          {isAdded ? (pdpStatic?.cta?.addedToCart ?? 'Added to Cart') : (pdpStatic?.cta?.buyNow ?? 'Buy Now')}
         </Button>
       </div>
 
@@ -268,7 +269,7 @@ export const ProductInfoPanel = ({
       {/* Accordions */}
       <div className="panel-item py-2">
         <ProductAccordion
-          items={pdpStaticData.accordions}
+          items={pdpStatic?.accordions?.map((a: any) => ({ id: a.id, title: a.title, content: a.content })) ?? []}
           open={openAccordion}
           onToggle={toggleAccordion}
         />
@@ -276,7 +277,7 @@ export const ProductInfoPanel = ({
 
       {/* Trust Badges */}
       <div className="panel-item pt-2">
-        <TrustBadges />
+        <TrustBadges badges={pdpStatic?.trustBadges} />
       </div>
     </div>
   )

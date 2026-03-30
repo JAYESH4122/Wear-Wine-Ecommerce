@@ -28,6 +28,12 @@
       ],
       "@payload-config": [
         "./src/payload.config.ts"
+      ],
+      "@types-frontend/*": [
+        "./src/types-frontend/*"
+      ],
+      "@fields": [
+        "./src/collections/fields/properties.ts"
       ]
     },
     "target": "ES2022",

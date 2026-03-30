@@ -6,6 +6,8 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { SectionWrapper } from '../SectionWrapper'
+import type { Media } from '@/payload-types'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -14,11 +16,18 @@ if (typeof window !== 'undefined') {
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs))
 
 export interface GalleryImage {
-  id: number
-  src: string
-  title: string
-  label: string
+  id: string | number
+  image: Media
+  title?: string
+  label?: string
   description?: string
+}
+
+interface CollectionGalleryProps {
+  badge?: string
+  title?: string
+  images: GalleryImage[]
+  properties?: any
 }
 
 interface ImageCardProps {
@@ -160,8 +169,8 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
         style={{ filter: 'grayscale(20%) brightness(0.9)' }}
       >
         <Image
-          src={image.src}
-          alt={image.title}
+          src={image.image?.url ?? ''}
+          alt={image.image?.alt ?? image.title ?? ''}
           fill
           priority={index === 0}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -198,7 +207,7 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
           {image.label}
         </span>
         <h3 className="text-xl md:text-3xl font-extralight text-white tracking-tighter leading-none">
-          {image.title}
+          {image.image?.alt ?? image.title}
         </h3>
         <div className="h-px bg-white/30 w-0 group-hover:w-10 group-active:w-10 transition-all duration-700 mt-4" />
       </div>
@@ -209,52 +218,113 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
 /**
  * CollectionGallery - Responsive Premium Bento
  */
-export const CollectionGallery = ({ images }: { images: GalleryImage[] }) => {
-  const displayImages = useMemo(() => images.slice(0, 4), [images])
+export const CollectionGallery = ({
+  badge = 'NEW ARRIVALS',
+  title = 'Premium Series',
+  images,
+  properties,
+}: CollectionGalleryProps) => {
+  const displayImages = useMemo(() => images?.slice(0, 4) || [], [images])
 
-  if (displayImages.length < 4) return null
+  const containerRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia()
+
+      mm.add('(min-width: 1024px)', () => {
+        // Desktop Entrance
+        gsap.from(headerRef.current, {
+          y: 40,
+          opacity: 0,
+          duration: 1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: headerRef.current,
+            start: 'top 85%',
+          },
+        })
+
+        gsap.from('.gallery-card', {
+          scale: 0.95,
+          opacity: 0,
+          duration: 1.2,
+          stagger: 0.15,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: gridRef.current,
+            start: 'top 80%',
+          },
+        })
+      })
+
+      mm.add('(max-width: 1023px)', () => {
+        // Mobile Entrance
+        gsap.from([headerRef.current, '.gallery-card'], {
+          y: 20,
+          opacity: 0,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: 'top 90%',
+          },
+        })
+      })
+    }, containerRef)
+
+    return () => ctx.revert()
+  }, [])
+
+  if (!displayImages || displayImages.length < 4) return null
 
   return (
-    <section className="relative w-full py-12 md:py-24 bg-transparent overflow-hidden">
-      <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-        <header className="mb-10 md:mb-16 space-y-2">
+    <SectionWrapper
+      containerProps={properties}
+      className={cn('!max-w-none !px-0', properties?.className)}
+    >
+      <div ref={containerRef} className="max-w-[1600px] mx-auto px-4 md:px-6">
+        <header ref={headerRef} className="mb-10 md:mb-16 space-y-2">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
               <div className="h-px w-6 bg-neutral-400" />
               <span className="text-[11px] font-black uppercase tracking-tighter text-neutral-900">
-                NEW ARRIVALS
+                {badge}
               </span>
             </div>
           </div>
-                        <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-text">
-            Premium <span className="text-neutral-400">Series</span>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-text">
+            {title}
           </h2>
         </header>
 
         {/* Seamless Grid System */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-12 gap-0">
           {/* Item 1: Hero */}
-          <div className="md:col-span-8 h-[400px] md:h-[700px]">
+          <div className="gallery-card md:col-span-8 h-[400px] md:h-[700px]">
             <ImageCard image={displayImages[0]} index={0} />
           </div>
 
           {/* Right Column */}
           <div className="md:col-span-4 flex flex-col">
-            <div className="h-[300px] md:h-[350px]">
+            <div className="gallery-card h-[300px] md:h-[350px]">
               <ImageCard image={displayImages[1]} index={1} />
             </div>
 
             <div className="flex h-[300px] md:h-[350px]">
-              <div className="w-1/2">
+              <div className="gallery-card w-1/2">
                 <ImageCard image={displayImages[2]} index={2} />
               </div>
-              <div className="w-1/2">
+              <div className="gallery-card w-1/2">
                 <ImageCard image={displayImages[3]} index={3} />
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   )
 }

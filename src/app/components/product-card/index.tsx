@@ -276,10 +276,10 @@ export const ProductCard = ({
         {/* Price & Stock */}
         <div className="flex justify-between items-center px-1">
           <div className="flex items-center gap-3">
-            <span className="text-[17px] font-extrabold text-black tracking-tight">${price}</span>
+            <span className="text-[17px] font-extrabold text-black tracking-tight">₹{price}</span>
             {originalPrice && (
               <span className="text-[14px] text-black/30 line-through tracking-tighter">
-                ${originalPrice}
+                ₹{originalPrice}
               </span>
             )}
           </div>

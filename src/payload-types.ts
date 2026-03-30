@@ -74,6 +74,7 @@ export interface Config {
     tags: Tag;
     colors: Color;
     sizes: Size;
+    pages: Page;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -88,6 +89,7 @@ export interface Config {
     tags: TagsSelect<false> | TagsSelect<true>;
     colors: ColorsSelect<false> | ColorsSelect<true>;
     sizes: SizesSelect<false> | SizesSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -97,8 +99,18 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    header: Header;
+    footer: Footer;
+    'pdp-static': PdpStatic;
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    header: HeaderSelect<false> | HeaderSelect<true>;
+    footer: FooterSelect<false> | FooterSelect<true>;
+    'pdp-static': PdpStaticSelect<false> | PdpStaticSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -253,6 +265,644 @@ export interface Size {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  slug: string;
+  layout: (HeroBlock | CollectionGallery | DepthDeckCarousel | ProductListSection | AboutBlock | ContactBlock)[];
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock".
+ */
+export interface HeroBlock {
+  properties?: {
+    paddingTop?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingTopMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottom?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottomMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    backgroundColor?: ('primary' | 'secondary' | 'alt') | null;
+    backgroundColorMobile?: ('primary' | 'secondary' | 'alt') | null;
+  };
+  slides: {
+    image: number | Media;
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'hero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CollectionGallery".
+ */
+export interface CollectionGallery {
+  properties?: {
+    paddingTop?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingTopMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottom?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottomMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    backgroundColor?: ('primary' | 'secondary' | 'alt') | null;
+    backgroundColorMobile?: ('primary' | 'secondary' | 'alt') | null;
+  };
+  images: {
+    image: number | Media;
+    title: string;
+    label: string;
+    gridClass: string;
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'collectionGallery';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DepthDeckCarousel".
+ */
+export interface DepthDeckCarousel {
+  properties?: {
+    paddingTop?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingTopMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottom?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottomMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    backgroundColor?: ('primary' | 'secondary' | 'alt') | null;
+    backgroundColorMobile?: ('primary' | 'secondary' | 'alt') | null;
+  };
+  cards: {
+    image: number | Media;
+    title?: string | null;
+    description?: string | null;
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'depthDeckCarousel';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductListSection".
+ */
+export interface ProductListSection {
+  properties?: {
+    paddingTop?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingTopMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottom?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottomMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    backgroundColor?: ('primary' | 'secondary' | 'alt') | null;
+    backgroundColorMobile?: ('primary' | 'secondary' | 'alt') | null;
+  };
+  tagline: string;
+  titlePrefix: string;
+  titleHighlight: string;
+  description: string;
+  buttonText: string;
+  /**
+   * Maximum number of products to fetch
+   */
+  limit: number;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'productListSection';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AboutBlock".
+ */
+export interface AboutBlock {
+  properties?: {
+    paddingTop?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingTopMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottom?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottomMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    backgroundColor?: ('primary' | 'secondary' | 'alt') | null;
+    backgroundColorMobile?: ('primary' | 'secondary' | 'alt') | null;
+  };
+  badge: string;
+  title: string;
+  description: string;
+  image: number | Media;
+  stats?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  values?:
+    | {
+        number: string;
+        title: string;
+        description: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'about';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactBlock".
+ */
+export interface ContactBlock {
+  properties?: {
+    paddingTop?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingTopMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottom?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    paddingBottomMobile?:
+      | (
+          | 'NONE'
+          | 'SM1'
+          | 'SM2'
+          | 'SM3'
+          | 'MD1'
+          | 'MD2'
+          | 'MD3'
+          | 'LG1'
+          | 'LG2'
+          | 'LG3'
+          | 'XL1'
+          | 'XL2'
+          | 'XL3'
+          | 'XXL1'
+          | 'XXL2'
+          | 'XXL3'
+        )
+      | null;
+    backgroundColor?: ('primary' | 'secondary' | 'alt') | null;
+    backgroundColorMobile?: ('primary' | 'secondary' | 'alt') | null;
+  };
+  badge: string;
+  title: string;
+  description: string;
+  methods?:
+    | {
+        type: 'Email' | 'Phone' | 'Live Chat' | 'Support Hours';
+        value: string;
+        href?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  socialLinks?:
+    | {
+        platform: 'Instagram' | 'Twitter' | 'LinkedIn' | 'Facebook';
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  newsletter: {
+    title: string;
+    description: string;
+    buttonText: string;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'contact';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -302,6 +952,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'sizes';
         value: number | Size;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -464,6 +1118,207 @@ export interface SizesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  layout?:
+    | T
+    | {
+        hero?: T | HeroBlockSelect<T>;
+        collectionGallery?: T | CollectionGallerySelect<T>;
+        depthDeckCarousel?: T | DepthDeckCarouselSelect<T>;
+        productListSection?: T | ProductListSectionSelect<T>;
+        about?: T | AboutBlockSelect<T>;
+        contact?: T | ContactBlockSelect<T>;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "HeroBlock_select".
+ */
+export interface HeroBlockSelect<T extends boolean = true> {
+  properties?:
+    | T
+    | {
+        paddingTop?: T;
+        paddingTopMobile?: T;
+        paddingBottom?: T;
+        paddingBottomMobile?: T;
+        backgroundColor?: T;
+        backgroundColorMobile?: T;
+      };
+  slides?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CollectionGallery_select".
+ */
+export interface CollectionGallerySelect<T extends boolean = true> {
+  properties?:
+    | T
+    | {
+        paddingTop?: T;
+        paddingTopMobile?: T;
+        paddingBottom?: T;
+        paddingBottomMobile?: T;
+        backgroundColor?: T;
+        backgroundColorMobile?: T;
+      };
+  images?:
+    | T
+    | {
+        image?: T;
+        title?: T;
+        label?: T;
+        gridClass?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DepthDeckCarousel_select".
+ */
+export interface DepthDeckCarouselSelect<T extends boolean = true> {
+  properties?:
+    | T
+    | {
+        paddingTop?: T;
+        paddingTopMobile?: T;
+        paddingBottom?: T;
+        paddingBottomMobile?: T;
+        backgroundColor?: T;
+        backgroundColorMobile?: T;
+      };
+  cards?:
+    | T
+    | {
+        image?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductListSection_select".
+ */
+export interface ProductListSectionSelect<T extends boolean = true> {
+  properties?:
+    | T
+    | {
+        paddingTop?: T;
+        paddingTopMobile?: T;
+        paddingBottom?: T;
+        paddingBottomMobile?: T;
+        backgroundColor?: T;
+        backgroundColorMobile?: T;
+      };
+  tagline?: T;
+  titlePrefix?: T;
+  titleHighlight?: T;
+  description?: T;
+  buttonText?: T;
+  limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "AboutBlock_select".
+ */
+export interface AboutBlockSelect<T extends boolean = true> {
+  properties?:
+    | T
+    | {
+        paddingTop?: T;
+        paddingTopMobile?: T;
+        paddingBottom?: T;
+        paddingBottomMobile?: T;
+        backgroundColor?: T;
+        backgroundColorMobile?: T;
+      };
+  badge?: T;
+  title?: T;
+  description?: T;
+  image?: T;
+  stats?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  values?:
+    | T
+    | {
+        number?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactBlock_select".
+ */
+export interface ContactBlockSelect<T extends boolean = true> {
+  properties?:
+    | T
+    | {
+        paddingTop?: T;
+        paddingTopMobile?: T;
+        paddingBottom?: T;
+        paddingBottomMobile?: T;
+        backgroundColor?: T;
+        backgroundColorMobile?: T;
+      };
+  badge?: T;
+  title?: T;
+  description?: T;
+  methods?:
+    | T
+    | {
+        type?: T;
+        value?: T;
+        href?: T;
+        id?: T;
+      };
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        href?: T;
+        id?: T;
+      };
+  newsletter?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        buttonText?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -501,6 +1356,240 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header".
+ */
+export interface Header {
+  id: number;
+  announcementBar?: {
+    text?: string | null;
+    isActive?: boolean | null;
+  };
+  navItems?:
+    | {
+        link?: (number | null) | Page;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer".
+ */
+export interface Footer {
+  id: number;
+  copyright?: string | null;
+  columns?:
+    | {
+        title?: string | null;
+        links?:
+          | {
+              link?: (number | null) | Page;
+              label?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pdp-static".
+ */
+export interface PdpStatic {
+  id: number;
+  shipping: {
+    title: string;
+    description: string;
+  };
+  returns: {
+    title: string;
+    description: string;
+  };
+  trustBadges?:
+    | {
+        label: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  sizeGuide: {
+    title: string;
+    description: string;
+  };
+  sizeChart: {
+    image: number | Media;
+    description: string;
+  };
+  cta: {
+    addToCart: string;
+    buyNow: string;
+    addedToCart: string;
+    outOfStock: string;
+  };
+  accordions?:
+    | {
+        title: string;
+        content: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  siteName: string;
+  logo: number | Media;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+  };
+  socialLinks?:
+    | {
+        platform: 'Instagram' | 'Twitter' | 'LinkedIn' | 'Facebook';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header_select".
+ */
+export interface HeaderSelect<T extends boolean = true> {
+  announcementBar?:
+    | T
+    | {
+        text?: T;
+        isActive?: T;
+      };
+  navItems?:
+    | T
+    | {
+        link?: T;
+        label?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer_select".
+ */
+export interface FooterSelect<T extends boolean = true> {
+  copyright?: T;
+  columns?:
+    | T
+    | {
+        title?: T;
+        links?:
+          | T
+          | {
+              link?: T;
+              label?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pdp-static_select".
+ */
+export interface PdpStaticSelect<T extends boolean = true> {
+  shipping?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  returns?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  trustBadges?:
+    | T
+    | {
+        label?: T;
+        description?: T;
+        id?: T;
+      };
+  sizeGuide?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  sizeChart?:
+    | T
+    | {
+        image?: T;
+        description?: T;
+      };
+  cta?:
+    | T
+    | {
+        addToCart?: T;
+        buyNow?: T;
+        addedToCart?: T;
+        outOfStock?: T;
+      };
+  accordions?:
+    | T
+    | {
+        title?: T;
+        content?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  logo?: T;
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
