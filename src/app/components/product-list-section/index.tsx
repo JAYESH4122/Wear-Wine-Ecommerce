@@ -11,11 +11,13 @@ import { Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
 import { ProductCard } from '../product-card'
 import { ArrowSlider } from '../arrow-slider'
 import { cn } from '@/lib/utils'
+import { getApiUrl } from '@/lib/api/getApiUrl'
 import { Button } from '@/components/ui/button/Button'
 import { useResponsive } from '@/hooks/use-responsive'
 import { SectionWrapper } from '../SectionWrapper'
 
-import type { Product as ProductType } from '@/payload-types'
+import type { Category as CategoryType, Product as ProductType } from '@/payload-types'
+import type { ContainerPropsType } from '@types-frontend/types'
 
 type Category = { id: string; name: string }
 
@@ -27,7 +29,7 @@ interface Product {
   image: string
   badge?: string
   rating: number
-  reviews: number
+  reviews?: number
   category: string
   categorySlug?: string
   slug?: string
@@ -72,7 +74,7 @@ interface ProductListSectionProps {
   badge?: string
   title?: string
   limit?: number
-  properties?: any
+  properties?: ContainerPropsType
 }
 
 export const ProductListSection = ({
@@ -84,7 +86,7 @@ export const ProductListSection = ({
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [viewMode, setViewMode] = useState<'detailed' | 'images'>('detailed')
   const swiperRef = useRef<SwiperInstance | null>(null)
-  const [dbProducts, setDbProducts] = useState<any[]>([])
+  const [dbProducts, setDbProducts] = useState<ProductType[]>([])
   const [categories, setCategories] = useState<Category[]>([ALL_CATEGORY])
   const [loading, setLoading] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -159,16 +161,21 @@ export const ProductListSection = ({
     const controller = new AbortController()
     const fetchProducts = async () => {
       try {
-        const res = await fetch(`/api/products?limit=${limit}`, { signal: controller.signal })
+        const API_URL = getApiUrl()
+        const res = await fetch(`${API_URL}/api/products?limit=${limit}`, {
+          signal: controller.signal,
+          credentials: 'include',
+        })
         if (!res.ok) throw new Error('Failed to fetch')
-        const data = await res.json()
-        const products: any[] = data.docs || []
+        const data = (await res.json()) as { docs?: ProductType[] }
+        const products = data.docs ?? []
         setDbProducts(products)
 
         const seen = new Set<string>()
         const derived: Category[] = []
         for (const p of products) {
-          const cat = p.category
+          const cat =
+            p.category && typeof p.category === 'object' ? (p.category as CategoryType) : null
           if (cat?.slug && !seen.has(cat.slug)) {
             seen.add(cat.slug)
             derived.push({ id: cat.slug, name: cat.name })
@@ -189,19 +196,28 @@ export const ProductListSection = ({
 
   const formattedProducts: Product[] = useMemo(
     () =>
-      dbProducts.map((p) => ({
-        id: String(p.id ?? p._id),
-        title: p.name ?? 'Untitled Product',
-        price: p.salePrice ?? p.price ?? 0,
-        originalPrice: p.salePrice ? p.price : undefined,
-        image: p.images?.[0]?.image?.url ?? '/placeholder.jpg',
-        badge: p.tags?.[0]?.name ?? (p.salePrice ? 'Sale' : undefined),
-        rating: 5.0,
-        reviews: Math.floor(Math.random() * 50) + 10,
-        category: p.category?.name ?? 'General',
-        categorySlug: p.category?.slug,
-        slug: p.slug,
-      })),
+      dbProducts.map((p) => {
+        const category =
+          p.category && typeof p.category === 'object' ? (p.category as CategoryType) : null
+        const firstImage = p.images?.[0]?.image
+        const imageUrl =
+          firstImage && typeof firstImage === 'object' ? firstImage.url ?? null : null
+        const firstTag = p.tags?.[0]
+        const tagName = firstTag && typeof firstTag === 'object' ? firstTag.name ?? null : null
+
+        return {
+          id: String(p.id),
+          title: p.name,
+          price: p.salePrice ?? p.price,
+          originalPrice: p.salePrice ? p.price : undefined,
+          image: imageUrl ?? '/placeholder.jpg',
+          badge: tagName ?? (p.salePrice ? 'Sale' : undefined),
+          rating: 5.0,
+          category: category?.name ?? 'General',
+          categorySlug: category?.slug,
+          slug: p.slug ?? undefined,
+        }
+      }),
     [dbProducts],
   )
 
@@ -231,8 +247,8 @@ export const ProductListSection = ({
 
   return (
     <SectionWrapper
-      containerProps={properties}
-      className={cn('!max-w-none !px-0', properties?.className)}
+      containerProps={properties ?? {}}
+      className={cn('!max-w-none !px-0')}
     >
       <div ref={sectionRef} className="container mx-auto px-4 relative z-10">
         {/* Header */}

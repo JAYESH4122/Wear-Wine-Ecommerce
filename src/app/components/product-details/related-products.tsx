@@ -6,6 +6,7 @@ import { Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useWishlist } from '@/providers/wishlist'
 import type { Product, Media } from './types'
+import type { Category } from '@/payload-types'
 
 interface Props {
   products: Product[]
@@ -95,9 +96,9 @@ export const RelatedProducts = ({ products }: Props) => {
               </div>
 
               {/* Info */}
-              <Link href={`/products/${rp.slug}`} className="flex flex-col flex-1 gap-1">
+              <Link href={`/product/${rp.slug}`} className="flex flex-col flex-1 gap-1">
                 <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400">
-                  {typeof rp.category === 'object' ? (rp.category as any).name : ''}
+                  {rp.category && typeof rp.category === 'object' ? (rp.category as Category).name : ''}
                 </span>
                 <h3 className="text-sm font-medium text-neutral-900 leading-snug group-hover:text-neutral-600 transition-colors duration-200 line-clamp-2">
                   {rp.name}

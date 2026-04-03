@@ -3,12 +3,22 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { UserService } from './user-service'
 
+const requireEnv = (key: string): string => {
+  const value = process.env[key]
+  if (!value) throw new Error(`${key} is not defined`)
+  return value
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -35,8 +45,8 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             roles: user.roles,
           }
-        } catch (error: any) {
-          throw new Error(error.message || 'Invalid email or password')
+        } catch (error: unknown) {
+          throw new Error(error instanceof Error ? error.message : 'Invalid email or password')
         }
       },
     }),
@@ -44,14 +54,19 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google' && profile) {
+        if (!profile.email) return false
         try {
           // Link or create user in Payload
-          const payloadUser = await UserService.getOrCreateGoogleUser(profile)
+          const payloadUser = await UserService.getOrCreateGoogleUser({
+            email: profile.email,
+            name: profile.name,
+            sub: typeof (profile as { sub?: unknown }).sub === 'string' ? (profile as { sub: string }).sub : null,
+          })
           // Mutate the user object so the JWT gets the exact database values
           user.id = payloadUser.id.toString()
-          ;(user as any).roles = payloadUser.roles
+          user.roles = payloadUser.roles
           return true
-        } catch (error) {
+        } catch (_error: unknown) {
           return false
         }
       }
@@ -61,18 +76,17 @@ export const authOptions: NextAuthOptions = {
       // Persist required payload roles and id into the JWT token
       if (user) {
         token.id = user.id
-        token.roles = (user as any).roles
-        token.isVerified = (user as any).isVerified
+        token.roles = user.roles
+        token.isVerified = user.isVerified
       }
       return token
     },
     async session({ session, token }) {
       // Make mapped database fields available in the client session
       if (token) {
-        if (!session.user) session.user = {}
-        ;(session.user as any).id = token.id as string
-        ;(session.user as any).roles = token.roles as string[]
-        ;(session.user as any).isVerified = token.isVerified as boolean
+        session.user.id = token.id as string
+        session.user.roles = token.roles
+        session.user.isVerified = token.isVerified
       }
       return session
     },
@@ -85,5 +99,5 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-dev',
+  secret: requireEnv('NEXTAUTH_SECRET'),
 }

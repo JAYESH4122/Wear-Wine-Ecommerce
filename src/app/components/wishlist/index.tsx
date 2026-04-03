@@ -17,10 +17,14 @@ import { Button } from '@/components/ui/button/Button'
  * Helper to extract image URL from WishlistItem
  */
 const getImageUrl = (item: WishlistItem): string | null => {
-  const img = item.images?.[0]?.image as any
+  const img = item.images?.[0]?.image
   if (!img) return null
   if (typeof img === 'string') return img
-  return img?.url ?? null
+  if (typeof img === 'number') return null
+  if (typeof img === 'object') {
+    return (img as Media).url ?? (img as { url?: string | null }).url ?? null
+  }
+  return null
 }
 
 /**

@@ -15,7 +15,7 @@ import { QuantitySelector } from './quantity-selector'
 import { ProductAccordion } from './product-accordion'
 import { TrustBadges } from './trust-badges'
 import type { Product, NormalizedColor, NormalizedSize } from './types'
-import type { Color, Size } from '@/payload-types'
+import type { Color, PdpStatic, Size } from '@/payload-types'
 
 // Removed hardcoded ACCORDION_ITEMS as it's now in pdpStaticData
 
@@ -25,7 +25,7 @@ interface Props {
   onOpenSizeChart: () => void
   sizes: NormalizedSize[]
   colors: NormalizedColor[]
-  pdpStatic: any
+  pdpStatic: PdpStatic
 }
 
 export const ProductInfoPanel = ({
@@ -269,7 +269,13 @@ export const ProductInfoPanel = ({
       {/* Accordions */}
       <div className="panel-item py-2">
         <ProductAccordion
-          items={pdpStatic?.accordions?.map((a: any) => ({ id: a.id, title: a.title, content: a.content })) ?? []}
+          items={
+            pdpStatic?.accordions?.map((a) => ({
+              id: String(a.id),
+              title: a.title,
+              content: a.content,
+            })) ?? []
+          }
           open={openAccordion}
           onToggle={toggleAccordion}
         />

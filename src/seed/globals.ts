@@ -64,16 +64,17 @@ export const seedGlobals = async (payload: Payload) => {
         trustBadges: pdpStaticData.trustBadges,
         sizeGuide: pdpStaticData.sizeGuide,
         sizeChart: {
-          image: sizeChartMedia?.id || (await safeUploadImage({
-            payload,
-            url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
-            alt: 'Default Size Chart',
-            type: 'product',
-          }))?.id as any,
+          image: (sizeChartMedia?.id ||
+            (await safeUploadImage({
+              payload,
+              url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
+              alt: 'Default Size Chart',
+              type: 'product',
+            }))?.id) as unknown as number,
           description: pdpStaticData.sizeChart.description,
         },
         cta: pdpStaticData.cta,
-        accordions: pdpStaticData.accordions.map((a: any) => ({
+        accordions: pdpStaticData.accordions.map((a) => ({
           title: a.title,
           content: a.content,
         })),
@@ -98,12 +99,13 @@ export const seedGlobals = async (payload: Payload) => {
     slug: 'site-settings',
     data: {
       siteName: 'Wear Wine',
-      logo: logoMedia?.id || (await safeUploadImage({
-        payload,
-        url: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b',
-        alt: 'Default Logo',
-        type: 'hero',
-      }))?.id as any,
+      logo: (logoMedia?.id ||
+        (await safeUploadImage({
+          payload,
+          url: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b',
+          alt: 'Default Logo',
+          type: 'hero',
+        }))?.id) as unknown as number,
       seo: {
         title: 'Wear Wine | Premium Streetwear',
         description: 'Curated premium streetwear for the modern aesthetic.',

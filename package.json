@@ -5,6 +5,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "build:render": "rm -rf src/app/\\(frontend\\) && cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+    "start:render": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
     "dev:db": "tsx scripts/check-docker-db.ts",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",

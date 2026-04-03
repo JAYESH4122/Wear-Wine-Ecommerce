@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import type { Category, Media, Product } from '@/payload-types'
-import { productsData } from '@/data/products'
 
 type WishlistImage = number | Media | string | { url?: string | null } | null | undefined
 
@@ -31,13 +30,6 @@ const toWishlistItem = (product: Product | WishlistItem): WishlistItem => ({
     : [],
 })
 
-// Resolve IDs → full WishlistItem from productsData
-const resolveIds = (ids: (number | string)[]): WishlistItem[] =>
-  ids
-    .map((id) => productsData.find((p) => String(p.id) === String(id)))
-    .filter(Boolean)
-    .map((p) => toWishlistItem(p as Product))
-
 interface WishlistContextType {
   wishlist: WishlistItem[]
   wishlistCount: number
@@ -51,16 +43,16 @@ interface WishlistContextType {
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined)
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [ids, setIds] = useState<(number | string)[]>([])
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([])
   const [isHydrated, setIsHydrated] = useState(false)
 
-  // Load IDs from localStorage
+  // Load items from localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('wishlist-ids')
+      const saved = localStorage.getItem('wishlist-items')
       if (saved) {
         const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed)) setIds(parsed)
+        if (Array.isArray(parsed)) setWishlist(parsed)
       }
     } catch (e) {
       console.error('Failed to load wishlist:', e)
@@ -68,30 +60,28 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsHydrated(true)
   }, [])
 
-  // Persist IDs to localStorage
+  // Persist items to localStorage
   useEffect(() => {
     if (isHydrated) {
-      localStorage.setItem('wishlist-ids', JSON.stringify(ids))
+      localStorage.setItem('wishlist-items', JSON.stringify(wishlist))
     }
-  }, [ids, isHydrated])
+  }, [wishlist, isHydrated])
 
-  // Derive full wishlist items from IDs + productsData
-  const wishlist = resolveIds(ids)
-
-  const isInWishlist = (productId: string) => ids.some((id) => String(id) === productId)
+  const isInWishlist = (productId: string) =>
+    wishlist.some((item) => String(item.id) === String(productId))
 
   const toggleWishlist = (product: Product | WishlistItem) => {
-    const id = product.id
-    setIds((prev) => {
-      const exists = prev.some((i) => String(i) === String(id))
-      return exists ? prev.filter((i) => String(i) !== String(id)) : [...prev, id]
+    const nextItem = toWishlistItem(product)
+    setWishlist((prev) => {
+      const exists = prev.some((i) => String(i.id) === String(nextItem.id))
+      return exists ? prev.filter((i) => String(i.id) !== String(nextItem.id)) : [...prev, nextItem]
     })
   }
 
   const removeFromWishlist = (productId: string) =>
-    setIds((prev) => prev.filter((i) => String(i) !== productId))
+    setWishlist((prev) => prev.filter((i) => String(i.id) !== String(productId)))
 
-  const clearWishlist = () => setIds([])
+  const clearWishlist = () => setWishlist([])
 
   return (
     <WishlistContext.Provider

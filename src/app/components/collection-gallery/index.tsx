@@ -8,6 +8,7 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { SectionWrapper } from '../SectionWrapper'
 import type { Media } from '@/payload-types'
+import type { ContainerPropsType } from '@types-frontend/types'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
@@ -27,7 +28,7 @@ interface CollectionGalleryProps {
   badge?: string
   title?: string
   images: GalleryImage[]
-  properties?: any
+  properties?: ContainerPropsType
 }
 
 interface ImageCardProps {
@@ -283,8 +284,8 @@ export const CollectionGallery = ({
 
   return (
     <SectionWrapper
-      containerProps={properties}
-      className={cn('!max-w-none !px-0', properties?.className)}
+      containerProps={properties ?? {}}
+      className={cn('!max-w-none !px-0')}
     >
       <div ref={containerRef} className="max-w-[1600px] mx-auto px-4 md:px-6">
         <header ref={headerRef} className="mb-10 md:mb-16 space-y-2">

@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils'
 import { Truck, ShieldCheck, RefreshCcw } from 'lucide-react'
-import { pdpStaticData } from '@/data/pdp-static'
 
 const BADGE_ICONS = [
   {
@@ -36,7 +35,7 @@ interface TrustBadgesProps {
 }
 
 export const TrustBadges = ({ badges }: TrustBadgesProps) => {
-  const displayBadges = badges || pdpStaticData.trustBadges
+  const displayBadges = badges ?? []
 
   return (
     <div className="grid grid-cols-3 gap-3 pt-6 border-t border-neutral-100">

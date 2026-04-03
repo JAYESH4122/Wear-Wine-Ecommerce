@@ -4,6 +4,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import React, { useEffect, useRef } from 'react'
 import { SectionWrapper } from '../SectionWrapper'
+import type { ContainerPropsType } from '@types-frontend/types'
 
 import {
   Phone,
@@ -36,8 +37,10 @@ export interface ContactSectionProps {
     description: string
     buttonText: string
   }
-  properties?: any
+  properties?: ContainerPropsType
 }
+
+gsap.registerPlugin(ScrollTrigger)
 
 const getSocialIcon = (platform: string) => {
   switch (platform) {
@@ -146,7 +149,7 @@ export const ContactSection = ({
     return () => ctx.revert()
   }, [])
   return (
-    <SectionWrapper containerProps={properties}>
+    <SectionWrapper containerProps={properties ?? {}}>
       <div ref={containerRef} className="relative z-10">
         {/* Header */}
         <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-16 md:mb-20">

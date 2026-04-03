@@ -1,7 +1,6 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { SectionWrapper } from '../SectionWrapper'
 import type { ContainerPropsType } from '@types-frontend/types'

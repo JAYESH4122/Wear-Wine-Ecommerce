@@ -1,6 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
+import Image from 'next/image'
 
 interface Props {
   isOpen: boolean
@@ -32,7 +33,19 @@ export const SizeChartModal = ({ isOpen, onClose, imageUrl }: Props) => {
           </button>
         </div>
         <div className="p-5">
-          <img src={imageUrl} alt="Size chart" className="w-full h-auto object-contain" />
+          {imageUrl ? (
+            <div className="relative w-full aspect-[4/5]">
+              <Image
+                src={imageUrl}
+                alt="Size chart"
+                fill
+                sizes="(max-width: 640px) 100vw, 400px"
+                className="object-contain"
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-500">Size chart unavailable.</p>
+          )}
         </div>
         <div className="p-5 border-t border-neutral-100">
           <button

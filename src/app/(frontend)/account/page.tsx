@@ -26,25 +26,6 @@ export default function ProfilePage() {
     { name: 'Settings', href: '/account/settings', icon: Settings },
   ]
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
-    },
-  }
-
   const sidebar = (
     <motion.aside
       // initial={{ opacity: 0, x: -20 }}
@@ -146,7 +127,7 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-100 rounded-xl p-4">
                     <Mail className="w-4 h-4 text-neutral-400" />
                     <span className="text-sm font-semibold text-neutral-900">{user.email}</span>
-                    {(user as any).isVerified && (
+                    {user.isVerified && (
                       <span className="ml-auto text-[10px] bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                         Verified
                       </span>

@@ -2,12 +2,6 @@ import type { CollectionConfig } from 'payload'
 import { formatSlug } from './lib'
 import { validateVariantCombination } from './validation'
 
-
-type Variant = {
-  color?: string | { id: string }
-  size?: string | { id: string }
-}
-
 export const Products: CollectionConfig = {
   slug: 'products',
 

@@ -40,7 +40,7 @@ export const ProductCard = ({
   badge,
   originalPrice,
   rating,
-  reviews,
+  reviews: _reviews,
   slug,
   isInStock = true,
   product,

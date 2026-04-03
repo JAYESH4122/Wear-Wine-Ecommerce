@@ -2,16 +2,15 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Mail, Phone, Clock } from 'lucide-react'
-import { FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa6'
-import { footerData } from './data'
+import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter } from 'react-icons/fa6'
 
 const socialIcons: Record<string, React.ReactNode> = {
   Facebook: <FaFacebookF size={14} />,
   Instagram: <FaInstagram size={14} />,
-  WhatsApp: <FaWhatsapp size={16} />,
+  Twitter: <FaXTwitter size={14} />,
+  LinkedIn: <FaLinkedinIn size={14} />,
 }
-import type { Footer as FooterCMS, SiteSetting } from '@/payload-types'
+import type { Footer as FooterCMS, Media, Page, SiteSetting } from '@/payload-types'
 
 interface FooterProps {
   cmsData?: FooterCMS | null
@@ -19,7 +18,13 @@ interface FooterProps {
 }
 
 export const Footer = ({ cmsData, siteSettings }: FooterProps) => {
-  const { logo, policies, socials, contact, copyright: defaultCopyright } = footerData
+  const brandName = siteSettings?.siteName || 'Wear Wine'
+  const logoUrl =
+    siteSettings?.logo && typeof siteSettings.logo === 'object'
+      ? (siteSettings.logo as Media).url ?? null
+      : null
+  const socialLinks =
+    siteSettings?.socialLinks?.map((s) => ({ name: s.platform, href: s.url })) ?? []
 
   return (
     <div className="relative w-full overflow-hidden bg-primary text-background">
@@ -32,25 +37,18 @@ export const Footer = ({ cmsData, siteSettings }: FooterProps) => {
           <div className="grid grid-cols-1 gap-12 border-b border-background/10 pb-14 md:grid-cols-3 md:gap-16">
             {/* Brand */}
             <div className="flex flex-col gap-5">
+              {logoUrl && (
                 <Image
-                  src={logo.url}
-                  alt={logo.alt}
+                  src={logoUrl}
+                  alt={brandName}
                   width={160}
                   height={56}
                   className="h-14 w-24 object-contain"
                   unoptimized
-                />     
-              <p className="m-0 text-[0.625rem] uppercase tracking-[0.2em] text-background/50">
-                {logo.tagline}
-              </p>
-              <p className="m-0 max-w-xs text-sm leading-relaxed text-background/40">
-                {logo.description}
-              </p>
+                />
+              )}
               <nav className="flex gap-2" aria-label="Social media">
-                {(siteSettings?.socialLinks?.length ? siteSettings.socialLinks.map((s: any) => ({
-                  name: s.platform,
-                  href: s.url,
-                })) : socials).map((s) => {
+                {socialLinks.map((s) => {
                   const icon = socialIcons[s.name]
                   if (!icon) return null
                   return (
@@ -70,15 +68,15 @@ export const Footer = ({ cmsData, siteSettings }: FooterProps) => {
             </div>
 
             {/* Links */}
-            {(cmsData?.columns?.length ? cmsData.columns : [policies]).map((col: any) => (
+            {(cmsData?.columns ?? []).map((col) => (
               <div key={col.title} className="flex flex-col gap-6">
                 <h3 className="text-[0.625rem] font-bold uppercase tracking-[0.2em]">
                   {col.title}
                 </h3>
                 <ul className="flex flex-col gap-3">
-                  {(col.links || []).map((l: any) => {
-                    const link = l.link || {}
-                    const href = link.url || (typeof link.value === 'object' ? `/${link.value.slug}` : (link.value ? `/pages/${link.value}` : '#'))
+                  {(col.links ?? []).map((l) => {
+                    const href =
+                      l.link && typeof l.link === 'object' ? `/${(l.link as Page).slug}` : '#'
                     return (
                       <li key={l.label}>
                         <Link
@@ -93,37 +91,10 @@ export const Footer = ({ cmsData, siteSettings }: FooterProps) => {
                 </ul>
               </div>
             ))}
-
-            {/* Contact */}
-            <div className="flex flex-col gap-6">
-              <h3 className="text-[0.625rem] font-bold uppercase tracking-[0.2em]">
-                {contact.title}
-              </h3>
-              <address className="flex flex-col gap-4 text-sm not-italic text-background/60">
-                <div className="flex items-center gap-3">
-                  <Mail size={14} aria-hidden="true" />
-                  <span>{contact.email}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone size={14} aria-hidden="true" />
-                  <span>{contact.phone}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Clock size={14} className="mt-0.5" aria-hidden="true" />
-                  <div className="space-y-1">
-                    {contact.hours.map((h) => (
-                      <span key={h} className="block">
-                        {h}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </address>
-            </div>
           </div>
 
           <p className="pt-8 text-[0.6875rem] tracking-wider text-background/40">
-            {cmsData?.copyright ?? `© ${defaultCopyright.year}, ${defaultCopyright.brand}. ${defaultCopyright.text}`}
+            {cmsData?.copyright ?? `© ${new Date().getFullYear()} ${brandName}. All rights reserved.`}
           </p>
         </div>
       </footer>

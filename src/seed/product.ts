@@ -17,14 +17,14 @@ export const seed = async (payload: Payload) => {
   }
 
   // 3. SEED ATTRIBUTES
-  const [white, charcoal, navy, sand] = await Promise.all([
+  const [white, charcoal, _navy, _sand] = await Promise.all([
     payload.create({ collection: 'colors', data: { name: 'Off White', hex: '#FAF9F6' } }),
     payload.create({ collection: 'colors', data: { name: 'Charcoal', hex: '#36454F' } }),
     payload.create({ collection: 'colors', data: { name: 'Navy', hex: '#000080' } }),
     payload.create({ collection: 'colors', data: { name: 'Sand', hex: '#C2B280' } }),
   ])
 
-  const [s, m, l, xl] = await Promise.all([
+  const [_s, m, l, _xl] = await Promise.all([
     payload.create({ collection: 'sizes', data: { label: 'Small', value: 's' } }),
     payload.create({ collection: 'sizes', data: { label: 'Medium', value: 'm' } }),
     payload.create({ collection: 'sizes', data: { label: 'Large', value: 'l' } }),

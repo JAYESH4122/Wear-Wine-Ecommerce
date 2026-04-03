@@ -6,26 +6,20 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
+        protocol: 'http',
+        hostname: 'localhost',
       },
-      ...(process.env.S3_BUCKET && process.env.S3_REGION
-        ? [
-            {
-              protocol: 'https',
-              hostname: `${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com`,
-            },
-            {
-              protocol: 'https',
-              hostname: `s3.${process.env.S3_REGION}.amazonaws.com`,
-              pathname: `/${process.env.S3_BUCKET}/**`,
-            },
-          ]
-        : []),
-      // Hardcoded fallback for production builds where env variables might not be present at build time
       {
         protocol: 'https',
-        hostname: 'wear-wine-media.s3.eu-north-1.amazonaws.com',
+        hostname: '**.onrender.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
       },
     ],
   },

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import React from 'react'
 import { ProductDetails } from '@/app/components/product-details'
-import type { Product, PdpStatic } from '@/payload-types'
+import type { Category, Product, PdpStatic } from '@/payload-types'
 import { getProductBySlug, getRelatedProducts } from '@/lib/api/products'
 import { getGlobal } from '@/lib/api/cms'
 
@@ -21,7 +21,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const categoryId =
     product.category && typeof product.category === 'object'
-      ? (product.category as any).id
+      ? (product.category as Category).id
       : product.category
 
   const relatedDocs = categoryId ? await getRelatedProducts({ categoryId, slug, limit: 4 }) : []

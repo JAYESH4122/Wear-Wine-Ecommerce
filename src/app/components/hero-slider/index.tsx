@@ -7,12 +7,14 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button/Button'
 import { ArrowSlider } from '../arrow-slider'
 import type { Media } from '@/payload-types'
+import type { ContainerPropsType } from '@types-frontend/types'
+import type { Swiper as SwiperInstance } from 'swiper'
 
 import { SectionWrapper } from '../SectionWrapper'
 
 export interface HeroSliderProps {
   slides: (Media | { image: Media | string | number })[]
-  properties?: any
+  properties?: ContainerPropsType
 }
 
 interface HeroSlideProps {
@@ -250,12 +252,12 @@ const PaginationDot = ({
 )
 
 export const HeroSlider = ({ slides, properties }: HeroSliderProps) => {
-  const swiperRef = useRef<any>(null)
+  const swiperRef = useRef<SwiperInstance | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
   const [isInitialRender, setIsInitialRender] = useState(true)
 
   const handleSlideChange = useCallback(
-    (swiper: any) => {
+    (swiper: SwiperInstance) => {
       setActiveIndex(swiper.realIndex)
       if (isInitialRender) setIsInitialRender(false)
     },
@@ -298,7 +300,7 @@ export const HeroSlider = ({ slides, properties }: HeroSliderProps) => {
   if (!slides?.length) return null
 
   return (
-    <SectionWrapper containerProps={properties} className="!max-w-none !px-0">
+    <SectionWrapper containerProps={properties ?? {}} className="!max-w-none !px-0">
       <div className="relative w-full">
         <div className="absolute left-4 lg:left-[4%] top-1/2 -translate-y-1/2 z-30">
           <NavButton direction="prev" onClick={handlePrev} />

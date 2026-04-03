@@ -1,51 +1,37 @@
-import { DATA_SOURCE } from '@/config/data-source'
-import { collectionImages } from '@/data/collection'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
 import type { GalleryImage } from '@/app/components/collection-gallery'
-import type { Page, CollectionGallery, Media } from '@/payload-types'
+import { getApiUrl } from '@/lib/api/getApiUrl'
+import type { CollectionGallery, Media, Page } from '@/payload-types'
 
 export const getCollectionImages = async (): Promise<GalleryImage[]> => {
-  if (DATA_SOURCE === 'local') {
-    return collectionImages
+  const API_URL = getApiUrl()
+  const params = new URLSearchParams({ limit: '1', depth: '2' })
+  params.set('where[slug][equals]', 'home')
+
+  const res = await fetch(`${API_URL}/api/pages?${params.toString()}`, {
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to fetch home page: ${res.status}`)
   }
+  const data = (await res.json()) as { docs?: Page[] }
+  const homePage = data?.docs?.[0]
+  if (!homePage) return []
 
-  try {
-    const payloadConfig = await config
-    const payload = await getPayload({ config: payloadConfig })
+  const galleryBlock = homePage.layout?.find(
+    (block): block is CollectionGallery => block.blockType === 'collectionGallery',
+  )
+  if (!galleryBlock?.images?.length) return []
 
-    // Find the home page
-    const { docs: pages } = await payload.find({
-      collection: 'pages',
-      where: {
-        slug: { equals: 'home' },
-      },
-      limit: 1,
-    })
-
-    if (pages.length > 0) {
-      const homePage = pages[0] as Page
-      // Find the collectionGallery block
-      const galleryBlock = homePage.layout?.find(
-        (block): block is CollectionGallery => block.blockType === 'collectionGallery'
-      )
-
-      if (galleryBlock && galleryBlock.images) {
-        return galleryBlock.images
-          .filter(item => typeof item.image !== 'number') // Ensure it's populated Media
-          .map((item) => ({
-            id: item.id || `gallery-item-${Math.random()}`,
-            image: item.image as Media,
-            title: item.title,
-            label: item.label,
-          }))
-      }
-    }
-
-    // Fallback if no block found
-    return collectionImages
-  } catch (error) {
-    console.error('Failed to fetch collection gallery data from CMS:', error)
-    return collectionImages
-  }
+  return galleryBlock.images
+    .filter((item) => typeof item.image !== 'number')
+    .map((item) => ({
+      id:
+        item.id ||
+        `${String(item.title ?? item.label ?? 'gallery')}-${String(
+          typeof item.image === 'object' && item.image ? (item.image as Media).id : 'unknown',
+        )}`,
+      image: item.image as Media,
+      title: item.title,
+      label: item.label,
+    }))
 }

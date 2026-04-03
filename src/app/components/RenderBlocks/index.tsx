@@ -15,19 +15,23 @@ const blockComponents = {
   contact: ContactSection,
 }
 
-export const RenderBlocks: React.FC<{ blocks: any[] }> = ({ blocks }) => {
+type Block = NonNullable<import('@/payload-types').Page['layout']>[number]
+
+export const RenderBlocks: React.FC<{ blocks: Block[] }> = ({ blocks }) => {
   if (!blocks || blocks.length === 0) return null
 
   return (
     <>
       {blocks.map((block, index) => {
-        const BlockComponent = blockComponents[block.blockType as keyof typeof blockComponents]
+        const blockType = block.blockType as keyof typeof blockComponents | undefined
+        const BlockComponent = blockType ? blockComponents[blockType] : undefined
 
         if (BlockComponent) {
-          return <BlockComponent key={index} {...block} />
+          const Component = BlockComponent as unknown as React.ComponentType<Record<string, unknown>>
+          return <Component key={index} {...(block as unknown as Record<string, unknown>)} />
         }
 
-        return <div key={index}>Block component not found: {block.blockType}</div>
+        return <div key={index}>Block component not found: {String(blockType)}</div>
       })}
     </>
   )

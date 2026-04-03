@@ -4,9 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { clsx } from 'clsx'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ShoppingBag, User, X, Heart, ChevronDown, ChevronRight } from 'lucide-react'
-import { navigation, type CategoryItem } from './data'
+import { motion } from 'framer-motion'
+import { Search, ShoppingBag, User, Heart } from 'lucide-react'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import Image from 'next/image'
@@ -15,11 +14,11 @@ import { useAuth } from '@/providers/auth'
 import { AuthModal } from './AuthModal'
 import { LogOut, User as UserIcon, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button/Button'
+import { getApiUrl } from '@/lib/api/getApiUrl'
 
-import type { Header as HeaderCMS, SiteSetting } from '@/payload-types'
+import type { Header as HeaderCMS, Media, Page, Product, SiteSetting } from '@/payload-types'
 
 interface HeaderProps {
-  categories?: CategoryItem[]
   cmsData?: HeaderCMS | null
   siteSettings?: SiteSetting | null
 }
@@ -56,11 +55,10 @@ const AnimatedMenuIcon = ({ isOpen }: { isOpen: boolean }) => {
   )
 }
 
-export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) => {
+export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
   const { cartCount, isHydrated: isCartHydrated } = useCart()
   const { wishlistCount, isHydrated: isWishlistHydrated } = useWishlist()
   const [searchQuery, setSearchQuery] = useState('')
@@ -69,16 +67,9 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
-  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current)
-    }
-  }, [])
 
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searchResults, setSearchResults] = useState<Product[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -110,7 +101,6 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
 
   useEffect(() => {
     setIsMenuOpen(false)
-    setIsCategoriesOpen(false)
   }, [pathname])
 
   const handleSearch = (e: React.FormEvent) => {
@@ -136,10 +126,17 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
     const fetchResults = async () => {
       setIsSearching(true)
       try {
-        const res = await fetch(`/api/products?q=${encodeURIComponent(debouncedQuery)}&limit=5`)
+        const API_URL = getApiUrl()
+        const params = new URLSearchParams({ limit: '5', depth: '1' })
+        params.set('where[or][0][name][contains]', debouncedQuery)
+        params.set('where[or][1][description][contains]', debouncedQuery)
+
+        const res = await fetch(`${API_URL}/api/products?${params.toString()}`, {
+          credentials: 'include',
+        })
         if (res.ok) {
-          const data = await res.json()
-          setSearchResults(data.docs || [])
+          const data = (await res.json()) as { docs?: Product[] }
+          setSearchResults(data.docs ?? [])
         }
       } catch (err) {
         console.error('Error searching products:', err)
@@ -153,8 +150,24 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
 
   const closeMenu = () => {
     setIsMenuOpen(false)
-    setIsCategoriesOpen(false)
   }
+
+  const brandName = siteSettings?.siteName || 'Wear Wine'
+
+  const navItems =
+    cmsData?.navItems
+      ?.map((item) => {
+        if (!item?.label) return null
+
+        const href =
+          item.link && typeof item.link === 'object' ? `/${(item.link as Page).slug}` : '/'
+
+        return {
+          name: item.label,
+          href,
+        }
+      })
+      .filter((item): item is { name: string; href: string } => Boolean(item)) ?? []
 
   return (
     <>
@@ -188,7 +201,7 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
             {/* Layout Spacer - Keeps logo centered exactly like original code */}
             <div className="w-10 lg:hidden" aria-hidden="true" />
 
-            <Link href="/" className="flex items-center relative  gap-2">
+            <Link href="/" className="flex items-center relative gap-2" aria-label={`${brandName} Home`}>
               <motion.div
                 className="relative inline-block overflow-hidden"
                 whileHover="hover"
@@ -198,14 +211,14 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
                 <div className="relative z-10 flex items-center gap-2">
                   <Image
                     src={IconBlack}
-                    alt=""
+                    alt={`${brandName} icon`}
                     width={30}
                     height={30}
                     className="w-3 h-3 lg:w-8 lg:h-6"
                   />
                   <Image
                     src={WearWine}
-                    alt="Wear Wine"
+                    alt={brandName}
                     width={100}
                     height={50}
                     className="h-3 lg:h-5 w-full"
@@ -231,23 +244,7 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
 
             {/* Desktop nav */}
             <nav className="hidden lg:flex items-center gap-2">
-              {(cmsData?.navItems?.length
-                ? cmsData.navItems.map((item: any) => {
-                    const link = item.link || {}
-                    const href =
-                      link.url ||
-                      (typeof link.value === 'object'
-                        ? `/${link.value.slug}`
-                        : link.value
-                          ? `/pages/${link.value}`
-                          : '/')
-                    return {
-                      name: item.label,
-                      href,
-                    }
-                  })
-                : navigation
-              ).map((item) => {
+              {navItems.map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
@@ -329,7 +326,7 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
                           Signed in as
                         </p>
                         <p className="text-sm font-bold text-text truncate">
-                          {(user as any).name || user.email}
+                          {user.name || user.email}
                         </p>
                       </div>
 
@@ -438,64 +435,76 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
                       </div>
 
                       <div className="divide-y divide-neutral-50">
-                        {searchResults.map((product) => (
-                          <Link
-                            key={product.id}
-                            href={`/product/${product.slug}`}
-                            onClick={() => {
-                              setIsSearchOpen(false)
-                              setSearchQuery('')
-                              setDebouncedQuery('')
-                              setSearchResults([])
-                            }}
-                            className="flex items-center gap-4 px-4 py-2.5 hover:bg-neutral-50 transition-colors group"
-                          >
-                            <div className="relative w-10 h-14 bg-neutral-100 flex-shrink-0 overflow-hidden rounded-none border border-neutral-100">
-                              {product.images?.[0]?.image?.url ? (
-                                <Image
-                                  src={product.images[0].image.url}
-                                  alt={product.name}
-                                  fill
-                                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <ShoppingBag className="w-3 h-3 text-neutral-300" />
-                                </div>
-                              )}
-                            </div>
+                        {searchResults.map((product) => {
+                          const firstImage = product.images?.[0]?.image
+                          const imageUrl =
+                            firstImage && typeof firstImage === 'object'
+                              ? (firstImage as Media).url ?? null
+                              : null
+                          const categoryName =
+                            product.category && typeof product.category === 'object'
+                              ? product.category.name
+                              : null
 
-                            <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
-                              <div className="min-w-0">
-                                <h4 className="text-[12px] font-medium text-black truncate tracking-tight group-hover:text-neutral-500 transition-colors uppercase">
-                                  {product.name}
-                                </h4>
-                                {product.category?.name && (
-                                  <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-neutral-400 mt-0.5">
-                                    {product.category.name}
-                                  </p>
+                          return (
+                            <Link
+                              key={product.id}
+                              href={`/product/${product.slug}`}
+                              onClick={() => {
+                                setIsSearchOpen(false)
+                                setSearchQuery('')
+                                setDebouncedQuery('')
+                                setSearchResults([])
+                              }}
+                              className="flex items-center gap-4 px-4 py-2.5 hover:bg-neutral-50 transition-colors group"
+                            >
+                              <div className="relative w-10 h-14 bg-neutral-100 flex-shrink-0 overflow-hidden rounded-none border border-neutral-100">
+                                {imageUrl ? (
+                                  <Image
+                                    src={imageUrl}
+                                    alt={product.name}
+                                    fill
+                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <ShoppingBag className="w-3 h-3 text-neutral-300" />
+                                  </div>
                                 )}
                               </div>
 
-                              <div className="flex flex-col items-end shrink-0">
-                                {product.salePrice ? (
-                                  <div className="flex flex-col items-end">
+                              <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
+                                <div className="min-w-0">
+                                  <h4 className="text-[12px] font-medium text-black truncate tracking-tight group-hover:text-neutral-500 transition-colors uppercase">
+                                    {product.name}
+                                  </h4>
+                                  {categoryName && (
+                                    <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-neutral-400 mt-0.5">
+                                      {categoryName}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="flex flex-col items-end shrink-0">
+                                  {product.salePrice ? (
+                                    <div className="flex flex-col items-end">
+                                      <span className="text-[11px] font-bold text-black">
+                                        ₹{product.salePrice}
+                                      </span>
+                                      <span className="text-[9px] font-medium text-neutral-400 line-through decoration-neutral-300">
+                                        ₹{product.price}
+                                      </span>
+                                    </div>
+                                  ) : (
                                     <span className="text-[11px] font-bold text-black">
-                                      ₹{product.salePrice}
-                                    </span>
-                                    <span className="text-[9px] font-medium text-neutral-400 line-through decoration-neutral-300">
                                       ₹{product.price}
                                     </span>
-                                  </div>
-                                ) : (
-                                  <span className="text-[11px] font-bold text-black">
-                                    ₹{product.price}
-                                  </span>
-                                )}
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </Link>
-                        ))}
+                            </Link>
+                          )
+                        })}
                       </div>
 
                       {/* Action Call to Action */}
@@ -551,23 +560,7 @@ export const Header = ({ categories = [], cmsData, siteSettings }: HeaderProps) 
         <div className="flex-1 overflow-y-auto overscroll-contain">
           {/* Main nav links */}
           <nav className="px-3 py-4 pt-16">
-            {(cmsData?.navItems?.length
-              ? cmsData.navItems.map((item: any) => {
-                  const link = item.link || {}
-                  const href =
-                    link.url ||
-                    (typeof link.value === 'object'
-                      ? `/${link.value.slug}`
-                      : link.value
-                        ? `/pages/${link.value}`
-                        : '/')
-                  return {
-                    name: item.label,
-                    href,
-                  }
-                })
-              : navigation
-            ).map((item) => {
+            {navItems.map((item) => {
               const isActive = pathname === item.href
               return (
                 <Link

@@ -1,77 +1,25 @@
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
-import { DATA_SOURCE } from '@/config/data-source'
-import { productsData } from '@/data/products'
+import { getApiUrl } from '@/lib/api/getApiUrl'
+import type { Product } from '@/payload-types'
 
-const emptyProductsResult = (limit: number) => ({
-  docs: [],
-  totalDocs: 0,
-  limit,
-  totalPages: 1,
-  page: 1,
-  pagingCounter: 1,
-  hasPrevPage: false,
-  hasNextPage: false,
-  prevPage: null,
-  nextPage: null,
-})
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  try {
+    const API_URL = getApiUrl()
+    const params = new URLSearchParams({
+      depth: '2',
+      limit: '1',
+    })
+    params.set('where[slug][equals]', slug)
 
-export async function getProducts({ limit = 20, query = '' }: { limit?: number; query?: string } = {}) {
-  if (DATA_SOURCE === 'local') {
-    return {
-      docs: productsData,
-      totalDocs: productsData.length,
-      limit,
-      totalPages: 1,
-      page: 1,
-      pagingCounter: 1,
-      hasPrevPage: false,
-      hasNextPage: false,
-      prevPage: null,
-      nextPage: null,
-    }
-  }
-
-  if (!process.env.PAYLOAD_SECRET) {
-    return emptyProductsResult(limit)
-  }
-  const payload = await getPayload({ config: configPromise })
-
-  const where: any = {}
-  if (query) {
-    where.or = [{ name: { contains: query } }, { description: { contains: query } }]
-  }
-
-  const result = await payload.find({
-    collection: 'products',
-    limit,
-    depth: 1,
-    where: Object.keys(where).length > 0 ? where : undefined,
-  })
-
-  return result
-}
-
-export async function getProductBySlug(slug: string) {
-  if (DATA_SOURCE === 'local') {
-    return productsData.find(p => p.slug === slug) ?? null
-  }
-
-  if (!process.env.PAYLOAD_SECRET) {
+    const res = await fetch(`${API_URL}/api/products?${params.toString()}`, {
+      credentials: 'include',
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as { docs?: Product[] }
+    return data?.docs?.[0] ?? null
+  } catch (error) {
+    console.error(`Error fetching product ${slug}:`, error)
     return null
   }
-  const payload = await getPayload({ config: configPromise })
-
-  const result = await payload.find({
-    collection: 'products',
-    limit: 1,
-    depth: 1,
-    where: {
-      slug: { equals: slug },
-    },
-  })
-
-  return result.docs?.[0] ?? null
 }
 
 export async function getRelatedProducts({
@@ -82,29 +30,24 @@ export async function getRelatedProducts({
   categoryId: number | string
   slug: string
   limit?: number
-}) {
-  if (DATA_SOURCE === 'local') {
-    return productsData
-      .filter((p) => {
-        const pCatId = typeof p.category === 'object' ? p.category.id : p.category
-        return pCatId === categoryId && p.slug !== slug
-      })
-      .slice(0, limit)
-  }
+}): Promise<Product[]> {
+  try {
+    const API_URL = getApiUrl()
+    const params = new URLSearchParams({
+      depth: '1',
+      limit: String(limit),
+    })
+    params.set('where[and][0][category][equals]', String(categoryId))
+    params.set('where[and][1][slug][not_equals]', slug)
 
-  if (!process.env.PAYLOAD_SECRET) {
+    const res = await fetch(`${API_URL}/api/products?${params.toString()}`, {
+      credentials: 'include',
+    })
+    if (!res.ok) return []
+    const data = (await res.json()) as { docs?: Product[] }
+    return data?.docs ?? []
+  } catch (error) {
+    console.error('Error fetching related products:', error)
     return []
   }
-
-  const payload = await getPayload({ config: configPromise })
-  const result = await payload.find({
-    collection: 'products',
-    where: {
-      and: [{ category: { equals: categoryId } }, { slug: { not_equals: slug } }],
-    },
-    depth: 1,
-    limit,
-  })
-
-  return result.docs
 }

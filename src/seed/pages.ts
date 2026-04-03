@@ -125,13 +125,13 @@ export const seedPages = async (payload: Payload) => {
     await payload.update({
       collection: 'pages',
       id: homePage.docs[0].id,
-      data: pageData as any,
-    })
+      data: pageData,
+    } as unknown as Parameters<typeof payload.update>[0])
   } else {
     await payload.create({
       collection: 'pages',
-      data: pageData as any,
-    })
+      data: pageData,
+    } as unknown as Parameters<typeof payload.create>[0])
   }
 
   payload.logger.info('Pages Seeded.')

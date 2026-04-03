@@ -22,10 +22,18 @@ import { SiteSettings } from './globals/SiteSettings'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+const requireEnv = (key: string): string => {
+  const value = process.env[key]
+  if (!value) {
+    throw new Error(`${key} is not defined`)
+  }
+  return value
+}
+
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SITE_URL || '',
-  cors: [process.env.NEXT_PUBLIC_SITE_URL || ''].filter(Boolean),
-  csrf: [process.env.NEXT_PUBLIC_SITE_URL || ''].filter(Boolean),
+  serverURL: requireEnv('NEXT_PUBLIC_API_URL'),
+  cors: [requireEnv('PAYLOAD_CORS_ORIGINS')],
+  csrf: [requireEnv('PAYLOAD_CORS_ORIGINS')],
   admin: {
     user: Users.slug,
     importMap: {
@@ -35,13 +43,13 @@ export default buildConfig({
   collections: [Users, Media, Products, Categories, Tags, Colors, Sizes, Pages],
   globals: [Header, Footer, PDPStatic, SiteSettings],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || '',
+  secret: requireEnv('PAYLOAD_SECRET'),
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URI || '',
+      connectionString: requireEnv('DATABASE_URI'),
     },
   }),
   sharp,
@@ -50,13 +58,13 @@ export default buildConfig({
       collections: {
         media: true,
       },
-      bucket: process.env.S3_BUCKET!,
+      bucket: requireEnv('S3_BUCKET'),
       config: {
         endpoint: process.env.S3_ENDPOINT || `https://s3.${process.env.S3_REGION}.amazonaws.com`,
-        region: process.env.S3_REGION!,
+        region: requireEnv('S3_REGION'),
         credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY!,
-          secretAccessKey: process.env.S3_SECRET_KEY!,
+          accessKeyId: requireEnv('S3_ACCESS_KEY'),
+          secretAccessKey: requireEnv('S3_SECRET_KEY'),
         },
       },
     }),

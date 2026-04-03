@@ -7,6 +7,7 @@ import React, { useEffect, useRef } from 'react'
 
 import { SectionWrapper } from '../SectionWrapper'
 import { Media } from '@/payload-types'
+import type { ContainerPropsType } from '@types-frontend/types'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -24,7 +25,7 @@ export interface AboutSectionProps {
     title: string
     description: string
   }[]
-  properties?: any
+  properties: ContainerPropsType
 }
 
 import { ArrowRight } from 'lucide-react'

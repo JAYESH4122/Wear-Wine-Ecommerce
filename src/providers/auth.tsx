@@ -2,14 +2,17 @@
 
 import React, { createContext, useContext } from 'react'
 import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react'
-import type { User } from '@/payload-types'
+import type { Session } from 'next-auth'
+import { getApiUrl } from '@/lib/api/getApiUrl'
+
+type AuthUser = Session['user']
 
 interface AuthContextType {
-  user: User | null
+  user: AuthUser | null
   isLoading: boolean
   isHydrated: boolean
-  login: (data: any) => Promise<void>
-  signup: (data: any) => Promise<void>
+  login: (data: { email: string; password: string }) => Promise<void>
+  signup: (data: { email: string; password: string; name: string }) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -27,14 +30,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const AuthContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { data: session, status } = useSession()
   const [isHydrated, setIsHydrated] = React.useState(false)
-  const user = (session?.user as User) || null
+  const user = session?.user ?? null
   const isLoading = status === 'loading'
 
   React.useEffect(() => {
     setIsHydrated(true)
   }, [])
 
-  const login = async (data: any) => {
+  const login = async (data: { email: string; password: string }) => {
     const res = await signIn('credentials', {
       redirect: false,
       email: data.email,
@@ -47,11 +50,13 @@ const AuthContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }
 
-  const signup = async (data: any) => {
+  const signup = async (data: { email: string; password: string; name: string }) => {
     // Utilize the native Payload local API route for creation since NextAuth only does sign IN.
-    const response = await fetch('/api/users', {
+    const API_URL = getApiUrl()
+    const response = await fetch(`${API_URL}/api/users`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
         ...data,
         collection: 'users',

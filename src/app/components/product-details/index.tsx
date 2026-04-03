@@ -7,9 +7,8 @@ import { ProductInfoPanel } from './product-info-panel'
 import { RelatedProducts } from './related-products'
 import { SizeChartModal } from './size-chart-model'
 import { TermsModal } from './terms-modal'
-import { pdpStaticData } from '@/data/pdp-static'
 import type { ProductDetailsProps, NormalizedColor, NormalizedSize } from './types'
-import type { Media, Color, Size } from '@/payload-types'
+import type { Category, Color, Media, Size } from '@/payload-types'
 
 export const ProductDetails = ({ product, relatedProducts = [], pdpStatic }: ProductDetailsProps) => {
   const [showTermsModal, setShowTermsModal] = useState(false)
@@ -17,7 +16,7 @@ export const ProductDetails = ({ product, relatedProducts = [], pdpStatic }: Pro
 
   const categoryName =
     typeof product.category === 'object' && product.category !== null
-      ? ((product.category as any).name ?? 'Product')
+      ? ((product.category as Category).name ?? 'Product')
       : 'Product'
 
   const hasSale = !!product.salePrice && product.salePrice < product.price

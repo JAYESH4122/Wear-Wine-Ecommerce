@@ -28,7 +28,7 @@ const toCartProduct = (product: Product | CartProduct): CartProduct => ({
   salePrice: product.salePrice ?? null,
   variants: 'variants' in product ? product.variants ?? null : null,
   images: Array.isArray(product.images)
-    ? product.images.map((img: any) => ({
+    ? product.images.map((img) => ({
         image: img?.image,
         id: img?.id ?? null,
       }))

@@ -9,7 +9,12 @@ export const Users: CollectionConfig = {
     read: () => true,
     create: () => true,
   },
-  auth: true,
+  auth: {
+    cookies: {
+      secure: true,
+      sameSite: 'None',
+    },
+  },
   fields: [
     {
       name: 'name',

@@ -11,6 +11,7 @@ import { CartSummary } from './components/CartSummary'
 import { EmptyCart } from './components/EmptyCart'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button/Button'
+import { getApiUrl } from '@/lib/api/getApiUrl'
 
 type Step = 1 | 2 | 3
 
@@ -97,7 +98,11 @@ export const CartPage = () => {
     const controller = new AbortController()
     const load = async () => {
       try {
-        const res = await fetch('/api/products?limit=12', { signal: controller.signal })
+        const API_URL = getApiUrl()
+        const res = await fetch(`${API_URL}/api/products?limit=12`, {
+          signal: controller.signal,
+          credentials: 'include',
+        })
         if (!res.ok) return
         const data = (await res.json()) as { docs?: Product[] }
         const docs = data?.docs ?? []

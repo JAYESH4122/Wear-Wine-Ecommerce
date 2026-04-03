@@ -1,34 +1,23 @@
-import { DATA_SOURCE } from '@/config/data-source'
-import { carouselData } from '@/data/carousel'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
 import type { CarouselCard } from '@/app/components/depth-card-carousel'
+import { getApiUrl } from '@/lib/api/getApiUrl'
 
 export const getCarouselData = async (): Promise<CarouselCard[]> => {
-  if (DATA_SOURCE === 'local') {
-    return carouselData
+  const API_URL = getApiUrl()
+  const params = new URLSearchParams({ limit: '30', depth: '0' })
+  params.set('where[type][equals]', 'carousel')
+
+  const res = await fetch(`${API_URL}/api/media?${params.toString()}`, {
+    credentials: 'include',
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to fetch carousel media: ${res.status}`)
   }
+  const data = (await res.json()) as { docs?: { url?: string | null; alt?: string | null }[] }
+  const docs = data?.docs ?? []
 
-  // EXISTING CMS LOGIC
-  try {
-    const payloadConfig = await config
-    const payload = await getPayload({ config: payloadConfig })
-
-    const { docs } = await payload.find({
-      collection: 'media',
-      where: {
-        type: { equals: 'carousel' },
-      },
-      limit: 30,
-    })
-
-    return docs.map((doc) => ({
-      src: doc.url || '',
-      title: doc.alt ?? undefined,
-      description: 'Editorial Selection',
-    }))
-  } catch (error) {
-    console.error('Failed to fetch carousel data from CMS:', error)
-    return carouselData // Fallback to local
-  }
+  return docs.map((doc) => ({
+    src: doc.url || '',
+    title: doc.alt ?? undefined,
+    description: 'Editorial Selection',
+  }))
 }
