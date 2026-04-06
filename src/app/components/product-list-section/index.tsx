@@ -38,7 +38,7 @@ interface Product {
 const ALL_CATEGORY: Category = { id: 'all', name: 'All Products' }
 
 const BREAKPOINTS = {
-  320: { slidesPerView: 1, spaceBetween: 16 },
+  320: { slidesPerView: 2, spaceBetween: 12 },
   640: { slidesPerView: 2, spaceBetween: 16 },
   1024: { slidesPerView: 3, spaceBetween: 20 },
   1280: { slidesPerView: 4, spaceBetween: 24 },
@@ -350,7 +350,7 @@ export const ProductListSection = ({
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse" />
             ))}

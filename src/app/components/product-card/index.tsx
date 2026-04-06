@@ -274,7 +274,7 @@ export const ProductCard = ({
         </span>
 
         {/* Price & Stock */}
-        <div className="flex justify-between items-center px-1">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-1">
           <div className="flex items-center gap-3">
             <span className="text-[17px] font-extrabold text-black tracking-tight">₹{price}</span>
             {originalPrice && (
@@ -308,7 +308,7 @@ export const ProductCard = ({
         {/* Stock Progress Bar */}
         {isInStock && (
           <div className="mt-2 px-1">
-            <div className="flex justify-between items-center mb-1.5">
+            <div className="flex flex-col md:flex-row gap-2 items-start md:items-center justify-between md:items-center mb-1.5">
               <span className="text-[10px] uppercase tracking-[0.1em] text-black/40 font-bold">
                 Limited Availability
               </span>

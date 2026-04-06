@@ -8,6 +8,10 @@
   justify-content: center;
   align-items: center;
   gap: 8px;
+  &:empty,
+  &.swiper-pagination-lock {
+    display: none !important;
+  }
 }
 
 .swiper-pagination-bullet {
@@ -24,7 +28,7 @@
 .swiper-pagination-bullet-active {
   background: var(--background-alt, #000000) !important;
   width: 30px !important;
-  border-radius: 10px !important;
+  border-radius: 10px !important
 }
 
 .swiper-slide {
