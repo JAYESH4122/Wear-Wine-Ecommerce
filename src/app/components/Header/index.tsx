@@ -201,7 +201,11 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
             {/* Layout Spacer - Keeps logo centered exactly like original code */}
             <div className="w-10 lg:hidden" aria-hidden="true" />
 
-            <Link href="/" className="flex items-center relative gap-2" aria-label={`${brandName} Home`}>
+            <Link
+              href="/"
+              className="flex items-center absolute ms-10 lg:relative gap-2"
+              aria-label={`${brandName} Home`}
+            >
               <motion.div
                 className="relative inline-block overflow-hidden"
                 whileHover="hover"
@@ -221,7 +225,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                     alt={brandName}
                     width={100}
                     height={50}
-                    className="h-3 lg:h-5 w-full"
+                    className="h-4 lg:h-5 w-full"
                   />
                 </div>
 
@@ -439,7 +443,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                           const firstImage = product.images?.[0]?.image
                           const imageUrl =
                             firstImage && typeof firstImage === 'object'
-                              ? (firstImage as Media).url ?? null
+                              ? ((firstImage as Media).url ?? null)
                               : null
                           const categoryName =
                             product.category && typeof product.category === 'object'
