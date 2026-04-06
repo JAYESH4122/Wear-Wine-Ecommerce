@@ -3,7 +3,6 @@ import { CollectionGallery } from '../collection-gallery'
 import { DepthDeckCarousel } from '../depth-card-carousel'
 import { ProductListSection } from '../product-list-section'
 import { HeroSlider } from '../hero-slider'
-import { AboutSection } from '../about-section'
 import { ContactSection } from '../contact-section'
 
 const blockComponents = {
@@ -11,7 +10,6 @@ const blockComponents = {
   collectionGallery: CollectionGallery,
   depthDeckCarousel: DepthDeckCarousel,
   productListSection: ProductListSection,
-  about: AboutSection,
   contact: ContactSection,
 }
 

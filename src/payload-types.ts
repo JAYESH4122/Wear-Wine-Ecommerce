@@ -271,7 +271,7 @@ export interface Page {
   id: number;
   title: string;
   slug: string;
-  layout: (HeroBlock | CollectionGallery | DepthDeckCarousel | ProductListSection | AboutBlock | ContactBlock)[];
+  layout: (HeroBlock | CollectionGallery | DepthDeckCarousel | ProductListSection | ContactBlock)[];
   updatedAt: string;
   createdAt: string;
 }
@@ -675,118 +675,6 @@ export interface ProductListSection {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "AboutBlock".
- */
-export interface AboutBlock {
-  properties?: {
-    paddingTop?:
-      | (
-          | 'NONE'
-          | 'SM1'
-          | 'SM2'
-          | 'SM3'
-          | 'MD1'
-          | 'MD2'
-          | 'MD3'
-          | 'LG1'
-          | 'LG2'
-          | 'LG3'
-          | 'XL1'
-          | 'XL2'
-          | 'XL3'
-          | 'XXL1'
-          | 'XXL2'
-          | 'XXL3'
-        )
-      | null;
-    paddingTopMobile?:
-      | (
-          | 'NONE'
-          | 'SM1'
-          | 'SM2'
-          | 'SM3'
-          | 'MD1'
-          | 'MD2'
-          | 'MD3'
-          | 'LG1'
-          | 'LG2'
-          | 'LG3'
-          | 'XL1'
-          | 'XL2'
-          | 'XL3'
-          | 'XXL1'
-          | 'XXL2'
-          | 'XXL3'
-        )
-      | null;
-    paddingBottom?:
-      | (
-          | 'NONE'
-          | 'SM1'
-          | 'SM2'
-          | 'SM3'
-          | 'MD1'
-          | 'MD2'
-          | 'MD3'
-          | 'LG1'
-          | 'LG2'
-          | 'LG3'
-          | 'XL1'
-          | 'XL2'
-          | 'XL3'
-          | 'XXL1'
-          | 'XXL2'
-          | 'XXL3'
-        )
-      | null;
-    paddingBottomMobile?:
-      | (
-          | 'NONE'
-          | 'SM1'
-          | 'SM2'
-          | 'SM3'
-          | 'MD1'
-          | 'MD2'
-          | 'MD3'
-          | 'LG1'
-          | 'LG2'
-          | 'LG3'
-          | 'XL1'
-          | 'XL2'
-          | 'XL3'
-          | 'XXL1'
-          | 'XXL2'
-          | 'XXL3'
-        )
-      | null;
-    backgroundColor?: ('primary' | 'secondary' | 'alt') | null;
-    backgroundColorMobile?: ('primary' | 'secondary' | 'alt') | null;
-  };
-  badge: string;
-  title: string;
-  description: string;
-  image: number | Media;
-  stats?:
-    | {
-        value: string;
-        label: string;
-        id?: string | null;
-      }[]
-    | null;
-  values?:
-    | {
-        number: string;
-        title: string;
-        description: string;
-        id?: string | null;
-      }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'about';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ContactBlock".
  */
 export interface ContactBlock {
@@ -1130,7 +1018,6 @@ export interface PagesSelect<T extends boolean = true> {
         collectionGallery?: T | CollectionGallerySelect<T>;
         depthDeckCarousel?: T | DepthDeckCarouselSelect<T>;
         productListSection?: T | ProductListSectionSelect<T>;
-        about?: T | AboutBlockSelect<T>;
         contact?: T | ContactBlockSelect<T>;
       };
   updatedAt?: T;
@@ -1234,43 +1121,6 @@ export interface ProductListSectionSelect<T extends boolean = true> {
   description?: T;
   buttonText?: T;
   limit?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "AboutBlock_select".
- */
-export interface AboutBlockSelect<T extends boolean = true> {
-  properties?:
-    | T
-    | {
-        paddingTop?: T;
-        paddingTopMobile?: T;
-        paddingBottom?: T;
-        paddingBottomMobile?: T;
-        backgroundColor?: T;
-        backgroundColorMobile?: T;
-      };
-  badge?: T;
-  title?: T;
-  description?: T;
-  image?: T;
-  stats?:
-    | T
-    | {
-        value?: T;
-        label?: T;
-        id?: T;
-      };
-  values?:
-    | T
-    | {
-        number?: T;
-        title?: T;
-        description?: T;
-        id?: T;
-      };
   id?: T;
   blockName?: T;
 }

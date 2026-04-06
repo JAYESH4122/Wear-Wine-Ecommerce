@@ -3,7 +3,6 @@ import { CollectionGallery } from './CollectionGallery'
 import { DepthDeckCarousel } from './DepthDeckCarousel'
 import { ProductListSection } from './ProductListSection'
 import { Hero } from './Hero'
-import { About } from './About'
 import { Contact } from './Contact'
 
 export const Pages: CollectionConfig = {
@@ -51,7 +50,6 @@ export const Pages: CollectionConfig = {
         CollectionGallery,
         DepthDeckCarousel,
         ProductListSection,
-        About,
         Contact,
       ],
     },
