@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 interface Props {
-  category: string
+  category?: string | null
 }
 
 export const ProductBreadcrumb = ({ category }: Props) => (
@@ -14,15 +14,13 @@ export const ProductBreadcrumb = ({ category }: Props) => (
     <Link href="/" className="hover:text-neutral-900 transition-colors duration-200">
       Home
     </Link>
-    <span className="mx-2" aria-hidden>
-      /
-    </span>
-    {/* <Link href="/shop" className="hover:text-neutral-900 transition-colors duration-200">
-      Shop
-    </Link> */}
-    {/* <span className="mx-2" aria-hidden>
-      /
-    </span> */}
-    <span className="text-neutral-900">{category}</span>
+    {category && (
+      <>
+        <span className="mx-2" aria-hidden>
+          /
+        </span>
+        <span className="text-neutral-900">{category}</span>
+      </>
+    )}
   </nav>
 )

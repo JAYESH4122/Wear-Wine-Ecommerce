@@ -16,8 +16,8 @@ export const ProductDetails = ({ product, relatedProducts = [], pdpStatic }: Pro
 
   const categoryName =
     typeof product.category === 'object' && product.category !== null
-      ? ((product.category as Category).name ?? 'Product')
-      : 'Product'
+      ? ((product.category as Category).name ?? null)
+      : null
 
   const hasSale = !!product.salePrice && product.salePrice < product.price
   const discountPercentage = hasSale

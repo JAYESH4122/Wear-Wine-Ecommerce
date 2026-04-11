@@ -108,9 +108,11 @@ export const RelatedProducts = ({ products }: Props) => {
 
               {/* Info */}
               <Link href={`/product/${rp.slug}`} className="flex flex-col flex-1 gap-1">
-                <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400">
-                  {rp.category && typeof rp.category === 'object' ? (rp.category as Category).name : ''}
-                </span>
+                {rp.category && typeof rp.category === 'object' && (rp.category as Category).name && (
+                  <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-neutral-400">
+                    {(rp.category as Category).name}
+                  </span>
+                )}
                 <h3 className="text-sm font-medium text-neutral-900 leading-snug group-hover:text-neutral-600 transition-colors duration-200 line-clamp-2">
                   {rp.name}
                 </h3>

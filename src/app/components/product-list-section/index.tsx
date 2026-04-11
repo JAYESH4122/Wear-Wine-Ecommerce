@@ -30,7 +30,7 @@ interface Product {
   image: string
   badge?: string
   rating: number
-  category: string
+  category?: string
   categorySlug?: string
   slug?: string
 }
@@ -174,7 +174,7 @@ export const ProductListSection = ({
           image: imageUrl ?? '/placeholder.jpg',
           badge: tagName ?? (p.salePrice ? 'Sale' : undefined),
           rating: 5.0,
-          category: category?.name ?? 'General',
+          category: category?.name ?? undefined,
           categorySlug: category?.slug,
           slug: p.slug ?? undefined,
           isInStock,
