@@ -23,6 +23,49 @@ const invalidBody = (request: Request, message: string) =>
 const tooManyRequests = (request: Request) =>
   withCors(request, Response.json({ error: 'Too many requests' }, { status: 429 }))
 
+type ShippingAddressInput = {
+  fullName?: string
+  addressLine1?: string
+  addressLine2?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
+  landmark?: string
+}
+
+const normalizeMoney = (value: number) => Math.round(value * 100) / 100
+
+const toTrimmedString = (value: unknown): string => (typeof value === 'string' ? value.trim() : '')
+
+const normalizeShippingAddress = (shippingAddress: ShippingAddressInput | undefined) => {
+  if (!shippingAddress) return null
+
+  const normalized = {
+    fullName: toTrimmedString(shippingAddress.fullName),
+    addressLine1: toTrimmedString(shippingAddress.addressLine1),
+    addressLine2: toTrimmedString(shippingAddress.addressLine2),
+    city: toTrimmedString(shippingAddress.city),
+    state: toTrimmedString(shippingAddress.state),
+    country: toTrimmedString(shippingAddress.country),
+    postalCode: toTrimmedString(shippingAddress.postalCode),
+    landmark: toTrimmedString(shippingAddress.landmark),
+  }
+
+  if (
+    !normalized.fullName
+    || !normalized.addressLine1
+    || !normalized.city
+    || !normalized.state
+    || !normalized.country
+    || !normalized.postalCode
+  ) {
+    return null
+  }
+
+  return normalized
+}
+
 
 
 export const OPTIONS = async (request: Request) => {
@@ -43,6 +86,7 @@ export const POST = async (request: Request): Promise<Response> => {
     | {
         email?: unknown
         phone?: unknown
+        total?: unknown
         shippingAddress?: {
           fullName?: string
           addressLine1?: string
@@ -61,16 +105,13 @@ export const POST = async (request: Request): Promise<Response> => {
 
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   const phone = typeof body.phone === 'string' ? body.phone.trim() : ''
-  const shippingAddress = body.shippingAddress
+  const providedTotal = Number(body.total)
+  const shippingAddress = normalizeShippingAddress(body.shippingAddress)
 
   if (!email) return invalidBody(request, 'Email is required')
   if (!phone) return invalidBody(request, 'Phone is required')
-  if (!shippingAddress) return invalidBody(request, 'Shipping address is required')
-
-  const { fullName, addressLine1, city, state, country, postalCode } = shippingAddress
-  if (!fullName || !addressLine1 || !city || !state || !country || !postalCode) {
-    return invalidBody(request, 'All required shipping address fields must be provided')
-  }
+  if (!Number.isFinite(providedTotal) || providedTotal <= 0) return invalidBody(request, 'Total is required')
+  if (!shippingAddress) return invalidBody(request, 'All required shipping address fields must be provided')
 
   const normalizedItems = normalizeCartItems(body.items)
   if (normalizedItems.length === 0) return invalidBody(request, 'Cart items are required')
@@ -109,9 +150,15 @@ export const POST = async (request: Request): Promise<Response> => {
   const computedTotal = validItems.reduce((sum, item) => {
     return sum + item.price * item.quantity
   }, 0)
+  const normalizedComputedTotal = normalizeMoney(computedTotal)
+
+  if (normalizeMoney(providedTotal) !== normalizedComputedTotal) {
+    return invalidBody(request, 'Order total mismatch')
+  }
 
   // Razorpay expects amount in paise (multiply by 100)
-  const amountInPaise = Math.round(computedTotal * 100)
+  const amountInPaise = Math.round(normalizedComputedTotal * 100)
+  let createdOrderId: string | number | null = null
 
   try {
     // 1. Create Order in Payload CMS
@@ -132,10 +179,17 @@ export const POST = async (request: Request): Promise<Response> => {
           landmark: shippingAddress.landmark || '',
         },
         items: validItems,
-        total: computedTotal,
+        total: normalizedComputedTotal,
         status: 'pending',
       },
       overrideAccess: true,
+    })
+    createdOrderId = order.id
+    console.info('[create-order] CMS order created', {
+      orderId: String(order.id),
+      isGuest: !payloadUser?.id,
+      itemCount: validItems.length,
+      total: normalizedComputedTotal,
     })
 
     // 2. Create Order in Razorpay
@@ -150,7 +204,7 @@ export const POST = async (request: Request): Promise<Response> => {
     })
 
     // 3. Update Payload order with razorpayOrderId
-    await payload.update({
+    const updatedOrder = await payload.update({
       collection: 'orders',
       id: order.id,
       data: {
@@ -159,9 +213,18 @@ export const POST = async (request: Request): Promise<Response> => {
       overrideAccess: true,
     })
 
+    if (!updatedOrder.razorpayOrderId) {
+      throw new Error('Order was created without razorpayOrderId')
+    }
+    console.info('[create-order] Razorpay order linked', {
+      orderId: String(order.id),
+      razorpayOrderId: razorpayOrder.id,
+    })
+
     return withCors(
       request,
       Response.json({
+        orderId: order.id,
         id: order.id,
         razorpayOrderId: razorpayOrder.id,
         amount: razorpayOrder.amount,
@@ -169,7 +232,24 @@ export const POST = async (request: Request): Promise<Response> => {
       })
     )
   } catch (error) {
-    console.error('Error creating Razorpay order:', error)
+    if (createdOrderId) {
+      try {
+        await payload.delete({
+          collection: 'orders',
+          id: createdOrderId,
+          overrideAccess: true,
+        })
+      } catch (cleanupError) {
+        console.error('[create-order] Failed to cleanup unlinked order', {
+          orderId: String(createdOrderId),
+          error: cleanupError instanceof Error ? cleanupError.message : 'unknown',
+        })
+      }
+    }
+    console.error('[create-order] Failed to create linked payment order', {
+      orderId: createdOrderId ? String(createdOrderId) : null,
+      error: error instanceof Error ? error.message : 'unknown',
+    })
     return withCors(request, Response.json({ error: 'Failed to create payment order' }, { status: 500 }))
   }
 }

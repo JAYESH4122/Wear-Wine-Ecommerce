@@ -7,7 +7,7 @@ import { ArrowLeft, Heart, ShoppingBag, Trash2, X } from 'lucide-react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 
-import { cn } from '@/lib/utils'
+import { cn, formatPriceINR } from '@/lib/utils'
 import type { Media } from '@/payload-types'
 import { useWishlist, type WishlistItem } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
@@ -167,11 +167,11 @@ export const WishlistItemRow = ({
                 'text-sm font-semibold'
               )}
             >
-              ${currentPrice.toFixed(2)}
+              {formatPriceINR(currentPrice)}
             </span>
             {hasDiscount && (
               <span className="text-xs text-icon-red line-through">
-                ${item.price.toFixed(2)}
+                {formatPriceINR(item.price)}
               </span>
             )}
           </div>
@@ -247,10 +247,10 @@ export const WishlistItemRow = ({
         {/* Unit Price Column */}
         <div className="col-span-2 flex justify-center items-baseline gap-2">
           <span className='font-medium'>
-            ${currentPrice.toFixed(2)}
+            {formatPriceINR(currentPrice)}
           </span>
           {hasDiscount && (
-            <span className="text-xs text-icon-red line-through">${item.price.toFixed(2)}</span>
+            <span className="text-xs text-icon-red line-through">{formatPriceINR(item.price)}</span>
           )}
         </div>  
 

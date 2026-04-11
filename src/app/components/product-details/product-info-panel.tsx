@@ -1,7 +1,7 @@
 // product-info-panel.tsx
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
@@ -27,6 +27,16 @@ interface Props {
   sizes: NormalizedSize[]
   colors: NormalizedColor[]
   pdpStatic: PdpStatic
+}
+
+const getRelationId = (value: unknown): string | null => {
+  if (value == null) return null
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (typeof value === 'object' && 'id' in (value as { id?: unknown })) {
+    const id = (value as { id?: unknown }).id
+    if (typeof id === 'string' || typeof id === 'number') return String(id)
+  }
+  return null
 }
 
 export const ProductInfoPanel = ({
@@ -60,10 +70,32 @@ export const ProductInfoPanel = ({
 
   const needsColor = colors.length > 0
   const needsSize = sizes.length > 0
-  
+  const variants = product.variants ?? []
+
+  useEffect(() => {
+    if (!variants.length || (!needsColor && !needsSize)) return
+
+    const hasMatchingVariant = variants.some((v) => {
+      const vColorId = getRelationId(v.color)
+      const vSizeId = getRelationId(v.size)
+      const matchesColor = !needsColor || vColorId === selectedColor
+      const matchesSize = !needsSize || vSizeId === selectedSize
+      return matchesColor && matchesSize
+    })
+
+    if (hasMatchingVariant) return
+
+    const fallbackVariant = variants.find((v) => (v.stock ?? 0) > 0) ?? variants[0]
+    const fallbackColorId = getRelationId(fallbackVariant.color)
+    const fallbackSizeId = getRelationId(fallbackVariant.size)
+
+    if (needsColor && fallbackColorId) setSelectedColor(fallbackColorId)
+    if (needsSize && fallbackSizeId) setSelectedSize(fallbackSizeId)
+  }, [variants, needsColor, needsSize, selectedColor, selectedSize])
+
   const currentVariant = (product.variants ?? []).find(v => {
-    const vColorId = v.color && typeof v.color === 'object' ? String((v.color as Color).id) : String(v.color);
-    const vSizeId = v.size && typeof v.size === 'object' ? String((v.size as Size).id) : String(v.size);
+    const vColorId = getRelationId(v.color)
+    const vSizeId = getRelationId(v.size)
     
     const matchesColor = !needsColor || vColorId === selectedColor;
     const matchesSize = !needsSize || vSizeId === selectedSize;

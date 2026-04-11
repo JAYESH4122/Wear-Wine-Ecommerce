@@ -6,6 +6,7 @@ import { Plus, ShoppingBag } from 'lucide-react'
 import type { Media } from '@/payload-types'
 import type { CartProduct } from '@/providers/cart'
 import { Button } from '@/components/ui/button/Button'
+import { formatPriceINR } from '@/lib/utils'
 
 export const RecommendationCard = React.memo(function RecommendationCard({
   product,
@@ -53,9 +54,9 @@ export const RecommendationCard = React.memo(function RecommendationCard({
       </div>
       <h4 className="text-sm font-medium text-neutral-900 truncate">{product.name}</h4>
       <div className="mt-1 flex items-center gap-2">
-        <span className="text-sm font-medium text-neutral-900">${price.toFixed(2)}</span>
+        <span className="text-sm font-medium text-neutral-900">{formatPriceINR(price)}</span>
         {hasDiscount && (
-          <span className="text-xs text-neutral-400 line-through">${product.price.toFixed(2)}</span>
+          <span className="text-xs text-neutral-400 line-through">{formatPriceINR(product.price)}</span>
         )}
       </div>
     </div>

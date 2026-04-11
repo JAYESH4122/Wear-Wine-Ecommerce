@@ -37,7 +37,7 @@ export interface PDPStaticData {
 export const pdpStaticData: PDPStaticData = {
   shipping: {
     title: 'Free Shipping',
-    description: 'Free shipping on all orders above $100',
+    description: 'Free shipping on all orders above ₹100',
   },
 
   returns: {
@@ -81,7 +81,7 @@ sizeChart: {
       id: 'shipping',
       title: 'Delivery & Returns',
       content:
-        'Standard delivery 3–5 business days. Hassle-free returns within 30 days of purchase. We offer free shipping on all orders over $100.',
+        'Standard delivery 3–5 business days. Hassle-free returns within 30 days of purchase. We offer free shipping on all orders over ₹100.',
     },
     {
       id: 'care',

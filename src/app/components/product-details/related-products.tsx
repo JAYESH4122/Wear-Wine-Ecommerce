@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Heart } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatPriceINR } from '@/lib/utils'
 import { useWishlist } from '@/providers/wishlist'
 import type { Product, Media } from './types'
 import type { Category } from '@/payload-types'
@@ -121,11 +121,11 @@ export const RelatedProducts = ({ products }: Props) => {
                       hasSale ? 'text-neutral-900' : 'text-neutral-900',
                     )}
                   >
-                    ${(hasSale ? rp.salePrice! : rp.price).toFixed(2)}
+                    {formatPriceINR(hasSale ? rp.salePrice! : rp.price)}
                   </span>
                   {hasSale && (
                     <span className="text-xs text-neutral-400 line-through">
-                      ${rp.price.toFixed(2)}
+                      {formatPriceINR(rp.price)}
                     </span>
                   )}
                 </div>

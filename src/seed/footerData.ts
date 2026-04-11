@@ -114,7 +114,7 @@ export const policyPages: Record<string, PolicyContentType> = {
       {
         heading: 'Shipping Policy',
         content:
-          'We offer free standard shipping on all orders over $100. Standard shipping typically takes 5-7 business days. Express shipping (2-3 business days) is available for an additional fee. International shipping is available to select countries.',
+          'We offer free standard shipping on all orders over ₹100. Standard shipping typically takes 5-7 business days. Express shipping (2-3 business days) is available for an additional fee. International shipping is available to select countries.',
       },
       {
         heading: 'Processing Time',
@@ -218,7 +218,7 @@ export const footerData: FooterType = {
     title: 'Contact Us',
     email: 'hello@wearwine.com',
     phone: '+1 (555) 123-4567',
-    hours: ['Mon - Fri: 9:00 AM - 6:00 PM', 'Sat - Sun: Closed'],
+    hours: ['Mon - Fri: 9:00 AM - 6:00 PM'],
   },
   copyright: {
     year: '2026',

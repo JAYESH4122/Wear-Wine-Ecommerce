@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Check, Package, RotateCcw, ShieldCheck, Tag, Truck, X } from 'lucide-react'
 import { Button } from '@/components/ui/button/Button'
+import { formatPriceINR } from '@/lib/utils'
 
 export const CartSummary = React.memo(function CartSummary({
   subtotal,
@@ -46,7 +47,7 @@ export const CartSummary = React.memo(function CartSummary({
           <span className="text-neutral-500">
             Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})
           </span>
-          <span className="font-medium text-neutral-900">${subtotal.toFixed(2)}</span>
+          <span className="font-medium text-neutral-900">{formatPriceINR(subtotal)}</span>
         </div>
 
         {promoApplied && (
@@ -64,7 +65,7 @@ export const CartSummary = React.memo(function CartSummary({
                 className="ml-1 h-5 w-5 bg-transparent text-neutral-400 hover:text-red-500"
               />
             </span>
-            <span className="font-medium">-${discount.toFixed(2)}</span>
+            <span className="font-medium">{formatPriceINR(-discount)}</span>
           </div>
         )}
 
@@ -75,17 +76,17 @@ export const CartSummary = React.memo(function CartSummary({
 
         <div className="flex justify-between">
           <span className="text-neutral-500">Estimated Tax (8%)</span>
-          <span className="font-medium text-neutral-900">${tax.toFixed(2)}</span>
+          <span className="font-medium text-neutral-900">{formatPriceINR(tax)}</span>
         </div>
 
         <div className="pt-4 mt-4 border-t border-neutral-200">
           <div className="flex justify-between items-baseline">
             <span className="text-base font-medium text-neutral-900">Total</span>
-            <span className="text-xl font-semibold text-neutral-900">${total.toFixed(2)}</span>
+            <span className="text-xl font-semibold text-neutral-900">{formatPriceINR(total)}</span>
           </div>
           {promoApplied && (
             <p className="text-xs text-emerald-600 text-right mt-1">
-              You&apos;re saving ${discount.toFixed(2)}!
+              You&apos;re saving {formatPriceINR(discount)}!
             </p>
           )}
         </div>
@@ -127,7 +128,7 @@ export const CartSummary = React.memo(function CartSummary({
       <div className="mt-6 pt-6 border-t border-neutral-200 space-y-3">
         <div className="flex items-center gap-3 text-xs text-neutral-500">
           <Truck className="w-4 h-4 flex-shrink-0" />
-          <span>Free shipping on orders over $50</span>
+          <span>Free shipping on orders over ₹50</span>
         </div>
         <div className="flex items-center gap-3 text-xs text-neutral-500">
           <ShieldCheck className="w-4 h-4 flex-shrink-0" />

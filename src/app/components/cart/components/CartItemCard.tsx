@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { gsap } from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ShoppingBag, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatPriceINR } from '@/lib/utils'
 import type { Media } from '@/payload-types'
 import type { CartItem } from '@/providers/cart'
 import { QuantitySelector } from './QuantitySelector'
@@ -304,11 +304,11 @@ export const CartItemCard = React.memo(function CartItemCard({
           {/* Price */}
           <div className="mt-1.5 flex items-center gap-1.5">
             <span className="text-sm font-medium text-neutral-900 tabular-nums">
-              ${currentPrice.toFixed(2)}
+              {formatPriceINR(currentPrice)}
             </span>
             {hasDiscount && (
               <span className="text-xs text-neutral-400 line-through tabular-nums">
-                ${product.price.toFixed(2)}
+                {formatPriceINR(product.price)}
               </span>
             )}
           </div>
@@ -327,16 +327,16 @@ export const CartItemCard = React.memo(function CartItemCard({
             <div className="text-right">
               <p className="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">Subtotal</p>
               <p className="text-sm sm:text-base font-semibold text-neutral-900 tabular-nums">
-                ${subtotal.toFixed(2)}
+                {formatPriceINR(subtotal)}
               </p>
               {hasDiscount && savings > 0 && (
                 <p className="text-[11px] text-emerald-600 mt-0.5 tabular-nums">
-                  Save ${savings.toFixed(2)}
+                  Save {formatPriceINR(savings)}
                 </p>
               )}
               {quantity > 1 && (
                 <p className="text-[11px] text-neutral-400 tabular-nums">
-                  ${currentPrice.toFixed(2)} × {quantity}
+                  {formatPriceINR(currentPrice)} × {quantity}
                 </p>
               )}
             </div>

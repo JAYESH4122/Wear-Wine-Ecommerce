@@ -289,12 +289,16 @@ const CartPageContent = () => {
               productId: item.product.id,
               quantity: item.quantity,
             })),
+            total: subtotal,
           }),
         })
 
         const orderData = await response.json()
         if (!response.ok) {
           throw new Error(orderData.error || 'Failed to create order')
+        }
+        if (!orderData?.razorpayOrderId) {
+          throw new Error('Order creation failed to return a payment reference')
         }
 
         // 2. Options for Razorpay
@@ -318,7 +322,6 @@ const CartPageContent = () => {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
-                  internal_order_id: orderData.id,
                 }),
               })
 
@@ -354,6 +357,7 @@ const CartPageContent = () => {
         rzp.open()
     } catch (error) {
       setOrderError(error instanceof Error ? error.message : 'Failed to place order')
+      setIsPlacingOrder(false)
     } finally {
       // NOTE: For Razorpay, we keep isPlacingOrder true until verification completes or modal closes
     }
@@ -373,6 +377,7 @@ const CartPageContent = () => {
     transitionTo,
     validateAddress,
     loadRazorpayScript,
+    subtotal,
   ])
 
   const contentClass = cn(

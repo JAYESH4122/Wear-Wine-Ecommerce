@@ -6,6 +6,7 @@ import { Package, Search, ChevronRight, Clock, User } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/auth'
+import { formatPriceINR } from '@/lib/utils'
 
 type OrderSummary = {
   id: number | string
@@ -209,7 +210,7 @@ const OrdersPage = () => {
                         <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-0.5">
                           Total
                         </p>
-                        <p className="text-sm font-bold text-neutral-900">${order.total.toFixed(2)}</p>
+                        <p className="text-sm font-bold text-neutral-900">{formatPriceINR(order.total)}</p>
                       </div>
 
                       <div className="flex-1 md:flex-none">

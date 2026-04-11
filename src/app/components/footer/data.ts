@@ -116,7 +116,7 @@ export const policyPages: Record<string, PolicyContentType> = {
       {
         heading: 'Shipping Policy',
         content:
-          'We offer free standard shipping on all orders over $100. Standard shipping typically takes 5-7 business days. Express shipping (2-3 business days) is available for an additional fee. International shipping is available to select countries.',
+          'We offer free standard shipping on all orders over ₹100. Standard shipping typically takes 5-7 business days. Express shipping (2-3 business days) is available for an additional fee. International shipping is available to select countries.',
       },
       {
         heading: 'Processing Time',
