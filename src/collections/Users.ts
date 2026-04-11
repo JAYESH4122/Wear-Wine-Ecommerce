@@ -10,6 +10,7 @@ export const Users: CollectionConfig = {
     create: () => true,
   },
   auth: {
+    verify: true,
     cookies: {
       secure: true,
       sameSite: 'None',
@@ -24,6 +25,7 @@ export const Users: CollectionConfig = {
     {
       name: 'googleId',
       type: 'text',
+      unique: true,
       admin: {
         readOnly: true,
       },

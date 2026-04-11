@@ -145,6 +145,7 @@ export const ProductInfoPanel = ({
     quantity,
     addItem,
     router,
+    clearCart,
   ])
 
   const handleToggleWishlist = useCallback(() => toggleWishlist(product), [toggleWishlist, product])

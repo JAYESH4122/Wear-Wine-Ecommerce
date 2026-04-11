@@ -1,9 +1,18 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+
+import { getApiUrl } from '@/lib/api/getApiUrl'
 import type { Category, Color, Media, Product, Size } from '@/payload-types'
+import { useAuth } from '@/providers/auth'
 
 type CartImage = number | Media | string | { url?: string | null } | null | undefined
+
+type RemoteCartItem = {
+  cartItemId?: unknown
+  product?: unknown
+  quantity?: unknown
+}
 
 export type CartProduct = {
   id: number | string
@@ -37,16 +46,18 @@ const toCartProduct = (product: Product | CartProduct): CartProduct => ({
 
 const isCartProduct = (value: unknown): value is CartProduct => {
   if (!value || typeof value !== 'object') return false
+
   const item = value as Partial<CartProduct>
   if (typeof item.id !== 'number' && typeof item.id !== 'string') return false
   if (typeof item.name !== 'string') return false
   if (typeof item.price !== 'number') return false
   if (!Array.isArray(item.images)) return false
+
   return true
 }
 
 export interface CartItem {
-  cartItemId: string // Unique ID for this specific combination (productId-colorId-sizeId)
+  cartItemId: string
   product: CartProduct
   quantity: number
   selectedColor?: Color
@@ -64,62 +75,175 @@ interface CartContextType {
   subtotal: number
 }
 
+const LOCAL_STORAGE_KEY = 'cart'
+
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+const readLocalCart = (): CartItem[] => {
+  const savedCart = localStorage.getItem(LOCAL_STORAGE_KEY)
+  if (!savedCart) return []
+
+  try {
+    const parsed = JSON.parse(savedCart) as unknown
+    if (!Array.isArray(parsed)) return []
+
+    return parsed
+      .map((raw): CartItem | null => {
+        if (!raw || typeof raw !== 'object') return null
+
+        const candidate = raw as Partial<CartItem> & { product?: unknown }
+        const cartItemId = typeof candidate.cartItemId === 'string' ? candidate.cartItemId : null
+        const quantity = typeof candidate.quantity === 'number' ? candidate.quantity : null
+        const product = isCartProduct(candidate.product) ? toCartProduct(candidate.product) : null
+
+        if (!cartItemId || !quantity || quantity <= 0 || !product) return null
+
+        return {
+          cartItemId,
+          quantity,
+          product,
+          selectedColor: candidate.selectedColor,
+          selectedSize: candidate.selectedSize,
+        }
+      })
+      .filter(Boolean) as CartItem[]
+  } catch {
+    return []
+  }
+}
+
+const normalizeRemoteCartItems = (value: unknown): CartItem[] => {
+  if (!Array.isArray(value)) return []
+
+  return value
+    .map((raw): CartItem | null => {
+      const item = raw as RemoteCartItem
+      const product = isCartProduct(item.product) ? toCartProduct(item.product) : null
+      const quantity = typeof item.quantity === 'number' ? Math.max(1, Math.floor(item.quantity)) : null
+
+      if (!product || !quantity) return null
+
+      return {
+        cartItemId:
+          typeof item.cartItemId === 'string'
+            ? item.cartItemId
+            : `${String(product.id)}-no-color-no-size`,
+        product,
+        quantity,
+      }
+    })
+    .filter(Boolean) as CartItem[]
+}
+
+const toServerCartItems = (items: CartItem[]) => {
+  return items.map((item) => ({
+    productId: item.product.id,
+    quantity: item.quantity,
+  }))
+}
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isHydrated: isAuthHydrated } = useAuth()
+
   const [cart, setCart] = useState<CartItem[]>([])
   const [isHydrated, setIsHydrated] = useState(false)
+  const skipNextRemoteSync = useRef(false)
+  const hasLoadedRemoteCart = useRef(false)
 
-  // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart')
-    if (savedCart) {
-      try {
-        const parsed = JSON.parse(savedCart) as unknown
-        if (Array.isArray(parsed)) {
-          const normalized = parsed
-            .map((raw): CartItem | null => {
-              if (!raw || typeof raw !== 'object') return null
-              const candidate = raw as Partial<CartItem> & { product?: unknown }
-
-              const cartItemId = typeof candidate.cartItemId === 'string' ? candidate.cartItemId : null
-              const quantity = typeof candidate.quantity === 'number' ? candidate.quantity : null
-              const product = isCartProduct(candidate.product) ? toCartProduct(candidate.product) : null
-
-              if (!cartItemId || !quantity || quantity <= 0 || !product) return null
-
-              return {
-                cartItemId,
-                quantity,
-                product,
-                selectedColor: candidate.selectedColor,
-                selectedSize: candidate.selectedSize,
-              }
-            })
-            .filter(Boolean) as CartItem[]
-
-          setCart(normalized)
-        }
-      } catch (error) {
-        console.error('Failed to parse cart from localStorage:', error)
-      }
-    }
+    setCart(readLocalCart())
     setIsHydrated(true)
   }, [])
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem('cart', JSON.stringify(cart))
+  const loadRemoteCart = React.useCallback(async () => {
+    const API_URL = getApiUrl()
+
+    try {
+      const response = await fetch(`${API_URL}/api/cart`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+
+      if (!response.ok) return
+
+      const data = (await response.json()) as { items?: unknown }
+      skipNextRemoteSync.current = true
+      setCart(normalizeRemoteCartItems(data.items))
+    } finally {
+      hasLoadedRemoteCart.current = true
     }
-  }, [cart, isHydrated])
+  }, [])
 
-  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0)
+  useEffect(() => {
+    if (!isHydrated || !isAuthHydrated) return
 
-  const subtotal = cart.reduce((acc, item) => {
-    const price = item.product.salePrice || item.product.price
-    return acc + price * item.quantity
-  }, 0)
+    if (!user) {
+      hasLoadedRemoteCart.current = false
+      setCart(readLocalCart())
+      return
+    }
+
+    hasLoadedRemoteCart.current = false
+    void loadRemoteCart()
+
+    const handleMerged = () => {
+      void loadRemoteCart()
+    }
+
+    window.addEventListener('commerce:merged', handleMerged)
+    return () => {
+      window.removeEventListener('commerce:merged', handleMerged)
+    }
+  }, [isHydrated, isAuthHydrated, user, loadRemoteCart])
+
+  useEffect(() => {
+    if (!isHydrated) return
+
+    if (!user) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cart))
+      return
+    }
+
+    if (!hasLoadedRemoteCart.current) return
+
+    if (skipNextRemoteSync.current) {
+      skipNextRemoteSync.current = false
+      return
+    }
+
+    const controller = new AbortController()
+    const timeout = setTimeout(async () => {
+      const API_URL = getApiUrl()
+
+      await fetch(`${API_URL}/api/cart`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: toServerCartItems(cart),
+        }),
+        credentials: 'include',
+        signal: controller.signal,
+      }).catch(() => undefined)
+    }, 200)
+
+    return () => {
+      controller.abort()
+      clearTimeout(timeout)
+    }
+  }, [cart, isHydrated, user])
+
+  const cartCount = useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart])
+
+  const subtotal = useMemo(
+    () =>
+      cart.reduce((acc, item) => {
+        const price = item.product.salePrice || item.product.price
+        return acc + price * item.quantity
+      }, 0),
+    [cart],
+  )
 
   const addItem = (product: Product | CartProduct, quantity = 1, color?: Color, size?: Size) => {
     const normalizedProduct = toCartProduct(product)

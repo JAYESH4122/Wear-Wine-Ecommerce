@@ -105,9 +105,6 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      console.log('Searching for:', searchQuery)
-    }
   }
 
   useEffect(() => {

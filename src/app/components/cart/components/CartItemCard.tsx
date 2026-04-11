@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { gsap } from 'gsap'
+import { useGSAP } from '@gsap/react'
 import { ShoppingBag, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Media } from '@/payload-types'
@@ -30,11 +31,11 @@ export const CartItemCard = React.memo(function CartItemCard({
   const cardRef = useRef<HTMLDivElement>(null)
   const removeBtnRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
-    const card = cardRef.current
-    if (!card) return
+  useGSAP(
+    () => {
+      const card = cardRef.current
+      if (!card) return
 
-    const ctx = gsap.context(() => {
       const mm = gsap.matchMedia()
       const mediaEls = Array.from(card.querySelectorAll<HTMLElement>('[data-cart-media]'))
       const overlayEls = Array.from(card.querySelectorAll<HTMLElement>('[data-cart-overlay]'))
@@ -150,11 +151,10 @@ export const CartItemCard = React.memo(function CartItemCard({
         }
       })
 
-      return () => mm.kill()
-    }, card)
-
-    return () => ctx.revert()
-  }, [])
+      return () => mm.revert()
+    },
+    { scope: cardRef },
+  )
 
   const handleRemoveEnter = () => {
     if (removeBtnRef.current) removeBtnRef.current.dataset.hovered = 'true'

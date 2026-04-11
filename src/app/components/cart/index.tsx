@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Check } from 'lucide-react'
 import type { Product } from '@/payload-types'
 import { useCart, type CartProduct } from '@/providers/cart'
+import { useAuth } from '@/providers/auth'
 import { CartItemsList } from './components/CartItemsList'
 import { CartRecommendations } from './components/CartRecommendations'
 import { CartSummary } from './components/CartSummary'
@@ -17,6 +18,7 @@ import { getApiUrl } from '@/lib/api/getApiUrl'
 type Step = 1 | 2 | 3
 
 interface AddressForm {
+  email: string
   fullName: string
   phone: string
   addressLine: string
@@ -26,6 +28,7 @@ interface AddressForm {
 }
 
 interface AddressErrors {
+  email?: string
   fullName?: string
   phone?: string
   addressLine?: string
@@ -43,6 +46,7 @@ const STEPS = [
 ] as const
 
 const INITIAL_ADDRESS: AddressForm = {
+  email: '',
   fullName: '',
   phone: '',
   addressLine: '',
@@ -52,6 +56,7 @@ const INITIAL_ADDRESS: AddressForm = {
 }
 
 const ADDRESS_FIELDS = [
+  { field: 'email', label: 'Email Address', type: 'email', placeholder: 'jane@example.com' },
   { field: 'fullName', label: 'Full Name', type: 'text', placeholder: 'Jane Doe' },
   { field: 'phone', label: 'Phone Number', type: 'tel', placeholder: '+91 98765 43210' },
   {
@@ -85,7 +90,8 @@ export const CartPage = () => {
 }
 
 const CartPageContent = () => {
-  const { cart, cartCount, removeItem, updateQuantity, subtotal, addItem } = useCart()
+  const { cart, cartCount, removeItem, updateQuantity, subtotal, addItem, clearCart } = useCart()
+  const { user } = useAuth()
   const searchParams = useSearchParams()
   const stepParam = searchParams.get('step')
   const initialStep = (stepParam && ['1', '2', '3'].includes(stepParam)) ? Number(stepParam) as Step : 1
@@ -95,6 +101,9 @@ const CartPageContent = () => {
   const [address, setAddress] = useState<AddressForm>(INITIAL_ADDRESS)
   const [addressErrors, setAddressErrors] = useState<AddressErrors>({})
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [orderError, setOrderError] = useState<string | null>(null)
+  const [orderSuccess, setOrderSuccess] = useState<string | null>(null)
   const [visible, setVisible] = useState(true)
   const [slideDir, setSlideDir] = useState<'forward' | 'back'>('forward')
 
@@ -154,6 +163,8 @@ const CartPageContent = () => {
 
   const validateAddress = useCallback((): boolean => {
     const errors: AddressErrors = {}
+    if (!address.email.trim()) errors.email = 'Required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.email)) errors.email = 'Invalid email'
     if (!address.fullName.trim()) errors.fullName = 'Required'
     if (!address.phone.trim()) errors.phone = 'Required'
     if (!address.addressLine.trim()) errors.addressLine = 'Required'
@@ -163,6 +174,11 @@ const CartPageContent = () => {
     setAddressErrors(errors)
     return Object.keys(errors).length === 0
   }, [address])
+
+  useEffect(() => {
+    if (!user?.email) return
+    setAddress((prev) => ({ ...prev, email: prev.email || user.email || '' }))
+  }, [user?.email])
 
   const handleContinue = useCallback(() => {
     if (step === 1) transitionTo(2, 'forward')
@@ -178,9 +194,51 @@ const CartPageContent = () => {
     (field: keyof AddressForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setAddress((prev) => ({ ...prev, [field]: e.target.value }))
       setAddressErrors((prev) => ({ ...prev, [field]: undefined }))
+      setOrderError(null)
     },
     [],
   )
+
+  const handlePlaceOrder = useCallback(async () => {
+    if (!validateAddress() || cart.length === 0) return
+
+    setIsPlacingOrder(true)
+    setOrderError(null)
+    setOrderSuccess(null)
+
+    try {
+      const API_URL = getApiUrl()
+      const response = await fetch(`${API_URL}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: address.email,
+          items: cart.map((item) => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+          })),
+          status: paymentMethod === 'card' ? 'pending' : 'processing',
+        }),
+      })
+
+      const data = (await response.json().catch(() => null)) as { error?: string } | null
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to place order')
+      }
+
+      clearCart()
+      setOrderSuccess('Order placed successfully')
+      transitionTo(1, 'back')
+    } catch (error) {
+      setOrderError(error instanceof Error ? error.message : 'Failed to place order')
+    } finally {
+      setIsPlacingOrder(false)
+    }
+  }, [address.email, cart, clearCart, paymentMethod, transitionTo, validateAddress])
 
   const contentClass = cn(
     'will-change-transform',
@@ -403,7 +461,13 @@ const CartPageContent = () => {
                   ))}
                 </div>
 
-                <NavButtons onBack={handleBack} continueLabel="Place Order" />
+                {orderError && <p className="text-xs text-red-500">{orderError}</p>}
+                {orderSuccess && <p className="text-xs text-emerald-600">{orderSuccess}</p>}
+                <NavButtons
+                  onBack={handleBack}
+                  onContinue={handlePlaceOrder}
+                  continueLabel={isPlacingOrder ? 'Placing Order...' : 'Place Order'}
+                />
               </div>
 
               <div className="lg:col-span-5 xl:col-span-4">

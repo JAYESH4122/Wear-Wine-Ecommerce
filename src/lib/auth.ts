@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import GoogleProvider from 'next-auth/providers/google'
 import { UserService } from './user-service'
+import { verifyGoogleExchangeToken } from './server/google-exchange-token'
 
 const requireEnv = (key: string): string => {
   const value = process.env[key]
@@ -11,21 +11,32 @@ const requireEnv = (key: string): string => {
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          }),
-        ]
-      : []),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        googleExchangeToken: { label: 'Google Exchange Token', type: 'text' },
       },
       async authorize(credentials) {
+        const googleExchangeToken = credentials?.googleExchangeToken
+
+        if (typeof googleExchangeToken === 'string' && googleExchangeToken.length > 0) {
+          const payload = verifyGoogleExchangeToken(googleExchangeToken)
+
+          if (!payload) {
+            throw new Error('Invalid Google sign-in token')
+          }
+
+          return {
+            id: payload.sub,
+            email: payload.email,
+            name: payload.name ?? payload.email.split('@')[0],
+            roles: payload.roles ?? ['user'],
+            isVerified: payload.isVerified ?? true,
+          }
+        }
+
         if (!credentials?.email || !credentials?.password) return null
 
         try {
@@ -52,24 +63,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account?.provider === 'google' && profile) {
-        if (!profile.email) return false
-        try {
-          // Link or create user in Payload
-          const payloadUser = await UserService.getOrCreateGoogleUser({
-            email: profile.email,
-            name: profile.name,
-            sub: typeof (profile as { sub?: unknown }).sub === 'string' ? (profile as { sub: string }).sub : null,
-          })
-          // Mutate the user object so the JWT gets the exact database values
-          user.id = payloadUser.id.toString()
-          user.roles = payloadUser.roles
-          return true
-        } catch (_error: unknown) {
-          return false
-        }
-      }
+    async signIn() {
       return true
     },
     async jwt({ token, user }) {
@@ -90,10 +84,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-  },
-  pages: {
-    signIn: '/login', // Fallback, although using modals
-    error: '/login', // Redirect back on error
   },
   session: {
     strategy: 'jwt',

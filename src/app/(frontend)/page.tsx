@@ -4,9 +4,9 @@ import { RenderBlocks } from '@/app/components/RenderBlocks'
 import { getPageBySlug } from '@/lib/api/cms'
 import './styles.css'
 
-export default async function HomePage() {
+export const HomePage = async () => {
   const pageInfo = await getPageBySlug('home')
-  
+
   if (!pageInfo) return notFound()
 
   return (
@@ -15,4 +15,6 @@ export default async function HomePage() {
     </>
   )
 }
+
+export default HomePage
 

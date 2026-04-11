@@ -6,6 +6,7 @@ import { CartProvider } from '@/providers/cart'
 import { AuthProvider } from '@/providers/auth'
 import { Header } from '@/app/components/Header'
 import { Footer } from '@/app/components/footer'
+import { AppToaster } from '@/components/ui/toaster'
 import { getGlobal } from '@/lib/api/cms'
 import type { Footer as FooterType, Header as HeaderType, Media, SiteSetting as SiteSettingsType } from '@/payload-types'
 
@@ -39,23 +40,28 @@ export async function generateMetadata() {
   }
 }
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
+export const RootLayout = async (props: { children: React.ReactNode }) => {
   const { children } = props
-  
+
   const headerData = await getGlobal<HeaderType>('header')
   const footerData = await getGlobal<FooterType>('footer')
   const siteSettings = await getGlobal<SiteSettingsType>('site-settings')
 
   return (
-    <html lang="en" className={`${bricolage.variable} ${sans.variable} ${anton.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${bricolage.variable} ${sans.variable} ${anton.variable}`}
+      suppressHydrationWarning
+    >
       <body className="antialiased font-bricolage overflow-x-hidden" suppressHydrationWarning>
-	        <AuthProvider>
-	          <CartProvider>
-	            <WishlistProvider>
-	              <Header cmsData={headerData} siteSettings={siteSettings} />
-	              <main id="main-content" tabIndex={-1}>
-	                {children}
-	              </main>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <AppToaster />
+              <Header cmsData={headerData} siteSettings={siteSettings} />
+              <main id="main-content" tabIndex={-1}>
+                {children}
+              </main>
               <Footer cmsData={footerData} siteSettings={siteSettings} />
             </WishlistProvider>
           </CartProvider>
@@ -64,3 +70,5 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
     </html>
   )
 }
+
+export default RootLayout

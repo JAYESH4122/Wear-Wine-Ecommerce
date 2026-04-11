@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import { gsap } from 'gsap'
+import { useGSAP } from '@gsap/react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button/Button'
 import { ArrowSlider } from '../arrow-slider'
@@ -73,57 +74,60 @@ const HeroSlide = ({ slide, index, isActive, isInitialRender }: HeroSlideProps) 
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Mouse parallax
-  useEffect(() => {
+  // Parallax and Text animation using useGSAP
+  useGSAP(() => {
     const container = containerRef.current
     const bg = bgRef.current
-    if (!container || !bg || !isActive || prefersReducedMotion.current) return
-
-    const onMove = (e: MouseEvent) => {
-      const r = container.getBoundingClientRect()
-      targetPos.current = {
-        x: ((e.clientX - r.left) / r.width - 0.5) * 20,
-        y: ((e.clientY - r.top) / r.height - 0.5) * 12,
-      }
-    }
-
-    const animate = () => {
-      currentPos.current.x += (targetPos.current.x - currentPos.current.x) * 0.06
-      currentPos.current.y += (targetPos.current.y - currentPos.current.y) * 0.06
-
-      const scale = 1.05 + scrollOffset.current * 0.0003
-      bg.style.transform = `translate3d(${currentPos.current.x}px, ${scrollOffset.current * 0.3 + currentPos.current.y}px, 0) scale(${scale})`
-
-      rafId.current = requestAnimationFrame(animate)
-    }
-
-    rafId.current = requestAnimationFrame(animate)
-    container.addEventListener('mousemove', onMove, { passive: true })
-
-    return () => {
-      cancelAnimationFrame(rafId.current)
-      container.removeEventListener('mousemove', onMove)
-    }
-  }, [isActive])
-
-  // Text animation on slide change
-  useEffect(() => {
     const text = textRef.current
     const title = titleRef.current
-    const bg = bgRef.current
-    if (!text || prefersReducedMotion.current) return
+    if (!container || !bg || !text || prefersReducedMotion.current) return
 
-    // Skip animation on initial render - CSS handles initial state
-    if (isInitialRender && !hasAnimatedIn.current) {
+    const mm = gsap.matchMedia()
+
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      // Mouse move parallax (only if active)
       if (isActive) {
-        hasAnimatedIn.current = true
-        gsap.set(text, { opacity: 1, y: 0 })
-        if (title) gsap.set(title, { opacity: 1, y: 0 })
-      }
-      return
-    }
+        const onMove = (e: MouseEvent) => {
+          const r = container.getBoundingClientRect()
+          targetPos.current = {
+            x: ((e.clientX - r.left) / r.width - 0.5) * 20,
+            y: ((e.clientY - r.top) / r.height - 0.5) * 12,
+          }
+        }
 
-    const ctx = gsap.context(() => {
+        const animate = () => {
+          currentPos.current.x += (targetPos.current.x - currentPos.current.x) * 0.06
+          currentPos.current.y += (targetPos.current.y - currentPos.current.y) * 0.06
+
+          const scale = 1.05 + scrollOffset.current * 0.0003
+          if (bg) {
+            bg.style.transform = `translate3d(${currentPos.current.x}px, ${scrollOffset.current * 0.3 + currentPos.current.y}px, 0) scale(${scale})`
+          }
+
+          rafId.current = requestAnimationFrame(animate)
+        }
+
+        rafId.current = requestAnimationFrame(animate)
+        container.addEventListener('mousemove', onMove, { passive: true })
+
+        return () => {
+          cancelAnimationFrame(rafId.current)
+          container.removeEventListener('mousemove', onMove)
+        }
+      }
+    })
+
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      // Text and Background animations on slide change
+      if (isInitialRender && !hasAnimatedIn.current) {
+        if (isActive) {
+          hasAnimatedIn.current = true
+          gsap.set(text, { opacity: 1, y: 0 })
+          if (title) gsap.set(title, { opacity: 1, y: 0 })
+        }
+        return
+      }
+
       if (isActive) {
         hasAnimatedIn.current = true
         gsap.fromTo(
@@ -144,10 +148,43 @@ const HeroSlide = ({ slide, index, isActive, isInitialRender }: HeroSlideProps) 
       } else {
         gsap.to(text, { opacity: 0, y: -20, duration: 0.3, ease: 'power2.in' })
       }
-    }, containerRef)
+    })
 
-    return () => ctx.revert()
+    return () => mm.revert()
   }, [isActive, isInitialRender])
+
+  // Scroll parallax (always active if not reduced motion)
+  useEffect(() => {
+    const container = containerRef.current
+    const bg = bgRef.current
+    if (!container || !bg || prefersReducedMotion.current) return
+
+    let ticking = false
+
+    const updateTransform = () => {
+      if (!bg) return
+      const scale = 1.05 + scrollOffset.current * 0.0003
+      bg.style.transform = `translate3d(${currentPos.current.x}px, ${scrollOffset.current * 0.3 + currentPos.current.y}px, 0) scale(${scale})`
+    }
+
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(() => {
+        const rect = container.getBoundingClientRect()
+        if (rect.bottom > 0 && rect.top < window.innerHeight) {
+          scrollOffset.current = Math.max(0, -rect.top)
+          updateTransform()
+        }
+        ticking = false
+      })
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   if (!slide || typeof slide !== 'object') return null
 

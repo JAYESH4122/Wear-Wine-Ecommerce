@@ -5,6 +5,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type { Swiper as SwiperInstance } from 'swiper'
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 
+import { useGSAP } from '@gsap/react'
+
 gsap.registerPlugin(ScrollTrigger)
 import { X, ChevronRight } from 'lucide-react'
 import { ProductCard } from '../product-card'
@@ -67,8 +69,8 @@ export const ProductListSection = ({
   const controlsRef = useRef<HTMLDivElement>(null)
   const productsRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
+  useGSAP(
+    () => {
       const mm = gsap.matchMedia()
 
       mm.add('(min-width: 1024px)', () => {
@@ -107,10 +109,11 @@ export const ProductListSection = ({
           scrollTrigger: { trigger: sectionRef.current, start: 'top 90%' },
         })
       })
-    }, sectionRef)
 
-    return () => ctx.revert()
-  }, [])
+      return () => mm.revert()
+    },
+    { scope: sectionRef },
+  )
 
   useEffect(() => {
     const controller = new AbortController()
