@@ -642,6 +642,7 @@ const CartPageContent = () => {
                   onBack={handleBack}
                   onContinue={handlePlaceOrder}
                   continueLabel={isPlacingOrder ? 'Processing...' : 'Pay Securely via Razorpay'}
+                  disabled={isPlacingOrder}
                 />
               </div>
 
@@ -664,14 +665,17 @@ const NavButtons = ({
   onBack,
   onContinue,
   continueLabel,
+  disabled,
 }: {
   onBack: () => void
   onContinue?: () => void
   continueLabel: string
+  disabled?: boolean
 }) => (
   <div className="flex gap-3 pt-2 lg:flex-row flex-col">
     <Button
       onClick={onBack}
+      disabled={disabled}
       variant="secondary"
       size="lg"
       className="flex-1 min-w-0 lg:px-4 py-4 text-xs tracking-widest uppercase"
@@ -680,6 +684,7 @@ const NavButtons = ({
     </Button>
     <Button
       onClick={onContinue}
+      disabled={disabled}
       variant="primary"
       size="lg"
       className="flex-1 min-w-0 lg:px-4 py-4 text-xs tracking-widest uppercase"

@@ -72,9 +72,11 @@ export const ProductInfoPanel = ({
   const needsSize = sizes.length > 0
   const variants = product.variants ?? []
 
+  // Refactored useEffect for initial selection
   useEffect(() => {
     if (!variants.length || (!needsColor && !needsSize)) return
 
+    // Only run this if we don't have a valid selection yet
     const hasMatchingVariant = variants.some((v) => {
       const vColorId = getRelationId(v.color)
       const vSizeId = getRelationId(v.size)
@@ -85,13 +87,62 @@ export const ProductInfoPanel = ({
 
     if (hasMatchingVariant) return
 
+    // Find a valid default
     const fallbackVariant = variants.find((v) => (v.stock ?? 0) > 0) ?? variants[0]
     const fallbackColorId = getRelationId(fallbackVariant.color)
     const fallbackSizeId = getRelationId(fallbackVariant.size)
 
     if (needsColor && fallbackColorId) setSelectedColor(fallbackColorId)
     if (needsSize && fallbackSizeId) setSelectedSize(fallbackSizeId)
-  }, [variants, needsColor, needsSize, selectedColor, selectedSize])
+    // We only want this to run once or when variants change to set initial state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variants, needsColor, needsSize])
+
+  const handleColorSelect = useCallback(
+    (colorId: string) => {
+      setSelectedColor(colorId)
+
+      // Try to keep the current size if it's available for the new color
+      const matchingSizeVariant = variants.find(
+        (v) => getRelationId(v.color) === colorId && getRelationId(v.size) === selectedSize,
+      )
+
+      if (!matchingSizeVariant && needsSize) {
+        // Find another size for this color that has stock
+        const firstAvailableSizeVariant =
+          variants.find((v) => getRelationId(v.color) === colorId && (v.stock ?? 0) > 0) ||
+          variants.find((v) => getRelationId(v.color) === colorId)
+
+        if (firstAvailableSizeVariant) {
+          setSelectedSize(getRelationId(firstAvailableSizeVariant.size))
+        }
+      }
+    },
+    [variants, selectedSize, needsSize],
+  )
+
+  const handleSizeSelect = useCallback(
+    (sizeId: string) => {
+      setSelectedSize(sizeId)
+
+      // Try to keep the current color if it's available for the new size
+      const matchingColorVariant = variants.find(
+        (v) => getRelationId(v.size) === sizeId && getRelationId(v.color) === selectedColor,
+      )
+
+      if (!matchingColorVariant && needsColor) {
+        // Find another color for this size that has stock
+        const firstAvailableColorVariant =
+          variants.find((v) => getRelationId(v.size) === sizeId && (v.stock ?? 0) > 0) ||
+          variants.find((v) => getRelationId(v.size) === sizeId)
+
+        if (firstAvailableColorVariant) {
+          setSelectedColor(getRelationId(firstAvailableColorVariant.color))
+        }
+      }
+    },
+    [variants, selectedColor, needsColor],
+  )
 
   const currentVariant = (product.variants ?? []).find(v => {
     const vColorId = getRelationId(v.color)
@@ -271,11 +322,11 @@ export const ProductInfoPanel = ({
 
       {/* Selectors */}
       <div className="panel-item py-5 border-b border-neutral-100 space-y-0">
-        <ColorSelector colors={colors} selected={selectedColor} onSelect={setSelectedColor} />
+        <ColorSelector colors={colors} selected={selectedColor} onSelect={handleColorSelect} />
         <SizeSelector
           sizes={sizes}
           selected={selectedSize}
-          onSelect={setSelectedSize}
+          onSelect={handleSizeSelect}
           onViewChart={onOpenSizeChart}
         />
       </div>

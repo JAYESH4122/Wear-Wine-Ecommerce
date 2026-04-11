@@ -25,6 +25,12 @@ export const POST = async (request: Request): Promise<Response> => {
     razorpay_signature?: string
   } | null
 
+  console.info('[verify-payment] Received payload:', {
+    razorpayOrderId: body?.razorpay_order_id,
+    razorpayPaymentId: body?.razorpay_payment_id,
+    hasSignature: !!body?.razorpay_signature,
+  })
+
   if (!body || !body.razorpay_order_id || !body.razorpay_payment_id || !body.razorpay_signature) {
     return withCors(request, Response.json({ error: 'Missing required fields' }, { status: 400 }))
   }

@@ -248,8 +248,8 @@ export const POST = async (request: Request): Promise<Response> => {
     }
     console.error('[create-order] Failed to create linked payment order', {
       orderId: createdOrderId ? String(createdOrderId) : null,
-      error: error instanceof Error ? error.message : 'unknown',
+      error: error instanceof Error ? error.stack || error.message : String(error),
     })
-    return withCors(request, Response.json({ error: 'Failed to create payment order' }, { status: 500 }))
+    return withCors(request, Response.json({ error: error instanceof Error ? error.message : 'Failed to create payment order' }, { status: 500 }))
   }
 }
