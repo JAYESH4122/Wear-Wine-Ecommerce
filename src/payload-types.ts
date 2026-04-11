@@ -864,13 +864,29 @@ export interface Order {
   id: number;
   user?: (number | null) | User;
   email: string;
+  phone: string;
+  shippingAddress: {
+    fullName: string;
+    addressLine1: string;
+    addressLine2?: string | null;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+    landmark?: string | null;
+  };
   items: {
     product: number | Product;
+    name: string;
+    price: number;
     quantity: number;
     id?: string | null;
   }[];
   total: number;
-  status: 'pending' | 'processing' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'paid' | 'delivered' | 'cancelled' | 'failed';
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  razorpaySignature?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1331,15 +1347,33 @@ export interface WishlistsSelect<T extends boolean = true> {
 export interface OrdersSelect<T extends boolean = true> {
   user?: T;
   email?: T;
+  phone?: T;
+  shippingAddress?:
+    | T
+    | {
+        fullName?: T;
+        addressLine1?: T;
+        addressLine2?: T;
+        city?: T;
+        state?: T;
+        country?: T;
+        postalCode?: T;
+        landmark?: T;
+      };
   items?:
     | T
     | {
         product?: T;
+        name?: T;
+        price?: T;
         quantity?: T;
         id?: T;
       };
   total?: T;
   status?: T;
+  razorpayOrderId?: T;
+  razorpayPaymentId?: T;
+  razorpaySignature?: T;
   updatedAt?: T;
   createdAt?: T;
 }

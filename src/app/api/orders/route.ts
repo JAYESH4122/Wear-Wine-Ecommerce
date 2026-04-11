@@ -94,8 +94,19 @@ export const POST = async (request: Request): Promise<Response> => {
   const body = (await request.json().catch(() => null)) as
     | {
         email?: unknown
+        phone?: unknown
         items?: unknown
         status?: unknown
+        shippingAddress?: {
+          fullName?: string
+          addressLine1?: string
+          addressLine2?: string
+          city?: string
+          state?: string
+          country?: string
+          postalCode?: string
+          landmark?: string
+        }
       }
     | null
 
@@ -122,15 +133,24 @@ export const POST = async (request: Request): Promise<Response> => {
     normalizedItems.map((item) => item.productId),
   )
 
-  const validItems = normalizedItems.filter((item) => productsById.has(String(item.productId)))
+  const validItems = normalizedItems
+    .map((item) => {
+      const product = productsById.get(String(item.productId))
+      if (!product) return null
+      
+      return {
+        product: item.productId,
+        quantity: item.quantity,
+        name: product.name,
+        price: typeof product.salePrice === 'number' ? product.salePrice : product.price
+      }
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null)
+
   if (validItems.length === 0) return invalidBody(request, 'No valid products were provided')
 
   const computedTotal = validItems.reduce((sum, item) => {
-    const product = productsById.get(String(item.productId))
-    if (!product) return sum
-
-    const price = typeof product.salePrice === 'number' ? product.salePrice : product.price
-    return sum + price * item.quantity
+    return sum + item.price * item.quantity
   }, 0)
 
   // Security: Status MUST be pending for new orders from this endpoint
@@ -141,10 +161,27 @@ export const POST = async (request: Request): Promise<Response> => {
     data: {
       user: payloadUser?.id,
       email,
-      items: validItems.map((item) => ({
-        product: item.productId,
-        quantity: item.quantity,
-      })),
+      phone: (typeof body.phone === 'string' ? body.phone : '') || '9999999999', // Placeholder if not provided
+      shippingAddress: body.shippingAddress
+        ? {
+            fullName: body.shippingAddress.fullName || 'Legacy User',
+            addressLine1: body.shippingAddress.addressLine1 || 'Legacy Address',
+            addressLine2: body.shippingAddress.addressLine2 || '',
+            city: body.shippingAddress.city || 'Legacy City',
+            state: body.shippingAddress.state || 'Legacy State',
+            country: body.shippingAddress.country || 'India',
+            postalCode: body.shippingAddress.postalCode || '000000',
+            landmark: body.shippingAddress.landmark || '',
+          }
+        : {
+            fullName: 'Legacy User',
+            addressLine1: 'Legacy Address',
+            city: 'Legacy City',
+            state: 'Legacy State',
+            country: 'India',
+            postalCode: '000000',
+          },
+      items: validItems,
       total: computedTotal,
       status,
     },
@@ -155,7 +192,7 @@ export const POST = async (request: Request): Promise<Response> => {
     const cartDoc = await getUserCart(payload, payloadUser.id, payloadUser)
     if (cartDoc) {
       const currentItems = collectionRowsToCartItems(cartDoc.items)
-      const orderedIds = new Set(validItems.map((item) => String(item.productId)))
+      const orderedIds = new Set(validItems.map((item) => String(item.product)))
       const remainingItems = currentItems.filter((item) => !orderedIds.has(String(item.productId)))
 
       await payload.update({

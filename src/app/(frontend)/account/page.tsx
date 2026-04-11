@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button/Button'
 
-export const ProfilePage = () => {
+const ProfilePage = () => {
   const { user, isLoading, isHydrated } = useAuth()
   const pathname = usePathname()
   const router = useRouter()

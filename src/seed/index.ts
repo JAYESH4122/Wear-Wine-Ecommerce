@@ -18,7 +18,7 @@ const run = async () => {
     await payload.delete({ collection: 'sizes', where: {} })
     try {
       await payload.delete({ collection: 'policies', where: {} })
-    } catch(e) {}
+    } catch(_e) {}
 
     await seed(payload)
     await seedGlobals(payload)

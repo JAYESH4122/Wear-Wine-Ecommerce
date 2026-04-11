@@ -107,7 +107,7 @@ export const ProductCard = ({
 
         let activeTimeline: gsap.core.Timeline | null = null
 
-        const onPointerDown = (e: PointerEvent) => {
+        const onPointerDown = (_e: PointerEvent) => {
           if (activeTimeline) activeTimeline.kill()
           activeTimeline = gsap.timeline()
           activeTimeline.to(card, {

@@ -8,7 +8,7 @@ import { Header } from '@/app/components/Header'
 import { Footer } from '@/app/components/footer'
 import { AppToaster } from '@/components/ui/toaster'
 import { getGlobal } from '@/lib/api/cms'
-import type { Footer as FooterType, Header as HeaderType, Media, SiteSetting as SiteSettingsType } from '@/payload-types'
+import type { Footer as FooterType, Header as HeaderType, SiteSetting as SiteSettingsType } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
 

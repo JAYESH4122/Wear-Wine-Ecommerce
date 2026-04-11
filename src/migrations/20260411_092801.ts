@@ -36,6 +36,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_padding_bottom_mobile" AS ENUM('NONE', 'SM1', 'SM2', 'SM3', 'MD1', 'MD2', 'MD3', 'LG1', 'LG2', 'LG3', 'XL1', 'XL2', 'XL3', 'XXL1', 'XXL2', 'XXL3');
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_background_color" AS ENUM('primary', 'secondary', 'alt');
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_background_color_mobile" AS ENUM('primary', 'secondary', 'alt');
+  CREATE TYPE "public"."enum_orders_status" AS ENUM('pending', 'processing', 'paid', 'delivered', 'cancelled', 'failed');
   CREATE TYPE "public"."enum_site_settings_social_links_platform" AS ENUM('Instagram', 'Twitter', 'LinkedIn', 'Facebook');
   CREATE TABLE "users_roles" (
   	"order" integer NOT NULL,
@@ -64,6 +65,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"reset_password_expiration" timestamp(3) with time zone,
   	"salt" varchar,
   	"hash" varchar,
+  	"_verified" boolean,
+  	"_verificationtoken" varchar,
   	"login_attempts" numeric DEFAULT 0,
   	"lock_until" timestamp(3) with time zone
   );
@@ -311,6 +314,68 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
   );
   
+  CREATE TABLE "carts_items" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"id" varchar PRIMARY KEY NOT NULL,
+  	"product_id_id" integer NOT NULL,
+  	"quantity" numeric NOT NULL
+  );
+  
+  CREATE TABLE "carts" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"user_id" integer NOT NULL,
+  	"last_merged_guest_hash" varchar,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+  );
+  
+  CREATE TABLE "wishlists_products" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"id" varchar PRIMARY KEY NOT NULL,
+  	"product_id_id" integer NOT NULL
+  );
+  
+  CREATE TABLE "wishlists" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"user_id" integer NOT NULL,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+  );
+  
+  CREATE TABLE "orders_items" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"id" varchar PRIMARY KEY NOT NULL,
+  	"product_id" integer NOT NULL,
+  	"name" varchar NOT NULL,
+  	"price" numeric NOT NULL,
+  	"quantity" numeric NOT NULL
+  );
+  
+  CREATE TABLE "orders" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"user_id" integer,
+  	"email" varchar NOT NULL,
+  	"phone" varchar NOT NULL,
+  	"shipping_address_full_name" varchar NOT NULL,
+  	"shipping_address_address_line1" varchar NOT NULL,
+  	"shipping_address_address_line2" varchar,
+  	"shipping_address_city" varchar NOT NULL,
+  	"shipping_address_state" varchar NOT NULL,
+  	"shipping_address_country" varchar DEFAULT 'India' NOT NULL,
+  	"shipping_address_postal_code" varchar NOT NULL,
+  	"shipping_address_landmark" varchar,
+  	"total" numeric NOT NULL,
+  	"status" "enum_orders_status" DEFAULT 'pending' NOT NULL,
+  	"razorpay_order_id" varchar,
+  	"razorpay_payment_id" varchar,
+  	"razorpay_signature" varchar,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+  );
+  
   CREATE TABLE "payload_kv" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"key" varchar NOT NULL,
@@ -337,7 +402,10 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"colors_id" integer,
   	"sizes_id" integer,
   	"pages_id" integer,
-  	"policies_id" integer
+  	"policies_id" integer,
+  	"carts_id" integer,
+  	"wishlists_id" integer,
+  	"orders_id" integer
   );
   
   CREATE TABLE "payload_preferences" (
@@ -491,6 +559,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "pages_blocks_contact" ADD CONSTRAINT "pages_blocks_contact_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "policies_sections" ADD CONSTRAINT "policies_sections_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."policies"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "policies_faqs" ADD CONSTRAINT "policies_faqs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."policies"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "carts_items" ADD CONSTRAINT "carts_items_product_id_id_products_id_fk" FOREIGN KEY ("product_id_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "carts_items" ADD CONSTRAINT "carts_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."carts"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "carts" ADD CONSTRAINT "carts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "wishlists_products" ADD CONSTRAINT "wishlists_products_product_id_id_products_id_fk" FOREIGN KEY ("product_id_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "wishlists_products" ADD CONSTRAINT "wishlists_products_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."wishlists"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "orders_items" ADD CONSTRAINT "orders_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "orders_items" ADD CONSTRAINT "orders_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."orders"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "orders" ADD CONSTRAINT "orders_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."payload_locked_documents"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_users_fk" FOREIGN KEY ("users_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_media_fk" FOREIGN KEY ("media_id") REFERENCES "public"."media"("id") ON DELETE cascade ON UPDATE no action;
@@ -501,6 +578,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_sizes_fk" FOREIGN KEY ("sizes_id") REFERENCES "public"."sizes"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_pages_fk" FOREIGN KEY ("pages_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_policies_fk" FOREIGN KEY ("policies_id") REFERENCES "public"."policies"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_carts_fk" FOREIGN KEY ("carts_id") REFERENCES "public"."carts"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_wishlists_fk" FOREIGN KEY ("wishlists_id") REFERENCES "public"."wishlists"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_orders_fk" FOREIGN KEY ("orders_id") REFERENCES "public"."orders"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_preferences_rels" ADD CONSTRAINT "payload_preferences_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."payload_preferences"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_preferences_rels" ADD CONSTRAINT "payload_preferences_rels_users_fk" FOREIGN KEY ("users_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "header_nav_items" ADD CONSTRAINT "header_nav_items_link_id_pages_id_fk" FOREIGN KEY ("link_id") REFERENCES "public"."pages"("id") ON DELETE set null ON UPDATE no action;
@@ -517,6 +597,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "users_roles_parent_idx" ON "users_roles" USING btree ("parent_id");
   CREATE INDEX "users_sessions_order_idx" ON "users_sessions" USING btree ("_order");
   CREATE INDEX "users_sessions_parent_id_idx" ON "users_sessions" USING btree ("_parent_id");
+  CREATE UNIQUE INDEX "users_google_id_idx" ON "users" USING btree ("google_id");
   CREATE INDEX "users_updated_at_idx" ON "users" USING btree ("updated_at");
   CREATE INDEX "users_created_at_idx" ON "users" USING btree ("created_at");
   CREATE UNIQUE INDEX "users_email_idx" ON "users" USING btree ("email");
@@ -588,6 +669,26 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE UNIQUE INDEX "policies_slug_idx" ON "policies" USING btree ("slug");
   CREATE INDEX "policies_updated_at_idx" ON "policies" USING btree ("updated_at");
   CREATE INDEX "policies_created_at_idx" ON "policies" USING btree ("created_at");
+  CREATE INDEX "carts_items_order_idx" ON "carts_items" USING btree ("_order");
+  CREATE INDEX "carts_items_parent_id_idx" ON "carts_items" USING btree ("_parent_id");
+  CREATE INDEX "carts_items_product_id_idx" ON "carts_items" USING btree ("product_id_id");
+  CREATE UNIQUE INDEX "carts_user_idx" ON "carts" USING btree ("user_id");
+  CREATE INDEX "carts_updated_at_idx" ON "carts" USING btree ("updated_at");
+  CREATE INDEX "carts_created_at_idx" ON "carts" USING btree ("created_at");
+  CREATE INDEX "wishlists_products_order_idx" ON "wishlists_products" USING btree ("_order");
+  CREATE INDEX "wishlists_products_parent_id_idx" ON "wishlists_products" USING btree ("_parent_id");
+  CREATE INDEX "wishlists_products_product_id_idx" ON "wishlists_products" USING btree ("product_id_id");
+  CREATE UNIQUE INDEX "wishlists_user_idx" ON "wishlists" USING btree ("user_id");
+  CREATE INDEX "wishlists_updated_at_idx" ON "wishlists" USING btree ("updated_at");
+  CREATE INDEX "wishlists_created_at_idx" ON "wishlists" USING btree ("created_at");
+  CREATE INDEX "orders_items_order_idx" ON "orders_items" USING btree ("_order");
+  CREATE INDEX "orders_items_parent_id_idx" ON "orders_items" USING btree ("_parent_id");
+  CREATE INDEX "orders_items_product_idx" ON "orders_items" USING btree ("product_id");
+  CREATE INDEX "orders_user_idx" ON "orders" USING btree ("user_id");
+  CREATE INDEX "orders_email_idx" ON "orders" USING btree ("email");
+  CREATE INDEX "orders_razorpay_order_id_idx" ON "orders" USING btree ("razorpay_order_id");
+  CREATE INDEX "orders_updated_at_idx" ON "orders" USING btree ("updated_at");
+  CREATE INDEX "orders_created_at_idx" ON "orders" USING btree ("created_at");
   CREATE UNIQUE INDEX "payload_kv_key_idx" ON "payload_kv" USING btree ("key");
   CREATE INDEX "payload_locked_documents_global_slug_idx" ON "payload_locked_documents" USING btree ("global_slug");
   CREATE INDEX "payload_locked_documents_updated_at_idx" ON "payload_locked_documents" USING btree ("updated_at");
@@ -604,6 +705,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_locked_documents_rels_sizes_id_idx" ON "payload_locked_documents_rels" USING btree ("sizes_id");
   CREATE INDEX "payload_locked_documents_rels_pages_id_idx" ON "payload_locked_documents_rels" USING btree ("pages_id");
   CREATE INDEX "payload_locked_documents_rels_policies_id_idx" ON "payload_locked_documents_rels" USING btree ("policies_id");
+  CREATE INDEX "payload_locked_documents_rels_carts_id_idx" ON "payload_locked_documents_rels" USING btree ("carts_id");
+  CREATE INDEX "payload_locked_documents_rels_wishlists_id_idx" ON "payload_locked_documents_rels" USING btree ("wishlists_id");
+  CREATE INDEX "payload_locked_documents_rels_orders_id_idx" ON "payload_locked_documents_rels" USING btree ("orders_id");
   CREATE INDEX "payload_preferences_key_idx" ON "payload_preferences" USING btree ("key");
   CREATE INDEX "payload_preferences_updated_at_idx" ON "payload_preferences" USING btree ("updated_at");
   CREATE INDEX "payload_preferences_created_at_idx" ON "payload_preferences" USING btree ("created_at");
@@ -660,6 +764,12 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "policies_sections" CASCADE;
   DROP TABLE "policies_faqs" CASCADE;
   DROP TABLE "policies" CASCADE;
+  DROP TABLE "carts_items" CASCADE;
+  DROP TABLE "carts" CASCADE;
+  DROP TABLE "wishlists_products" CASCADE;
+  DROP TABLE "wishlists" CASCADE;
+  DROP TABLE "orders_items" CASCADE;
+  DROP TABLE "orders" CASCADE;
   DROP TABLE "payload_kv" CASCADE;
   DROP TABLE "payload_locked_documents" CASCADE;
   DROP TABLE "payload_locked_documents_rels" CASCADE;
@@ -711,5 +821,6 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TYPE "public"."enum_pages_blocks_contact_properties_padding_bottom_mobile";
   DROP TYPE "public"."enum_pages_blocks_contact_properties_background_color";
   DROP TYPE "public"."enum_pages_blocks_contact_properties_background_color_mobile";
+  DROP TYPE "public"."enum_orders_status";
   DROP TYPE "public"."enum_site_settings_social_links_platform";`)
 }

@@ -20,7 +20,7 @@ export const seedGlobals = async (payload: Payload) => {
 
   // Policies seeding
   payload.logger.info('Seeding Policies...')
-  const policyDocs: Record<string, any> = {}
+  const policyDocs: Record<string, string | number> = {}
   for (const [key, val] of Object.entries(policyPages)) {
     const doc = await payload.create({
       collection: 'policies',
@@ -54,7 +54,7 @@ export const seedGlobals = async (payload: Payload) => {
           const linkSlug = link.href.split('/').pop() || ''
           const mappedKey = Object.keys(policyPages).find(k => policyPages[k].slug === linkSlug) || linkSlug
           return {
-            link: policyDocs[mappedKey],
+            link: policyDocs[mappedKey] as number,
             label: link.label,
           }
         }),

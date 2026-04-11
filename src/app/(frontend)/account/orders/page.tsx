@@ -15,7 +15,7 @@ type OrderSummary = {
   itemsCount: number
 }
 
-export const OrdersPage = () => {
+const OrdersPage = () => {
   const { user, isLoading: isAuthLoading, isHydrated } = useAuth()
   const pathname = usePathname()
   const router = useRouter()

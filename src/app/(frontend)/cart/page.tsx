@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: 'View and manage items in your shopping cart.',
 }
 
-export const Page = () => {
+const Page = () => {
   return <CartPage />
 }
 
