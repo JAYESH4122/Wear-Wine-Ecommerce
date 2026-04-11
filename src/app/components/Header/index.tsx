@@ -2,19 +2,19 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { clsx } from 'clsx'
-import { motion } from 'framer-motion'
-import { Search, ShoppingBag, User, Heart } from 'lucide-react'
-import { useWishlist } from '@/providers/wishlist'
-import { useCart } from '@/providers/cart'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { Search, ShoppingBag, User, Heart, LogOut, Package } from 'lucide-react'
+import { clsx } from 'clsx'
+import { toast } from 'sonner'
 import { IconBlack, WearWine } from 'assets'
 import { useAuth } from '@/providers/auth'
-import { AuthModal } from './AuthModal'
-import { LogOut, User as UserIcon, Package } from 'lucide-react'
+import { useCart } from '@/providers/cart'
+import { useWishlist } from '@/providers/wishlist'
 import { Button } from '@/components/ui/button/Button'
 import { getApiUrl } from '@/lib/api/getApiUrl'
+import { AuthModal } from './AuthModal'
 
 import type { Header as HeaderCMS, Media, Page, Product, SiteSetting } from '@/payload-types'
 
@@ -23,54 +23,49 @@ interface HeaderProps {
   siteSettings?: SiteSetting | null
 }
 
-/**
- * Animated Menu Icon exactly from the first code
- */
-const AnimatedMenuIcon = ({ isOpen }: { isOpen: boolean }) => {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <motion.path
-        animate={isOpen ? { d: 'M 5 5 L 19 19' } : { d: 'M 4 7 L 20 7' }}
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        transition={{ duration: 0.3 }}
-      />
-      <motion.path
-        d="M 4 12 L 20 12"
-        animate={isOpen ? { opacity: 0, x: -10 } : { opacity: 1, x: 0 }}
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        transition={{ duration: 0.2 }}
-      />
-      <motion.path
-        animate={isOpen ? { d: 'M 5 19 L 19 5' } : { d: 'M 4 17 L 20 17' }}
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        transition={{ duration: 0.3 }}
-      />
-    </svg>
-  )
-}
+const AnimatedMenuIcon = ({ isOpen }: { isOpen: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <motion.path
+      animate={isOpen ? { d: 'M 5 5 L 19 19' } : { d: 'M 4 7 L 20 7' }}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      transition={{ duration: 0.3 }}
+    />
+    <motion.path
+      d="M 4 12 L 20 12"
+      animate={isOpen ? { opacity: 0, x: -10 } : { opacity: 1, x: 0 }}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      transition={{ duration: 0.2 }}
+    />
+    <motion.path
+      animate={isOpen ? { d: 'M 5 19 L 19 5' } : { d: 'M 4 17 L 20 17' }}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      transition={{ duration: 0.3 }}
+    />
+  </svg>
+)
 
 export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const { cartCount, isHydrated: isCartHydrated } = useCart()
-  const { wishlistCount, isHydrated: isWishlistHydrated } = useWishlist()
-  const [searchQuery, setSearchQuery] = useState('')
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
-  const { user, logout } = useAuth()
-  const pathname = usePathname()
-  const searchInputRef = useRef<HTMLInputElement>(null)
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
-
+  const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Product[]>([])
   const [isSearching, setIsSearching] = useState(false)
+
+  const { cartCount, isHydrated: isCartHydrated } = useCart()
+  const { wishlistCount, isHydrated: isWishlistHydrated } = useWishlist()
+  const { user, logout } = useAuth()
+  const pathname = usePathname()
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const handleScroll = useCallback(() => {
@@ -83,34 +78,22 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
   }, [handleScroll])
 
   useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = isMenuOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
   }, [isMenuOpen])
 
   useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus()
-    }
+    if (isSearchOpen) searchInputRef.current?.focus()
   }, [isSearchOpen])
 
   useEffect(() => {
     setIsMenuOpen(false)
   }, [pathname])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-  }
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery)
-    }, 500)
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 500)
     return () => clearTimeout(timer)
   }, [searchQuery])
 
@@ -119,16 +102,13 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
       setSearchResults([])
       return
     }
-
     const fetchResults = async () => {
       setIsSearching(true)
       try {
-        const API_URL = getApiUrl()
         const params = new URLSearchParams({ limit: '5', depth: '1' })
         params.set('where[or][0][name][contains]', debouncedQuery)
         params.set('where[or][1][description][contains]', debouncedQuery)
-
-        const res = await fetch(`${API_URL}/api/products?${params.toString()}`, {
+        const res = await fetch(`${getApiUrl()}/api/products?${params.toString()}`, {
           credentials: 'include',
         })
         if (res.ok) {
@@ -141,13 +121,21 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
         setIsSearching(false)
       }
     }
-
     fetchResults()
   }, [debouncedQuery])
 
-  const closeMenu = () => {
-    setIsMenuOpen(false)
+  const handleLogout = async (onComplete?: () => void) => {
+    try {
+      await logout()
+      toast.success('Signed out successfully.')
+    } catch {
+      toast.error('Unable to sign out. Please try again.')
+    } finally {
+      onComplete?.()
+    }
   }
+
+  const closeMenu = () => setIsMenuOpen(false)
 
   const brandName = siteSettings?.siteName || 'Wear Wine'
 
@@ -155,20 +143,15 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
     cmsData?.navItems
       ?.map((item) => {
         if (!item?.label) return null
-
         const href =
           item.link && typeof item.link === 'object' ? `/${(item.link as Page).slug}` : '/'
-
-        return {
-          name: item.label,
-          href,
-        }
+        return { name: item.label, href }
       })
       .filter((item): item is { name: string; href: string } => Boolean(item)) ?? []
 
   return (
     <>
-      {/* FLOATING HAMBURGER - Floating and above the drawer (z-70) */}
+      {/* Floating hamburger */}
       <div
         className={clsx(
           'fixed lg:hidden transition-all duration-500 z-[70]',
@@ -195,7 +178,6 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
       >
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-14 lg:h-16">
-            {/* Layout Spacer - Keeps logo centered exactly like original code */}
             <div className="w-10 lg:hidden" aria-hidden="true" />
 
             <Link
@@ -208,8 +190,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                 whileHover="hover"
                 initial="initial"
               >
-                {/* Your logo */}
-                <div className="relative z-10 flex items-center lg:gap-2 gap-15">
+                <div className="relative z-10 flex items-center gap-2">
                   <Image
                     src={IconBlack}
                     alt={`${brandName} icon`}
@@ -225,17 +206,12 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                     className="h-4 lg:h-5 w-full"
                   />
                 </div>
-
-                {/* Shine layer */}
                 <motion.div
                   variants={{
                     initial: { x: '-120%', y: '-120%' },
                     hover: { x: '120%', y: '120%' },
                   }}
-                  transition={{
-                    duration: 0.8,
-                    ease: 'easeInOut',
-                  }}
+                  transition={{ duration: 0.8, ease: 'easeInOut' }}
                   className="pointer-events-none absolute inset-0 z-20"
                 >
                   <div className="w-2/3 h-full bg-gradient-to-br from-transparent via-white to-transparent opacity-100 blur-[2px]" />
@@ -283,7 +259,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
 
               <Link
                 href="/wishlist"
-                className="hidden sm:flex p-2 text-secondary hover:text-text transition-colors relative group/wishlist cusor-pointer"
+                className="hidden sm:flex p-2 text-secondary hover:text-text transition-colors relative cursor-pointer"
                 aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ''}`}
               >
                 <Heart className="w-5 h-5" />
@@ -316,12 +292,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                       className="fixed inset-0 z-[-1]"
                       onClick={() => setIsAccountDropdownOpen(false)}
                     />
-                    <motion.div
-                      // initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      // animate={{ opacity: 1, y: 0, scale: 1 }}
-                      // exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2"
-                    >
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-secondary/10 overflow-hidden py-2">
                       <div className="px-4 py-3 border-b border-secondary/5 mb-2">
                         <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">
                           Signed in as
@@ -336,7 +307,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                         onClick={() => setIsAccountDropdownOpen(false)}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-secondary hover:text-text hover:bg-secondary/5 transition-colors"
                       >
-                        <UserIcon className="w-4 h-4" />
+                        <User className="w-4 h-4" />
                         My Profile
                       </Link>
 
@@ -353,8 +324,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
 
                       <Button
                         onClick={() => {
-                          logout()
-                          setIsAccountDropdownOpen(false)
+                          void handleLogout(() => setIsAccountDropdownOpen(false))
                         }}
                         variant="text"
                         size="sm"
@@ -363,7 +333,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                       >
                         Sign Out
                       </Button>
-                    </motion.div>
+                    </div>
                   </>
                 )}
               </div>
@@ -383,7 +353,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
             </div>
           </div>
 
-          {/* Search bar - Untouched functionality */}
+          {/* Search bar */}
           <div
             className={clsx(
               'transition-all duration-300 relative',
@@ -392,7 +362,10 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                 : 'max-h-0 opacity-0 -z-10 overflow-hidden pointer-events-none',
             )}
           >
-            <form onSubmit={handleSearch} className="relative max-w-xl mx-auto flex flex-col">
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              className="relative max-w-xl mx-auto flex flex-col"
+            >
               <div className="relative">
                 <input
                   ref={searchInputRef}
@@ -415,7 +388,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
               {searchQuery.trim() && (
                 <div
                   ref={dropdownRef}
-                  className="absolute top-full left-0 right-0 bg-white border border-neutral-200 shadow-[0_20px_40px_rgba(0,0,0,0.1)] z-[100] max-h-[60vh] overflow-y-auto rounded-none"
+                  className="absolute top-full left-0 right-0 bg-white border border-neutral-200 shadow-[0_20px_40px_rgba(0,0,0,0.1)] z-[100] max-h-[60vh] overflow-y-auto"
                 >
                   {isSearching ? (
                     <div className="py-10 flex flex-col items-center justify-center">
@@ -459,7 +432,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                               }}
                               className="flex items-center gap-4 px-4 py-2.5 hover:bg-neutral-50 transition-colors group"
                             >
-                              <div className="relative w-10 h-14 bg-neutral-100 flex-shrink-0 overflow-hidden rounded-none border border-neutral-100">
+                              <div className="relative w-10 h-14 bg-neutral-100 flex-shrink-0 overflow-hidden border border-neutral-100">
                                 {imageUrl ? (
                                   <Image
                                     src={imageUrl}
@@ -508,7 +481,6 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                         })}
                       </div>
 
-                      {/* Action Call to Action */}
                       <div className="border-t border-neutral-100 px-4 py-3 bg-white">
                         <Button
                           variant="text"
@@ -536,7 +508,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
         </div>
       </header>
 
-      {/* Backdrop */}
+      {/* Mobile backdrop */}
       <div
         className={clsx(
           'fixed inset-0 bg-black/40 backdrop-blur-sm z-[55] lg:hidden transition-opacity duration-300',
@@ -546,12 +518,11 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
         aria-hidden="true"
       />
 
-      {/* Drawer panel */}
+      {/* Mobile drawer */}
       <div
         id="mobile-menu"
         className={clsx(
-          'fixed top-0 left-0 bottom-0 z-[60] w-[85vw] max-w-xs bg-background lg:hidden',
-          'flex flex-col',
+          'fixed top-0 left-0 bottom-0 z-[60] w-[85vw] max-w-xs bg-background lg:hidden flex flex-col',
           'transition-transform duration-300 ease-out',
           isMenuOpen ? 'translate-x-0' : '-translate-x-full',
         )}
@@ -559,7 +530,6 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
         aria-modal="true"
       >
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          {/* Main nav links */}
           <nav className="px-3 py-4 pt-16">
             {navItems.map((item) => {
               const isActive = pathname === item.href
@@ -582,7 +552,6 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
 
           <div className="mx-5 border-t border-secondary/10" />
 
-          {/* Account links */}
           <div className="px-3 py-4 space-y-1">
             <p className="px-3 py-1 text-[10px] font-bold text-secondary/50 uppercase tracking-widest">
               Account
@@ -599,8 +568,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                 </Link>
                 <Button
                   onClick={() => {
-                    logout()
-                    closeMenu()
+                    void handleLogout(closeMenu)
                   }}
                   variant="text"
                   size="sm"
@@ -653,6 +621,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
           </div>
         </div>
       </div>
+
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   )

@@ -6,23 +6,17 @@ import { useAuth } from '@/providers/auth'
 import { User, Mail, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button/Button'
 
 const ProfilePage = () => {
   const { user, isLoading, isHydrated } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
-  const [isEditing, setIsEditing] = useState(false)
-  const [draftName, setDraftName] = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
     if (user) {
       const initialName = user.name || ''
       setDisplayName(initialName)
-      setDraftName(initialName)
     }
   }, [user])
 
@@ -36,61 +30,6 @@ const ProfilePage = () => {
     { name: 'Profile Overview', href: '/account', icon: User },
     { name: 'My Orders', href: '/account/orders', icon: Clock },
   ]
-
-  const onEditToggle = () => {
-    if (isEditing) {
-      setDraftName(displayName)
-      setSaveError('')
-      setIsEditing(false)
-      return
-    }
-
-    setSaveError('')
-    setIsEditing(true)
-  }
-
-  const onSave = async () => {
-    const trimmed = draftName.trim()
-    if (!trimmed) {
-      setSaveError('Name is required')
-      return
-    }
-
-    setIsSaving(true)
-    setSaveError('')
-
-    try {
-      const response = await fetch('/api/users/me', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ name: trimmed }),
-      })
-
-      const data = (await response.json().catch(() => null)) as
-        | {
-            error?: string
-            user?: { name?: string | null }
-          }
-        | null
-
-      if (!response.ok) {
-        setSaveError(data?.error || 'Unable to update profile')
-        return
-      }
-
-      const nextName = data?.user?.name?.trim() || trimmed
-      setDisplayName(nextName)
-      setDraftName(nextName)
-      setIsEditing(false)
-    } catch {
-      setSaveError('Unable to update profile')
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   const sidebar = (
     <motion.aside className="w-full md:w-64 shrink-0">
@@ -167,19 +106,9 @@ const ProfilePage = () => {
                 </label>
                 <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-100 rounded-xl p-4">
                   <User className="w-4 h-4 text-neutral-400" />
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={draftName}
-                      onChange={(event) => setDraftName(event.target.value)}
-                      className="w-full bg-transparent text-sm font-semibold text-neutral-900 focus:outline-none"
-                      aria-label="Full Name"
-                    />
-                  ) : (
-                    <span className="text-sm font-semibold text-neutral-900">
-                      {displayName || 'Not provided'}
-                    </span>
-                  )}
+                  <span className="text-sm font-semibold text-neutral-900">
+                    {displayName || 'Not provided'}
+                  </span>
                 </div>
               </div>
 
@@ -198,31 +127,6 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              <div className="space-y-1.5 md:col-span-2 mt-4">
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="text-sm font-bold text-primary hover:text-black underline underline-offset-4"
-                  onClick={isEditing ? onSave : onEditToggle}
-                  loading={isSaving}
-                >
-                  {isEditing ? 'Save Profile Information' : 'Edit Profile Information'}
-                </Button>
-                {isEditing ? (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="ml-3 text-sm font-bold text-neutral-500 hover:text-black underline underline-offset-4"
-                    onClick={onEditToggle}
-                    disabled={isSaving}
-                  >
-                    Cancel
-                  </Button>
-                ) : null}
-                {saveError ? (
-                  <p className="text-xs font-medium text-red-600 mt-2">{saveError}</p>
-                ) : null}
-              </div>
             </div>
           </motion.div>
         )}
