@@ -14,35 +14,28 @@ export const dynamic = 'force-dynamic'
 
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
-  variable: '--font-bricolage',
+  variable: '--font-next-bricolage',
   weight: ['300', '400', '500', '600', '700', '800'],
 })
 
 const sans = DM_Sans({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-next-sans',
   weight: ['300', '400', '500', '600', '700', '800'],
 })
 
 const anton = Anton({
   subsets: ['latin'],
-  variable: '--font-anton',
+  variable: '--font-next-anton',
   weight: ['400'],
 })
 
 export async function generateMetadata() {
   const siteSettings = await getGlobal<SiteSettingsType>('site-settings')
-  const iconUrl =
-    siteSettings?.logo && typeof siteSettings.logo === 'object'
-      ? (siteSettings.logo as Media).url ?? undefined
-      : undefined
 
   return {
     title: siteSettings?.seo?.title || siteSettings?.siteName || 'Wear Wine',
     description: siteSettings?.seo?.description || 'Premium E-commerce experience',
-    icons: {
-      icon: iconUrl || '/favicon.ico',
-    },
   }
 }
 

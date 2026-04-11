@@ -16,6 +16,7 @@ import { Categories } from './collections/categories'
 import { Tags } from './collections/tags'
 import { Colors } from './collections/colors'
 import { Sizes } from './collections/sizes'
+import { Policies } from './collections/Policies'
 import { PDPStatic } from './globals/PDPStatic'
 import { SiteSettings } from './globals/SiteSettings'
 
@@ -40,7 +41,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Products, Categories, Tags, Colors, Sizes, Pages],
+  collections: [Users, Media, Products, Categories, Tags, Colors, Sizes, Pages, Policies],
   globals: [Header, Footer, PDPStatic, SiteSettings],
   editor: lexicalEditor(),
   secret: requireEnv('PAYLOAD_SECRET'),

@@ -1,4 +1,8 @@
-import type { CarouselCard } from '@/app/components/depth-card-carousel'
+export interface CarouselCard {
+  src: string
+  title?: string
+  description?: string
+}
 import { getApiUrl } from '@/lib/api/getApiUrl'
 
 export const getCarouselData = async (): Promise<CarouselCard[]> => {

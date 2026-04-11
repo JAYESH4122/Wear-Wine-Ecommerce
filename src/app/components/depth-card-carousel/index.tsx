@@ -9,7 +9,7 @@ const AUTOPLAY_INTERVAL = 5000
 
 const SPRING = { stiffness: 120, damping: 14, mass: 1.2 }
 
-const CONSTANTS = {
+const CONSTANTS = { 
   CARD_WIDTH_DESKTOP: 480,
   CARD_WIDTH_MOBILE: '75%',
   CARD_HEIGHT_DESKTOP: 650,
@@ -22,19 +22,16 @@ const CONSTANTS = {
   PERSPECTIVE: '2000px',
 }
 
-export interface CarouselCard {
-  src: string
-  title?: string
-  description?: string
-}
+import type { Media } from '@/payload-types'
 
 export interface DepthDeckCarouselProps {
-  cards: CarouselCard[]
+  cards?: { id?: string | null; image: string | Media }[] | null
   className?: string
   properties?: ContainerPropsType
 }
 
 export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCarouselProps) => {
+  const safeCards = Array.isArray(cards) ? cards : []
   const [active, setActive] = useState(0)
   const [hovered, setHovered] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -48,17 +45,19 @@ export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCar
 
   const goTo = useCallback(
     (dir: number) => {
-      setActive((prev) => (prev + dir + cards.length) % cards.length)
+      if (!safeCards.length) return
+      setActive((prev) => (prev + dir + safeCards.length) % safeCards.length)
     },
-    [cards.length],
+    [safeCards.length],
   )
 
   useEffect(() => {
+    if (!safeCards.length) return
     const interval = setInterval(() => {
       goTo(1)
     }, AUTOPLAY_INTERVAL)
     return () => clearInterval(interval)
-  }, [goTo])
+  }, [goTo, safeCards.length])
 
   return (
     <SectionWrapper sectionClassName="w-full bg-background" containerProps={properties || {}}>
@@ -82,8 +81,8 @@ export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCar
               transformStyle: 'preserve-3d',
             }}
           >
-            {cards.map((card, i) => {
-              const rel = ((i - active + cards.length) % cards.length) - Math.floor(cards.length / 2)
+            {safeCards.map((card, i) => {
+              const rel = ((i - active + safeCards.length) % safeCards.length) - Math.floor(safeCards.length / 2)
               const abs = Math.abs(rel)
               const isCenter = rel === 0
 
@@ -120,7 +119,7 @@ export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCar
                 }}
               >
                 <motion.img
-                  src={card.src}
+                  src={typeof card.image === 'object' && card.image !== null ? card.image.url || '' : typeof card.image === 'string' ? card.image : ''}
                   animate={{ scale: hovered === i ? 1.05 : 1 }}
                   transition={{ type: 'spring', stiffness: 100, damping: 20 }}
                   className="w-full h-full object-cover"
@@ -132,7 +131,7 @@ export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCar
 
           <div className="flex items-center gap-10 hidden md:flex">
             <div className="flex gap-3">
-              {cards.map((_, i) => (
+              {safeCards.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setActive(i)}

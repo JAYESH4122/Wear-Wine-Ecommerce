@@ -7,21 +7,6 @@ export const Header: GlobalConfig = {
   },
   fields: [
     {
-      name: 'announcementBar',
-      type: 'group',
-      fields: [
-        {
-          name: 'text',
-          type: 'text',
-        },
-        {
-          name: 'isActive',
-          type: 'checkbox',
-          defaultValue: true,
-        },
-      ],
-    },
-    {
       name: 'navItems',
       type: 'array',
       fields: [

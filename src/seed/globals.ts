@@ -1,6 +1,7 @@
 import { Payload } from 'payload'
 import { pdpStaticData } from '../data/pdp-static'
 import { safeUploadImage } from './utils'
+import { policyPages, footerData } from './footerData'
 
 export const seedGlobals = async (payload: Payload) => {
   payload.logger.info('Seeding Globals...')
@@ -9,10 +10,6 @@ export const seedGlobals = async (payload: Payload) => {
   await payload.updateGlobal({
     slug: 'header',
     data: {
-      announcementBar: {
-        text: 'FREE SHIPPING ON ALL ORDERS OVER $100',
-        isActive: true,
-      },
       navItems: [
         { label: 'Shop All', link: null },
         { label: 'New Arrivals', link: null },
@@ -21,27 +18,47 @@ export const seedGlobals = async (payload: Payload) => {
     },
   })
 
+  // Policies seeding
+  payload.logger.info('Seeding Policies...')
+  const policyDocs: Record<string, any> = {}
+  for (const [key, val] of Object.entries(policyPages)) {
+    const doc = await payload.create({
+      collection: 'policies',
+      data: {
+        title: val.title,
+        slug: val.slug,
+        lastUpdated: val.lastUpdated,
+        sections: val.sections || [],
+        faqs: val.faqs || [],
+      },
+    })
+    policyDocs[key] = doc.id
+  }
+
   // Footer
   await payload.updateGlobal({
     slug: 'footer',
     data: {
-      copyright: '© 2026 Wear Wine. All rights reserved.',
-      columns: [
-        {
-          title: 'Shop',
-          links: [
-            { label: 'All Products', link: null },
-            { label: 'Featured', link: null },
-          ],
-        },
-        {
-          title: 'Company',
-          links: [
-            { label: 'About Us', link: null },
-            { label: 'Contact', link: null },
-          ],
-        },
-      ],
+      copyright: footerData.copyright,
+      contact: {
+        title: footerData.contact.title,
+        email: footerData.contact.email,
+        phone: footerData.contact.phone,
+        hours: footerData.contact.hours.map(h => ({ time: h })),
+      },
+      socials: footerData.socials,
+
+      policiesGroup: {
+        title: footerData.policies.title,
+        links: footerData.policies.links.map(link => {
+          const linkSlug = link.href.split('/').pop() || ''
+          const mappedKey = Object.keys(policyPages).find(k => policyPages[k].slug === linkSlug) || linkSlug
+          return {
+            link: policyDocs[mappedKey],
+            label: link.label,
+          }
+        }),
+      },
     },
   })
 
@@ -65,12 +82,14 @@ export const seedGlobals = async (payload: Payload) => {
         sizeGuide: pdpStaticData.sizeGuide,
         sizeChart: {
           image: (sizeChartMedia?.id ||
-            (await safeUploadImage({
-              payload,
-              url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
-              alt: 'Default Size Chart',
-              type: 'product',
-            }))?.id) as unknown as number,
+            (
+              await safeUploadImage({
+                payload,
+                url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&q=70&fm=webp',
+                alt: 'Default Size Chart',
+                type: 'product',
+              })
+            )?.id) as unknown as number,
           description: pdpStaticData.sizeChart.description,
         },
         cta: pdpStaticData.cta,
@@ -81,31 +100,15 @@ export const seedGlobals = async (payload: Payload) => {
       },
     })
   } catch (error) {
-    payload.logger.error(`Failed to seed PDPStatic: ${error instanceof Error ? error.message : String(error)}`)
+    payload.logger.error(
+      `Failed to seed PDPStatic: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
-
-  // Site Settings
-  // Create logo media
-  const logoMedia = await safeUploadImage({
-    payload,
-    url: 'https://raw.githubusercontent.com/payloadcms/payload/main/packages/ui/src/assets/payload-logo-light.png',
-    alt: 'Wear Wine Logo',
-    type: 'hero',
-    filename: 'logo.png',
-    mimetype: 'image/png',
-  })
 
   await payload.updateGlobal({
     slug: 'site-settings',
     data: {
       siteName: 'Wear Wine',
-      logo: (logoMedia?.id ||
-        (await safeUploadImage({
-          payload,
-          url: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b',
-          alt: 'Default Logo',
-          type: 'hero',
-        }))?.id) as unknown as number,
       seo: {
         title: 'Wear Wine | Premium Streetwear',
         description: 'Curated premium streetwear for the modern aesthetic.',

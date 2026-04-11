@@ -7,6 +7,10 @@ export const Sizes: CollectionConfig = {
     useAsTitle: 'label',
   },
 
+  access: {
+    read: () => true,
+  },
+
   fields: [
     {
       name: 'label',

@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Check } from 'lucide-react'
 import type { Product } from '@/payload-types'
 import { useCart, type CartProduct } from '@/providers/cart'
@@ -76,9 +77,21 @@ const STEP_TITLES: Record<Step, string> = {
 }
 
 export const CartPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>}>
+      <CartPageContent />
+    </Suspense>
+  )
+}
+
+const CartPageContent = () => {
   const { cart, cartCount, removeItem, updateQuantity, subtotal, addItem } = useCart()
+  const searchParams = useSearchParams()
+  const stepParam = searchParams.get('step')
+  const initialStep = (stepParam && ['1', '2', '3'].includes(stepParam)) ? Number(stepParam) as Step : 1
+
   const [recommendations, setRecommendations] = useState<CartProduct[]>([])
-  const [step, setStep] = useState<Step>(1)
+  const [step, setStep] = useState<Step>(initialStep)
   const [address, setAddress] = useState<AddressForm>(INITIAL_ADDRESS)
   const [addressErrors, setAddressErrors] = useState<AddressErrors>({})
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card')

@@ -50,7 +50,6 @@ export const Products: CollectionConfig = {
       name: 'category',
       type: 'relationship',
       relationTo: 'categories',
-      required: true,
     },
 
     {
@@ -97,7 +96,6 @@ export const Products: CollectionConfig = {
       name: 'color',
       type: 'relationship',
       relationTo: 'colors',
-      required: true,
     },
     {
       name: 'size',
@@ -114,6 +112,7 @@ export const Products: CollectionConfig = {
       type: 'number',
       defaultValue: 0,
       min: 0,
+      required: true,
     },
   ],
 }

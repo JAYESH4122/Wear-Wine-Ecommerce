@@ -212,13 +212,13 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                 initial="initial"
               >
                 {/* Your logo */}
-                <div className="relative z-10 flex items-center gap-2">
+                <div className="relative z-10 flex items-center lg:gap-2 gap-15">
                   <Image
                     src={IconBlack}
                     alt={`${brandName} icon`}
                     width={30}
                     height={30}
-                    className="w-3 h-3 lg:w-8 lg:h-6"
+                    className="w-4 h-4 lg:w-8 lg:h-6"
                   />
                   <Image
                     src={WearWine}
@@ -573,7 +573,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
                   onClick={closeMenu}
                   className={clsx(
                     'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-colors',
-                    isActive ? 'text-primary bg-primary' : 'text-text hover:bg-secondary/5',
+                    isActive ? 'text-primary' : 'text-text hover:bg-secondary/5',
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >

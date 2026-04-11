@@ -6,14 +6,10 @@ export const Footer: GlobalConfig = {
     read: () => true,
   },
   fields: [
+
     {
-      name: 'copyright',
-      type: 'text',
-      defaultValue: '© 2024 Wear Wine. All rights reserved.',
-    },
-    {
-      name: 'columns',
-      type: 'array',
+      name: 'policiesGroup',
+      type: 'group',
       fields: [
         {
           name: 'title',
@@ -26,13 +22,77 @@ export const Footer: GlobalConfig = {
             {
               name: 'link',
               type: 'relationship',
-              relationTo: 'pages',
+              relationTo: 'policies',
+              required: true,
             },
             {
               name: 'label',
               type: 'text',
+              required: true,
             },
           ],
+        },
+      ],
+    },
+    {
+      name: 'socials',
+      type: 'array',
+      fields: [
+        {
+          name: 'name',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'href',
+          type: 'text',
+          required: true,
+        },
+      ],
+    },
+    {
+      name: 'contact',
+      type: 'group',
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+        },
+        {
+          name: 'email',
+          type: 'text',
+        },
+        {
+          name: 'phone',
+          type: 'text',
+        },
+        {
+          name: 'hours',
+          type: 'array',
+          fields: [
+            {
+              name: 'time',
+              type: 'text',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'copyright',
+      type: 'group',
+      fields: [
+        {
+          name: 'year',
+          type: 'text',
+        },
+        {
+          name: 'brand',
+          type: 'text',
+        },
+        {
+          name: 'text',
+          type: 'text',
         },
       ],
     },

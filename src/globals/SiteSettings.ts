@@ -13,12 +13,6 @@ export const SiteSettings: GlobalConfig = {
       defaultValue: 'Wear Wine',
     },
     {
-      name: 'logo',
-      type: 'upload',
-      relationTo: 'media',
-      required: true,
-    },
-    {
       name: 'seo',
       type: 'group',
       fields: [

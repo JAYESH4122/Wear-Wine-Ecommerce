@@ -12,7 +12,7 @@ export const CollectionGallery: Block = {
   imageURL: '',
   imageAltText: 'Collection gallery preview',
   fields: [
-    properties({
+    properties({    
       paddingTop: 'XXL2',
       paddingTopMobile: 'XL2',
       paddingBottom: 'XXL2',
@@ -41,12 +41,6 @@ export const CollectionGallery: Block = {
           name: 'label',
           type: 'text',
           required: true,
-        },
-        {
-          name: 'gridClass',
-          type: 'text',
-          required: true,
-          defaultValue: 'col-span-12 md:col-span-6 row-span-2',
         },
       ],
     },

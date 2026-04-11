@@ -4,8 +4,9 @@ import Image, { StaticImageData } from 'next/image'
 import Link from 'next/link'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { clsx } from 'clsx'
-import { Heart, ShoppingBag, Check, Loader2, Star } from 'lucide-react'
+import { ShoppingBag, Check, Loader2, Star, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { gsap } from 'gsap'
 
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
@@ -15,14 +16,13 @@ import type { WishlistItem } from '@/providers/wishlist'
 type ProductCardProps = {
   id: string
   title: string
-  category: string
+  category?: string
   price: number
   image: StaticImageData | string
   hoverImage?: StaticImageData | string
   badge?: string
   originalPrice?: number
   rating?: number
-  reviews?: number
   slug?: string | null
   isInStock?: boolean
   product?: WishlistItem | CartProduct
@@ -40,7 +40,6 @@ export const ProductCard = ({
   badge,
   originalPrice,
   rating,
-  reviews: _reviews,
   slug,
   isInStock = true,
   product,
@@ -48,285 +47,423 @@ export const ProductCard = ({
   onFavorite,
 }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isAdded, setIsAdded] = useState(false)
+  const [cartState, setCartState] = useState<'idle' | 'loading' | 'added'>('idle')
+  const [wishState, setWishState] = useState<'idle' | 'added' | 'removed'>('idle')
+  const [isMobileActive, setIsMobileActive] = useState(false)
 
   const cardRef = useRef<HTMLDivElement>(null)
   const isTouchDevice = useRef(false)
+  const gsapContext = useRef<gsap.Context | null>(null)
 
   const { isInWishlist, toggleWishlist } = useWishlist()
-  const { cart, addItem } = useCart()
+  const { addItem } = useCart()
 
-  const isInCart = cart.some((item) => String(item.product.id) === String(id))
   const isFavorite = isInWishlist(id)
+  const discountPct = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : null
 
-  // ─── Tap-away dismissal ───────────────────────────────────────────────────
+  // ── GSAP Animation System ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!cardRef.current) return
+
+    gsapContext.current = gsap.context(() => {
+      const mm = gsap.matchMedia()
+
+      // Desktop: hover animations (pointer: fine)
+      mm.add('(pointer: fine)', () => {
+        const card = cardRef.current
+        if (!card) return
+
+        const handleMouseEnter = () => {
+          gsap.to(card, {
+            scale: 1.02,
+            duration: 0.4,
+            ease: 'power2.out',
+            overwrite: true,
+          })
+        }
+
+        const handleMouseLeave = () => {
+          gsap.to(card, {
+            scale: 1,
+            duration: 0.5,
+            ease: 'elastic.out(1, 0.5)',
+            overwrite: true,
+          })
+        }
+
+        card.addEventListener('mouseenter', handleMouseEnter)
+        card.addEventListener('mouseleave', handleMouseLeave)
+
+        return () => {
+          card.removeEventListener('mouseenter', handleMouseEnter)
+          card.removeEventListener('mouseleave', handleMouseLeave)
+        }
+      })
+
+      // Mobile: pointer interactions (pointer: coarse)
+      mm.add('(pointer: coarse)', () => {
+        const card = cardRef.current
+        if (!card) return
+
+        let activeTimeline: gsap.core.Timeline | null = null
+
+        const onPointerDown = (e: PointerEvent) => {
+          if (activeTimeline) activeTimeline.kill()
+          activeTimeline = gsap.timeline()
+          activeTimeline.to(card, {
+            scale: 1.03,
+            duration: 0.2,
+            ease: 'power2.out',
+            overwrite: true,
+          })
+          activeTimeline.to(
+            card,
+            {
+              y: -4,
+              duration: 0.15,
+              ease: 'power2.out',
+            },
+            0
+          )
+        }
+
+        const onPointerUp = () => {
+          if (activeTimeline) {
+            activeTimeline.kill()
+            activeTimeline = null
+          }
+          gsap.to(card, {
+            scale: 1,
+            y: 0,
+            duration: 0.35,
+            ease: 'back.out(0.6)',
+            overwrite: true,
+          })
+        }
+
+        card.addEventListener('pointerdown', onPointerDown)
+        card.addEventListener('pointerup', onPointerUp)
+        card.addEventListener('pointercancel', onPointerUp)
+
+        return () => {
+          card.removeEventListener('pointerdown', onPointerDown)
+          card.removeEventListener('pointerup', onPointerUp)
+          card.removeEventListener('pointercancel', onPointerUp)
+          if (activeTimeline) activeTimeline.kill()
+        }
+      })
+    }, cardRef.current)
+
+    return () => {
+      gsapContext.current?.revert()
+    }
+  }, [])
+
+  // ── Floating Animation (Mobile only) ─────────────────────────────────────
+  useEffect(() => {
+    if (!cardRef.current) return
+    if (!isTouchDevice.current) return
+
+    const ctx = gsap.context(() => {
+      gsap.to(cardRef.current, {
+        y: -3,
+        duration: 2.5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'power1.inOut',
+        overwrite: true,
+      })
+    }, cardRef.current)
+
+    return () => ctx.revert()
+  }, [])
+
+  // ── Tap-away for mobile active state ─────────────────────────────────────
   const handleTapAway = useCallback((e: TouchEvent) => {
     if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+      setIsMobileActive(false)
       setIsHovered(false)
     }
   }, [])
 
   useEffect(() => {
-    if (isHovered && isTouchDevice.current) {
+    if (isMobileActive && isTouchDevice.current) {
       document.addEventListener('touchstart', handleTapAway, { passive: true })
-    } else {
-      document.removeEventListener('touchstart', handleTapAway)
     }
     return () => document.removeEventListener('touchstart', handleTapAway)
-  }, [isHovered, handleTapAway])
+  }, [isMobileActive, handleTapAway])
 
-  // ─── Desktop hover handlers ───────────────────────────────────────────────
+  // ── Interaction handlers ─────────────────────────────────────────────────
   const handleMouseEnter = () => {
     if (!isTouchDevice.current) setIsHovered(true)
   }
+
   const handleMouseLeave = () => {
     if (!isTouchDevice.current) setIsHovered(false)
   }
 
-  // ─── Mobile tap handler ───────────────────────────────────────────────────
   const handleTouchStart = () => {
     isTouchDevice.current = true
-    setIsHovered((prev) => !prev)
+    setIsMobileActive(true)
+    setIsHovered(true)
   }
 
-  // ─── Add to cart ──────────────────────────────────────────────────────────
+  // ── Cart handler ─────────────────────────────────────────────────────────
   const handleAddToCart = async (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!isInStock || isLoading) return
+    if (!isInStock || cartState !== 'idle') return
 
-    setIsLoading(true)
-    if (onAddToCart) {
-      await onAddToCart(id)
-    } else {
-      const cartProduct = (product as CartProduct) || {
-        id,
-        name: title,
-        slug: slug ?? null,
-        price,
-        images: [{ image: typeof image === 'string' ? image : image.src }],
+    setCartState('loading')
+    try {
+      if (onAddToCart) {
+        await onAddToCart(id)
+      } else {
+        addItem(
+          (product as CartProduct) || {
+            id,
+            name: title,
+            slug: slug ?? null,
+            price,
+            images: [{ image: typeof image === 'string' ? image : image.src }],
+          },
+          1,
+        )
       }
-      addItem(cartProduct, 1)
-    }
-    setIsLoading(false)
-    setIsAdded(true)
-    // Auto-dismiss the overlay on mobile after adding
-    if (isTouchDevice.current) {
-      setTimeout(() => {
-        setIsAdded(false)
-        setIsHovered(false)
-      }, 1500)
-    } else {
-      setTimeout(() => setIsAdded(false), 2000)
+      setCartState('added')
+      setTimeout(() => setCartState('idle'), 1800)
+    } catch {
+      setCartState('idle')
     }
   }
 
-  // ─── Wishlist toggle (works for both mouse and touch) ─────────────────────
+  // ── Wishlist handler ─────────────────────────────────────────────────────
   const handleWishlistToggle = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    const wasIn = isFavorite
     toggleWishlist((product as WishlistItem) || { id, name: title, price })
     onFavorite?.(id)
+    setWishState(wasIn ? 'removed' : 'added')
+    setTimeout(() => setWishState('idle'), 1800)
   }
 
   return (
-    <motion.div
+    <div
       ref={cardRef}
-      className="group relative flex flex-col h-full bg-white font-sans"
+      className="group relative flex flex-col h-full bg-white rounded-sm overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-500 will-change-transform"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
-      initial="initial"
-      whileHover="hover"
     >
-      {/* ── IMAGE SECTION ─────────────────────────────────────────────────── */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#F2F2F2]">
-        <Link href={`/product/${slug || id}`} className="block h-full w-full">
-          <motion.div
-            className="h-full w-full"
-            variants={{
-              initial: { scale: 1 },
-              hover: { scale: 1.05 },
-            }}
-            transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
-          >
+      {/* ── IMAGE SECTION ──────────────────────────────────────────────────── */}
+      <div className="relative aspect-[3/4] overflow-hidden bg-neutral-50">
+        <Link href={`/product/${slug || id}`} className="block h-full w-full" tabIndex={-1}>
+          <Image
+            src={image}
+            alt={title}
+            fill
+            className={clsx(
+              'object-cover transition-all duration-700 ease-out',
+              isHovered ? 'scale-110 opacity-0' : 'scale-100 opacity-100',
+              !hoverImage && isHovered && '!opacity-100'
+            )}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+          {hoverImage && (
             <Image
-              src={image}
+              src={hoverImage}
               alt={title}
               fill
               className={clsx(
-                'object-cover transition-opacity duration-700',
-                hoverImage && isHovered ? 'opacity-0' : 'opacity-100',
+                'object-cover absolute inset-0 transition-all duration-700 ease-out',
+                isHovered ? 'scale-100 opacity-100' : 'scale-110 opacity-0'
               )}
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
-            {hoverImage && (
-              <Image
-                src={hoverImage}
-                alt={title}
-                fill
-                className={clsx(
-                  'object-cover absolute inset-0 transition-opacity duration-700',
-                  isHovered ? 'opacity-100' : 'opacity-0',
-                )}
-                sizes="(max-width: 768px) 100vw, 33vw"
-              />
-            )}
-          </motion.div>
+          )}
         </Link>
 
         {/* Badges */}
-        {badge && (
-          <div className="absolute top-0 left-0 p-3 z-10 pointer-events-none">
-            <span className="bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1.5 shadow-sm">
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 pointer-events-none">
+          {badge && (
+            <span className="bg-black/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.2em] px-2.5 py-1.5 rounded-sm">
               {badge}
+            </span>
+          )}
+          {discountPct && (
+            <span className="bg-rose-500 text-white text-[10px] font-black uppercase tracking-wide px-2 py-1 rounded-sm">
+              -{discountPct}%
+            </span>
+          )}
+        </div>
+
+        {/* Sold out overlay */}
+        {!isInStock && (
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] flex items-center justify-center pointer-events-none z-10">
+            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-neutral-600 border border-neutral-500/40 px-4 py-2 bg-white/90 rounded-sm">
+              Sold Out
             </span>
           </div>
         )}
 
-        {/* Wishlist Icon */}
+        {/* ── ACTION BUTTONS (Bottom edge) ──────────────────────────────────── */}
         <AnimatePresence>
-          {isHovered && (
-            <motion.button
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              onClick={handleWishlistToggle}
-              onTouchEnd={handleWishlistToggle}
-              className="absolute top-4 right-4 z-20 cursor-pointer"
-            >
-              <div className="p-2 flex justify-center items-center bg-white/80 backdrop-blur-sm border border-black/5 hover:bg-white transition-colors shadow-sm w-12 h-12">
-                <Heart
-                  className={clsx(
-                    'w-5 h-5 transition-all duration-300',
-                    isFavorite ? 'fill-red-500 stroke-red-500' : 'stroke-black/60',
-                  )}
-                  strokeWidth={1.5}
-                />
-              </div>
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Slide-Up Quick Add */}
-        <AnimatePresence>
-          {isHovered && isInStock && (
+          {(isHovered || isMobileActive) && isInStock && (
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-x-0 bottom-0 z-30 cursor-pointer"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.25, ease: [0.2, 0.9, 0.4, 1] }}
+              className="absolute bottom-3 left-3 right-3 z-20 flex gap-2"
             >
-              <button
+              {/* Cart Button - Full width primary */}
+              <motion.button
                 onClick={handleAddToCart}
                 onTouchEnd={handleAddToCart}
-                disabled={isLoading}
+                disabled={cartState === 'loading'}
+                aria-label="Add to cart"
                 className={clsx(
-                  'w-full py-5.5 flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all duration-500 cursor-pointer',
-                  isAdded || isInCart
-                    ? 'bg-black text-white'
-                    : 'bg-white/95 backdrop-blur-md text-black hover:bg-black hover:text-white',
+                  'flex-1 h-11 rounded-full flex items-center justify-center gap-2 transition-all duration-300',
+                  cartState === 'added'
+                    ? 'bg-emerald-600 text-white shadow-lg'
+                    : 'bg-white/95 backdrop-blur-md text-neutral-900 shadow-md hover:bg-black hover:text-white active:scale-95'
                 )}
               >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : isAdded || isInCart ? (
-                  <>
-                    <Check className="w-4 h-4" /> Added to Cart
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag className="w-4 h-4" /> Add to Cart
-                  </>
+                <AnimatePresence mode="wait">
+                  {cartState === 'loading' ? (
+                    <motion.span
+                      key="spin"
+                      initial={{ opacity: 0, scale: 0.6 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.6 }}
+                    >
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </motion.span>
+                  ) : cartState === 'added' ? (
+                    <motion.span
+                      key="check"
+                      initial={{ opacity: 0, scale: 0.4 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.4 }}
+                    >
+                      <Check className="w-4 h-4" strokeWidth={2.5} />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="bag"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="flex items-center gap-2"
+                    >
+                      <ShoppingBag className="w-4 h-4" strokeWidth={1.8} />
+                      <span className="text-[11px] font-black uppercase tracking-wide">Add</span>
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+
+              {/* Wishlist Button - Circular secondary */}
+              <motion.button
+                onClick={handleWishlistToggle}
+                onTouchEnd={handleWishlistToggle}
+                aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
+                className={clsx(
+                  'h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 shrink-0',
+                  wishState === 'added'
+                    ? 'bg-rose-500 text-white shadow-lg'
+                    : wishState === 'removed'
+                      ? 'bg-neutral-100 text-neutral-500'
+                      : 'bg-white/95 backdrop-blur-md text-neutral-900 shadow-md hover:bg-rose-500 hover:text-white active:scale-95'
                 )}
-              </button>
+              >
+                <AnimatePresence mode="wait">
+                  {wishState === 'added' ? (
+                    <motion.span
+                      key="heart-fill"
+                      initial={{ scale: 0.3, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.3, opacity: 0 }}
+                    >
+                      <Heart className="w-4 h-4 fill-white stroke-white" strokeWidth={1.5} />
+                    </motion.span>
+                  ) : wishState === 'removed' ? (
+                    <motion.span
+                      key="heart-out"
+                      initial={{ scale: 1.2, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                    >
+                      <Heart className="w-4 h-4" strokeWidth={1.5} />
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="heart-idle"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                    >
+                      <Heart
+                        className={clsx(
+                          'w-4 h-4 transition-all duration-300',
+                          isFavorite ? 'fill-rose-500 stroke-rose-500' : ''
+                        )}
+                        strokeWidth={1.5}
+                      />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* ── PRODUCT INFO SECTION ──────────────────────────────────────────── */}
-      <div className="pt-2 pb-2 flex flex-col px-4">
-        {/* Title & Rating */}
-        <div className="flex justify-between items-center">
-          <Link href={`/product/${slug || id}`} className="flex-1">
-            <h3 className="text-[16px] font-bold text-black uppercase tracking-widest leading-none line-clamp-1 p-0 m-0">
-              {title}
-            </h3>
-          </Link>
-          {rating && (
-            <div className="flex items-center gap-1.5 pl-3">
-              <Star
-                className={clsx(
-                  'w-3.5 h-3.5 fill-yellow-400 text-yellow-400 transition-all duration-300',
-                  isHovered && 'rotate-12',
-                )}
-              />
-              <span className="text-[13px] font-extrabold text-black">{rating}</span>
-            </div>
-          )}
-        </div>
+      {/* ── PRODUCT INFO ────────────────────────────────────────────────────── */}
+      <Link href={`/product/${slug || id}`} className="pt-3 pb-2 px-2 flex flex-col gap-1 flex-1">
+        {category && (
+          <span className="text-[9px] font-black uppercase tracking-[0.22em] text-neutral-400">
+            {category}
+          </span>
+        )}
 
-        <span className="text-[12px] uppercase tracking-[0.1em] text-black/40 font-bold mx-0 my-2">
-          {category}
-        </span>
+        <h3 className="text-[13px] font-black text-neutral-800 uppercase tracking-wide leading-tight line-clamp-2">
+          {title}
+        </h3>
 
-        {/* Price & Stock */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center px-1">
-          <div className="flex items-center gap-3">
-            <span className="text-[17px] font-extrabold text-black tracking-tight">₹{price}</span>
-            {originalPrice && (
-              <span className="text-[14px] text-black/30 line-through tracking-tighter">
-                ₹{originalPrice}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center text-xs">
-            <span className="flex items-center gap-1.5">
-              <span className={clsx('relative flex h-2 w-2', isInStock && 'group/status')}>
-                <span
+        {rating !== undefined && rating > 0 && (
+          <div className="flex items-center gap-1 mt-0.5">
+            <div className="flex">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
                   className={clsx(
-                    'absolute inline-flex h-full w-full rounded-full',
-                    isInStock ? 'bg-green-500' : 'bg-red-500',
+                    'w-2.5 h-2.5',
+                    i < Math.floor(rating)
+                      ? 'fill-amber-400 text-amber-400'
+                      : 'fill-neutral-200 text-neutral-200'
                   )}
                 />
-              </span>
-              <span
-                className={clsx(
-                  'font-medium transition-colors duration-300',
-                  isInStock ? (isHovered ? 'text-green-600' : 'text-gray-500') : 'text-red-500',
-                )}
-              >
-                {isInStock ? 'In stock' : 'Sold out'}
-              </span>
+              ))}
+            </div>
+            <span className="text-[9px] font-bold text-neutral-400 ml-0.5 tabular-nums">
+              {rating.toFixed(1)}
             </span>
           </div>
-        </div>
-
-        {/* Stock Progress Bar */}
-        {isInStock && (
-          <div className="mt-2 px-1">
-            <div className="flex flex-col md:flex-row gap-2 items-start md:items-center justify-between md:items-center mb-1.5">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-black/40 font-bold">
-                Limited Availability
-              </span>
-              <span className="text-[10px] font-extrabold text-black uppercase">
-                Only {Math.floor(Math.random() * 8 + 2)} Left
-              </span>
-            </div>
-            <div className="h-[3px] w-full bg-gray-100 overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: isHovered ? '75%' : '0%' }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="h-full bg-black"
-              />
-            </div>
-          </div>
         )}
-      </div>
-    </motion.div>
+
+        <div className="flex items-baseline gap-2 mt-1 flex-wrap">
+          <span className="text-[15px] font-black text-neutral-900 tracking-tight">
+            ₹{price.toLocaleString()}
+          </span>
+          {originalPrice && originalPrice > price && (
+            <span className="text-[11px] text-neutral-400 line-through font-medium">
+              ₹{originalPrice.toLocaleString()}
+            </span>
+          )}
+        </div>
+      </Link>
+    </div>
   )
 }

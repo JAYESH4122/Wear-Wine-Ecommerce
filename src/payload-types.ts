@@ -75,6 +75,7 @@ export interface Config {
     colors: Color;
     sizes: Size;
     pages: Page;
+    policies: Policy;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -90,6 +91,7 @@ export interface Config {
     colors: ColorsSelect<false> | ColorsSelect<true>;
     sizes: SizesSelect<false> | SizesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
+    policies: PoliciesSelect<false> | PoliciesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -197,7 +199,7 @@ export interface Product {
   name: string;
   slug?: string | null;
   description?: string | null;
-  category: number | Category;
+  category?: (number | null) | Category;
   images: {
     image: number | Media;
     id?: string | null;
@@ -207,10 +209,10 @@ export interface Product {
   salePrice?: number | null;
   variants?:
     | {
-        color: number | Color;
+        color?: (number | null) | Color;
         size: number | Size;
         sku?: string | null;
-        stock?: number | null;
+        stock: number;
         id?: string | null;
       }[]
     | null;
@@ -465,7 +467,6 @@ export interface CollectionGallery {
     image: number | Media;
     title: string;
     label: string;
-    gridClass: string;
     id?: string | null;
   }[];
   id?: string | null;
@@ -563,8 +564,6 @@ export interface DepthDeckCarousel {
   };
   cards: {
     image: number | Media;
-    title?: string | null;
-    description?: string | null;
     id?: string | null;
   }[];
   id?: string | null;
@@ -791,6 +790,32 @@ export interface ContactBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "policies".
+ */
+export interface Policy {
+  id: number;
+  title: string;
+  slug: string;
+  lastUpdated?: string | null;
+  sections?:
+    | {
+        heading: string;
+        content: string;
+        id?: string | null;
+      }[]
+    | null;
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -844,6 +869,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pages';
         value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'policies';
+        value: number | Policy;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1068,7 +1097,6 @@ export interface CollectionGallerySelect<T extends boolean = true> {
         image?: T;
         title?: T;
         label?: T;
-        gridClass?: T;
         id?: T;
       };
   id?: T;
@@ -1093,8 +1121,6 @@ export interface DepthDeckCarouselSelect<T extends boolean = true> {
     | T
     | {
         image?: T;
-        title?: T;
-        description?: T;
         id?: T;
       };
   id?: T;
@@ -1169,6 +1195,31 @@ export interface ContactBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "policies_select".
+ */
+export interface PoliciesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  lastUpdated?: T;
+  sections?:
+    | T
+    | {
+        heading?: T;
+        content?: T;
+        id?: T;
+      };
+  faqs?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1213,10 +1264,6 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Header {
   id: number;
-  announcementBar?: {
-    text?: string | null;
-    isActive?: boolean | null;
-  };
   navItems?:
     | {
         link?: (number | null) | Page;
@@ -1233,20 +1280,39 @@ export interface Header {
  */
 export interface Footer {
   id: number;
-  copyright?: string | null;
-  columns?:
+  policiesGroup?: {
+    title?: string | null;
+    links?:
+      | {
+          link: number | Policy;
+          label: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  socials?:
     | {
-        title?: string | null;
-        links?:
-          | {
-              link?: (number | null) | Page;
-              label?: string | null;
-              id?: string | null;
-            }[]
-          | null;
+        name: string;
+        href: string;
         id?: string | null;
       }[]
     | null;
+  contact?: {
+    title?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    hours?:
+      | {
+          time?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  copyright?: {
+    year?: string | null;
+    brand?: string | null;
+    text?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1302,7 +1368,6 @@ export interface PdpStatic {
 export interface SiteSetting {
   id: number;
   siteName: string;
-  logo: number | Media;
   seo?: {
     title?: string | null;
     description?: string | null;
@@ -1322,12 +1387,6 @@ export interface SiteSetting {
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
-  announcementBar?:
-    | T
-    | {
-        text?: T;
-        isActive?: T;
-      };
   navItems?:
     | T
     | {
@@ -1344,8 +1403,7 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
-  copyright?: T;
-  columns?:
+  policiesGroup?:
     | T
     | {
         title?: T;
@@ -1356,7 +1414,33 @@ export interface FooterSelect<T extends boolean = true> {
               label?: T;
               id?: T;
             };
+      };
+  socials?:
+    | T
+    | {
+        name?: T;
+        href?: T;
         id?: T;
+      };
+  contact?:
+    | T
+    | {
+        title?: T;
+        email?: T;
+        phone?: T;
+        hours?:
+          | T
+          | {
+              time?: T;
+              id?: T;
+            };
+      };
+  copyright?:
+    | T
+    | {
+        year?: T;
+        brand?: T;
+        text?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1423,7 +1507,6 @@ export interface PdpStaticSelect<T extends boolean = true> {
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
   siteName?: T;
-  logo?: T;
   seo?:
     | T
     | {

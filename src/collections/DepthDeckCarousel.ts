@@ -32,14 +32,6 @@ export const DepthDeckCarousel: Block = {
           relationTo: 'media',
           required: true,
         },
-        {
-          name: 'title',
-          type: 'text',
-        },
-        {
-          name: 'description',
-          type: 'textarea',
-        },
       ],
     },
   ],

@@ -1,23 +1,17 @@
+import React from 'react'
+import { notFound } from 'next/navigation'
+import { RenderBlocks } from '@/app/components/RenderBlocks'
+import { getPageBySlug } from '@/lib/api/cms'
 import './styles.css'
-import { ProductListSection } from '@/app/components/product-list-section'
-import { HeroSlider } from '@/app/components/hero-slider'
-import { DepthDeckCarousel } from '../components/depth-card-carousel'
-import { CollectionGallery } from '../components/collection-gallery'
-import { getHeroData } from '@/lib/data/hero'
-import { getCarouselData } from '@/lib/data/carousel'
-import { getCollectionImages } from '@/lib/data/collection'
 
 export default async function HomePage() {
-  const heroImages = await getHeroData()
-  const carouselCards = await getCarouselData()
-  const galleryImages = await getCollectionImages()
+  const pageInfo = await getPageBySlug('home')
+  
+  if (!pageInfo) return notFound()
 
   return (
     <>
-      {heroImages.length > 0 && <HeroSlider slides={heroImages} />}
-      <CollectionGallery images={galleryImages} />
-      <ProductListSection />
-      {carouselCards.length > 0 && <DepthDeckCarousel cards={carouselCards} />}
+      <RenderBlocks blocks={pageInfo.layout || []} />
     </>
   )
 }

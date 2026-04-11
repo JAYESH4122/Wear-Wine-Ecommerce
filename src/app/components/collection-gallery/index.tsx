@@ -21,7 +21,6 @@ export interface GalleryImage {
   image: Media
   title?: string
   label?: string
-  description?: string
 }
 
 interface CollectionGalleryProps {
@@ -37,9 +36,6 @@ interface ImageCardProps {
   className?: string
 }
 
-/**
- * ImageCard - Dual-Engine (Mouse & Touch) GSAP Component
- */
 export const ImageCard = ({ image, index, className }: ImageCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
@@ -56,10 +52,6 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia()
 
-      /**
-       * 1. DESKTOP LOGIC (Pointer: Fine)
-       * Uses quickTo for high-frequency mouse tracking
-       */
       mm.add('(pointer: fine)', () => {
         const xTo = gsap.quickTo(card, 'rotateY', { duration: 0.7, ease: 'power2.out' })
         const yTo = gsap.quickTo(card, 'rotateX', { duration: 0.7, ease: 'power2.out' })
@@ -78,12 +70,7 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
 
         const onMouseEnter = () => {
           gsap.to(overlay, { opacity: 0.1, duration: 0.6 })
-          gsap.to(img, {
-            scale: 1.05,
-            filter: 'grayscale(0%) brightness(1)',
-            duration: 0.8,
-            ease: 'power2.out',
-          })
+          gsap.to(img, { scale: 1.05, filter: 'grayscale(0%) brightness(1)', duration: 0.8, ease: 'power2.out' })
           gsap.to(light, { opacity: 1, duration: 0.6 })
         }
 
@@ -100,12 +87,7 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
         card.addEventListener('mouseleave', onMouseLeave)
       })
 
-      /**
-       * 2. MOBILE LOGIC (Pointer: Coarse)
-       * Passive ambient movement + Tactile touch feedback
-       */
       mm.add('(pointer: coarse)', () => {
-        // Passive "Breathing" effect to signal interactivity
         gsap.to(img, {
           yPercent: 3,
           duration: 3,
@@ -118,7 +100,6 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
         const onTouchStart = () => {
           gsap.to(overlay, { opacity: 0.1, duration: 0.3 })
           gsap.to(img, { scale: 1.03, filter: 'grayscale(0%) brightness(1)', duration: 0.4 })
-          // Soft centered spotlight on touch
           gsap.to(light, { opacity: 0.8, duration: 0.4, xPercent: 0, yPercent: 0 })
         }
 
@@ -133,7 +114,6 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
         card.addEventListener('touchcancel', onTouchEnd)
       })
 
-      // 3. UNIVERSAL PARALLAX (Scroll-based)
       gsap.fromTo(
         img,
         { yPercent: -5 },
@@ -163,7 +143,6 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
       )}
       style={{ transformStyle: 'preserve-3d', perspective: '1200px' }}
     >
-      {/* Image Layer */}
       <div
         ref={imageRef}
         className="absolute inset-0 w-full h-[115%] -top-[7.5%] will-change-[transform,filter]"
@@ -179,13 +158,11 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
         />
       </div>
 
-      {/* Spotlight (Gradient) */}
       <div
         ref={lightRef}
         className="absolute inset-0 pointer-events-none opacity-0 mix-blend-overlay z-10"
         style={{
-          background:
-            'radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 80%)',
+          background: 'radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 80%)',
           width: '200%',
           height: '200%',
           left: '-50%',
@@ -193,13 +170,8 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
         }}
       />
 
-      {/* Scrim Overlay */}
-      <div
-        ref={overlayRef}
-        className="absolute inset-0 bg-neutral-950 opacity-30 pointer-events-none z-[5]"
-      />
+      <div ref={overlayRef} className="absolute inset-0 bg-neutral-950 opacity-30 pointer-events-none z-[5]" />
 
-      {/* Content */}
       <div
         className="absolute inset-0 p-6 md:p-10 flex flex-col justify-end z-20 pointer-events-none"
         style={{ transform: 'translateZ(30px)' }}
@@ -216,16 +188,93 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
   )
 }
 
-/**
- * CollectionGallery - Responsive Premium Bento
- */
+const getGridItems = (imgs: GalleryImage[]) => {
+  const count = imgs.length
+
+  if (count === 1) {
+    return (
+      <div className="gallery-card h-[500px] md:h-[700px]">
+        <ImageCard image={imgs[0]} index={0} />
+      </div>
+    )
+  }
+
+  if (count === 2) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2">
+        {imgs.map((img, i) => (
+          <div key={img.id} className="gallery-card h-[400px] md:h-[600px]">
+            <ImageCard image={img} index={i} />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (count === 3) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-12">
+        <div className="gallery-card md:col-span-8 h-[400px] md:h-[600px]">
+          <ImageCard image={imgs[0]} index={0} />
+        </div>
+        <div className="md:col-span-4 flex flex-col">
+          {imgs.slice(1).map((img, i) => (
+            <div key={img.id} className="gallery-card h-[300px] md:h-[300px]">
+              <ImageCard image={img} index={i + 1} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (count === 4) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-12">
+        <div className="gallery-card md:col-span-8 h-[400px] md:h-[700px]">
+          <ImageCard image={imgs[0]} index={0} />
+        </div>
+        <div className="md:col-span-4 flex flex-col">
+          <div className="gallery-card h-[300px] md:h-[350px]">
+            <ImageCard image={imgs[1]} index={1} />
+          </div>
+          <div className="flex h-[300px] md:h-[350px]">
+            <div className="gallery-card w-1/2">
+              <ImageCard image={imgs[2]} index={2} />
+            </div>
+            <div className="gallery-card w-1/2">
+              <ImageCard image={imgs[3]} index={3} />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 5+ — hero left + 2x2 right grid (capped at 5)
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-12">
+      <div className="gallery-card md:col-span-7 h-[400px] md:h-[700px]">
+        <ImageCard image={imgs[0]} index={0} />
+      </div>
+      <div className="md:col-span-5 grid grid-cols-2 grid-rows-2">
+        {imgs.slice(1, 5).map((img, i) => (
+          <div key={img.id} className="gallery-card h-[300px] md:h-[350px]">
+            <ImageCard image={img} index={i + 1} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export const CollectionGallery = ({
   badge = 'NEW ARRIVALS',
   title = 'Premium Series',
   images,
   properties,
 }: CollectionGalleryProps) => {
-  const displayImages = useMemo(() => images?.slice(0, 4) || [], [images])
+  const displayImages = useMemo(() => images?.slice(0, 5) || [], [images])
 
   const containerRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
@@ -236,43 +285,31 @@ export const CollectionGallery = ({
       const mm = gsap.matchMedia()
 
       mm.add('(min-width: 1024px)', () => {
-        // Desktop Entrance
         gsap.from(headerRef.current, {
           y: 40,
           opacity: 0,
           duration: 1,
           ease: 'power3.out',
-          scrollTrigger: {
-            trigger: headerRef.current,
-            start: 'top 85%',
-          },
+          scrollTrigger: { trigger: headerRef.current, start: 'top 85%' },
         })
-
         gsap.from('.gallery-card', {
           scale: 0.95,
           opacity: 0,
           duration: 1.2,
           stagger: 0.15,
           ease: 'power2.out',
-          scrollTrigger: {
-            trigger: gridRef.current,
-            start: 'top 80%',
-          },
+          scrollTrigger: { trigger: gridRef.current, start: 'top 80%' },
         })
       })
 
       mm.add('(max-width: 1023px)', () => {
-        // Mobile Entrance
         gsap.from([headerRef.current, '.gallery-card'], {
           y: 20,
           opacity: 0,
           duration: 0.8,
           stagger: 0.1,
           ease: 'power2.out',
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: 'top 90%',
-          },
+          scrollTrigger: { trigger: containerRef.current, start: 'top 90%' },
         })
       })
     }, containerRef)
@@ -280,51 +317,24 @@ export const CollectionGallery = ({
     return () => ctx.revert()
   }, [])
 
-  if (!displayImages || displayImages.length < 4) return null
+  if (!displayImages || displayImages.length === 0) return null
 
   return (
-    <SectionWrapper
-      containerProps={properties ?? {}}
-      className={cn('!max-w-none !px-0')}
-    >
+    <SectionWrapper containerProps={properties ?? {}} className={cn('!max-w-none !px-0')}>
       <div ref={containerRef} className="max-w-[1600px] mx-auto px-4 md:px-6">
         <header ref={headerRef} className="mb-10 md:mb-16 space-y-2">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3">
-              <div className="h-px w-6 bg-neutral-400" />
-              <span className="text-[11px] font-black uppercase tracking-tighter text-neutral-900">
-                {badge}
-              </span>
-            </div>
+            <div className="h-px w-6 bg-neutral-400" />
+            <span className="text-[11px] font-black uppercase tracking-tighter text-neutral-900">
+              {badge}
+            </span>
           </div>
           <h2 className="text-3xl md:text-4xl font-semibold tracking-tighter text-text">
             {title}
           </h2>
         </header>
 
-        {/* Seamless Grid System */}
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-12 gap-0">
-          {/* Item 1: Hero */}
-          <div className="gallery-card md:col-span-8 h-[400px] md:h-[700px]">
-            <ImageCard image={displayImages[0]} index={0} />
-          </div>
-
-          {/* Right Column */}
-          <div className="md:col-span-4 flex flex-col">
-            <div className="gallery-card h-[300px] md:h-[350px]">
-              <ImageCard image={displayImages[1]} index={1} />
-            </div>
-
-            <div className="flex h-[300px] md:h-[350px]">
-              <div className="gallery-card w-1/2">
-                <ImageCard image={displayImages[2]} index={2} />
-              </div>
-              <div className="gallery-card w-1/2">
-                <ImageCard image={displayImages[3]} index={3} />
-              </div>
-            </div>
-          </div>
-        </div>
+        <div ref={gridRef}>{getGridItems(displayImages)}</div>
       </div>
     </SectionWrapper>
   )

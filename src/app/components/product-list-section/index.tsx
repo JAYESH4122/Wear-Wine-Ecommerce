@@ -3,11 +3,10 @@
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import type { Swiper as SwiperInstance } from 'swiper'
-import NextImage from 'next/image'
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 
 gsap.registerPlugin(ScrollTrigger)
-import { Grid3x3, Image as ImageIcon, X, ChevronRight } from 'lucide-react'
+import { X, ChevronRight } from 'lucide-react'
 import { ProductCard } from '../product-card'
 import { ArrowSlider } from '../arrow-slider'
 import { cn } from '@/lib/utils'
@@ -29,7 +28,6 @@ interface Product {
   image: string
   badge?: string
   rating: number
-  reviews?: number
   category: string
   categorySlug?: string
   slug?: string
@@ -43,32 +41,6 @@ const BREAKPOINTS = {
   1024: { slidesPerView: 3, spaceBetween: 20 },
   1280: { slidesPerView: 4, spaceBetween: 24 },
 }
-
-const ToggleButton = ({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-}: {
-  active: boolean
-  onClick: () => void
-  icon: React.ElementType
-  label: string
-}) => (
-  <Button
-    onClick={onClick}
-    variant="icon"
-    size="icon"
-    leftIcon={<Icon className="w-4 h-4" />}
-    aria-label={label}
-    className={cn(
-      'h-10 w-10 border transition-all duration-200 rounded-none',
-      active
-        ? 'bg-white text-neutral-900 border-neutral-200'
-        : 'bg-transparent text-neutral-400 hover:text-neutral-600 border-transparent',
-    )}
-  />
-)
 
 interface ProductListSectionProps {
   badge?: string
@@ -84,7 +56,6 @@ export const ProductListSection = ({
   properties,
 }: ProductListSectionProps) => {
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [viewMode, setViewMode] = useState<'detailed' | 'images'>('detailed')
   const swiperRef = useRef<SwiperInstance | null>(null)
   const [dbProducts, setDbProducts] = useState<ProductType[]>([])
   const [categories, setCategories] = useState<Category[]>([ALL_CATEGORY])
@@ -101,55 +72,39 @@ export const ProductListSection = ({
       const mm = gsap.matchMedia()
 
       mm.add('(min-width: 1024px)', () => {
-        // Desktop Entrance
         gsap.from(headerRef.current, {
           y: 60,
           opacity: 0,
           duration: 1.2,
           ease: 'power4.out',
-          scrollTrigger: {
-            trigger: headerRef.current,
-            start: 'top 85%',
-          },
+          scrollTrigger: { trigger: headerRef.current, start: 'top 85%' },
         })
-
         gsap.from(controlsRef.current, {
           y: 40,
           opacity: 0,
           duration: 1,
           ease: 'power3.out',
-          scrollTrigger: {
-            trigger: controlsRef.current,
-            start: 'top 90%',
-          },
+          scrollTrigger: { trigger: controlsRef.current, start: 'top 90%' },
         })
-
         if (productsRef.current) {
           gsap.from(productsRef.current, {
             y: 50,
             opacity: 0,
             duration: 1.4,
             ease: 'power4.out',
-            scrollTrigger: {
-              trigger: productsRef.current,
-              start: 'top 80%',
-            },
+            scrollTrigger: { trigger: productsRef.current, start: 'top 80%' },
           })
         }
       })
 
       mm.add('(max-width: 1023px)', () => {
-        // Mobile Entrance
         gsap.from([headerRef.current, controlsRef.current, productsRef.current], {
           y: 30,
           opacity: 0,
           duration: 0.8,
           stagger: 0.1,
           ease: 'power2.out',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 90%',
-          },
+          scrollTrigger: { trigger: sectionRef.current, start: 'top 90%' },
         })
       })
     }, sectionRef)
@@ -201,9 +156,12 @@ export const ProductListSection = ({
           p.category && typeof p.category === 'object' ? (p.category as CategoryType) : null
         const firstImage = p.images?.[0]?.image
         const imageUrl =
-          firstImage && typeof firstImage === 'object' ? firstImage.url ?? null : null
+          firstImage && typeof firstImage === 'object' ? (firstImage.url ?? null) : null
         const firstTag = p.tags?.[0]
-        const tagName = firstTag && typeof firstTag === 'object' ? firstTag.name ?? null : null
+        const tagName = firstTag && typeof firstTag === 'object' ? (firstTag.name ?? null) : null
+
+        const totalStock = (p.variants || []).reduce((acc, variant) => acc + (variant.stock ?? 0), 0)
+        const isInStock = totalStock > 0
 
         return {
           id: String(p.id),
@@ -216,6 +174,7 @@ export const ProductListSection = ({
           category: category?.name ?? 'General',
           categorySlug: category?.slug,
           slug: p.slug ?? undefined,
+          isInStock,
         }
       }),
     [dbProducts],
@@ -246,10 +205,7 @@ export const ProductListSection = ({
   }, [])
 
   return (
-    <SectionWrapper
-      containerProps={properties ?? {}}
-      className={cn('!max-w-none !px-0')}
-    >
+    <SectionWrapper containerProps={properties ?? {}} className={cn('!max-w-none !px-0')}>
       <div ref={sectionRef} className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div ref={headerRef} className="lg:mb-10 mb-5">
@@ -268,7 +224,6 @@ export const ProductListSection = ({
                 {title}
               </h2>
             </div>
-
             <div>
               <Button
                 variant={isDesktop ? 'primary' : 'ghost'}
@@ -289,6 +244,7 @@ export const ProductListSection = ({
           ref={controlsRef}
           className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200"
         >
+          {/* Category filters */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
             {categories.map((cat) => (
               <button
@@ -298,59 +254,38 @@ export const ProductListSection = ({
                   'relative px-5 py-2 text-sm font-medium whitespace-nowrap border transition-colors duration-200 cursor-pointer',
                   selectedCategory === cat.id
                     ? 'text-white border-neutral-900 bg-neutral-900'
-                    : 'text-neutral-500 border-neutral-200 hover:border-neutral-900 hover:text-neutral-900',
+                    : 'text-neutral-500 border-neutral-200 hover:border-neutral-900 hover:text-neutral-900 active:border-neutral-900 active:text-neutral-900',
                 )}
               >
-                <span className="relative z-10">{cat.name}</span>
+                {cat.name}
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-neutral-400 tracking-wider tabular-nums">
-              <span className="text-neutral-700">{String(activeIndex + 1).padStart(2, '0')}</span>
-              {' / '}
-              {String(totalSlides).padStart(2, '0')}
-            </span>
-
-            <div className="hidden md:flex items-center gap-1">
-              <div className="z-30 flex gap-2">
-                {(['prev', 'next'] as const).map((dir) => (
-                  <Button
-                    key={dir}
-                    onClick={() =>
-                      dir === 'prev'
-                        ? swiperRef.current?.slidePrev()
-                        : swiperRef.current?.slideNext()
-                    }
-                    variant="slider"
-                    size="icon"
-                    sliderDirection={dir === 'prev' ? 'left' : 'right'}
-                    className="w-11 h-11 !rounded-none text-white/70 border border-white/15 bg-button-primary backdrop-blur-md hover:border-white/40"
-                  />
-                ))}
-              </div>
+          {/* Nav arrows */}
+          {filteredProducts.length > 1 && (
+            <div className="hidden md:flex items-center gap-2">
+              {(['prev', 'next'] as const).map((dir) => (
+                <Button
+                  key={dir}
+                  onClick={() =>
+                    dir === 'prev'
+                      ? swiperRef.current?.slidePrev()
+                      : swiperRef.current?.slideNext()
+                  }
+                  variant="slider"
+                  size="icon"
+                  sliderDirection={dir === 'prev' ? 'left' : 'right'}
+                  className="w-11 h-11 !rounded-none text-white/70 border border-white/15 bg-button-primary backdrop-blur-md hover:border-white/40"
+                />
+              ))}
             </div>
-
-            <div className="flex items-center border border-neutral-200 bg-neutral-50">
-              <ToggleButton
-                active={viewMode === 'detailed'}
-                onClick={() => setViewMode('detailed')}
-                icon={Grid3x3}
-                label="Detailed View"
-              />
-              <ToggleButton
-                active={viewMode === 'images'}
-                onClick={() => setViewMode('images')}
-                icon={ImageIcon}
-                label="Images View"
-              />
-            </div>
-          </div>
+          )}
         </div>
 
+        {/* Products */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="aspect-[3/4] bg-neutral-100 animate-pulse" />
             ))}
@@ -362,25 +297,7 @@ export const ProductListSection = ({
                 swiperRef={swiperRef}
                 renderItem={filteredProducts.map((product) => ({
                   key: product.id,
-                  element:
-                    viewMode === 'detailed' ? (
-                      <ProductCard {...product} />
-                    ) : (
-                      <div className="group relative aspect-square bg-neutral-100 overflow-hidden cursor-pointer">
-                        <NextImage
-                          src={product.image}
-                          alt={product.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        {product.badge && (
-                          <span className="absolute left-4 top-4 px-3 py-1.5 bg-white text-neutral-900 text-xs font-medium">
-                            {product.badge}
-                          </span>
-                        )}
-                      </div>
-                    ),
+                  element: <ProductCard {...product} />,
                 }))}
                 slidesPerView={1}
                 spaceBetween={16}
@@ -393,21 +310,23 @@ export const ProductListSection = ({
             </div>
 
             {/* Line pagination */}
-            <div className="flex gap-2 items-center justify-center mt-8">
-              {Array.from({ length: totalSlides }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToSlide(i)}
-                  className={cn(
-                    'h-px transition-all duration-300 cursor-pointer',
-                    i === activeIndex
-                      ? 'w-10 bg-neutral-800'
-                      : 'w-5 bg-neutral-300 hover:bg-neutral-500',
-                  )}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
-            </div>
+            {totalSlides > 1 && (
+              <div className="flex gap-2 items-center justify-center mt-8">
+                {Array.from({ length: totalSlides }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goToSlide(i)}
+                    className={cn(
+                      'h-px transition-all duration-300 cursor-pointer',
+                      i === activeIndex
+                        ? 'w-10 bg-neutral-800'
+                        : 'w-5 bg-neutral-300 hover:bg-neutral-500',
+                    )}
+                    aria-label={`Go to slide ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="py-20 text-center">

@@ -44,6 +44,9 @@ export const RelatedProducts = ({ products }: Props) => {
           const wishlisted = isInWishlist(String(rp.id))
           const hasSale = !!rp.salePrice && rp.salePrice < rp.price
 
+          const totalStock = (rp.variants ?? []).reduce((acc, v) => acc + (v.stock ?? 0), 0)
+          const isOutOfStock = totalStock === 0
+
           return (
             <div key={rp.id} className="group flex flex-col">
               {/* Image */}
@@ -60,10 +63,18 @@ export const RelatedProducts = ({ products }: Props) => {
                   <div className="w-full h-full bg-neutral-100" />
                 )}
 
-                {hasSale && (
-                  <span className="absolute top-3 left-3 bg-neutral-900 text-white px-2 py-0.5 text-[8px] font-bold tracking-wider uppercase">
+                {hasSale && !isOutOfStock && (
+                  <span className="absolute top-3 left-3 bg-neutral-900 text-white px-2 py-0.5 text-[8px] font-bold tracking-wider uppercase z-20">
                     Sale
                   </span>
+                )}
+
+                {isOutOfStock && (
+                  <div className="absolute inset-0 bg-white/60 flex items-center justify-center pointer-events-none z-10">
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 border border-neutral-400 px-4 py-2 bg-white/80">
+                      Sold Out
+                    </span>
+                  </div>
                 )}
 
                 {/* Wishlist button — visible on hover (desktop) / always (mobile) */}

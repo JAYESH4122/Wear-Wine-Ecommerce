@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { Heart, ShoppingBag, Check, AlertCircle, Star } from 'lucide-react'
@@ -37,6 +38,7 @@ export const ProductInfoPanel = ({
   pdpStatic,
 }: Props) => {
   const panelRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
@@ -47,7 +49,7 @@ export const ProductInfoPanel = ({
   const [openAccordion, setOpenAccordion] = useState<string | null>('details')
 
   const { isInWishlist, toggleWishlist } = useWishlist()
-  const { addItem } = useCart()
+  const { addItem, clearCart } = useCart()
 
   const isWishlisted = isInWishlist(String(product.id))
   const hasSale = !!product.salePrice && product.salePrice < product.price
@@ -58,8 +60,32 @@ export const ProductInfoPanel = ({
 
   const needsColor = colors.length > 0
   const needsSize = sizes.length > 0
-  const canAddToCart =
-    (!needsColor || !!selectedColor) && (!needsSize || !!selectedSize) && isAgreed
+  
+  const currentVariant = (product.variants ?? []).find(v => {
+    const vColorId = v.color && typeof v.color === 'object' ? String((v.color as Color).id) : String(v.color);
+    const vSizeId = v.size && typeof v.size === 'object' ? String((v.size as Size).id) : String(v.size);
+    
+    const matchesColor = !needsColor || vColorId === selectedColor;
+    const matchesSize = !needsSize || vSizeId === selectedSize;
+    
+    return matchesColor && matchesSize;
+  });
+
+  const totalStock = (product.variants ?? []).reduce((acc, v) => acc + (v.stock ?? 0), 0);
+  const isOutOfStockOverall = totalStock === 0;
+  
+  const isVariantSelected = (!needsColor || !!selectedColor) && (!needsSize || !!selectedSize);
+  const currentStock = currentVariant ? (currentVariant.stock ?? 0) : 0;
+  const isVariantOutOfStock = isVariantSelected && currentStock < quantity;
+
+  const canAddToCart = isVariantSelected && isAgreed && !isOutOfStockOverall && !isVariantOutOfStock;
+
+  const getAddToCartText = () => {
+    if (isOutOfStockOverall) return pdpStatic?.cta?.outOfStock ?? 'Out of Stock'
+    if (isVariantSelected && isVariantOutOfStock) return pdpStatic?.cta?.outOfStock ?? 'Out of Stock'
+    if (isAdded) return pdpStatic?.cta?.addedToCart ?? 'Added to Bag'
+    return pdpStatic?.cta?.addToCart ?? 'Add to Bag'
+  }
 
   const handleAddToCart = useCallback(() => {
     if (!isAgreed) {
@@ -85,6 +111,41 @@ export const ProductInfoPanel = ({
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2500)
   }, [isAgreed, needsColor, needsSize, selectedColor, selectedSize, product, quantity, addItem])
+
+  const handleBuyNow = useCallback(() => {
+    if (!isAgreed) {
+      setShowError(true)
+      setTimeout(() => setShowError(false), 3000)
+      return
+    }
+    if ((needsColor && !selectedColor) || (needsSize && !selectedSize)) return
+
+    const rawColors = (product.variants ?? []).reduce<Color[]>((acc, v) => {
+      if (v.color && typeof v.color === 'object') acc.push(v.color as Color)
+      return acc
+    }, [])
+    const rawSizes = (product.variants ?? []).reduce<Size[]>((acc, v) => {
+      if (v.size && typeof v.size === 'object') acc.push(v.size as Size)
+      return acc
+    }, [])
+
+    const color = rawColors.find((c) => String(c.id) === selectedColor)
+    const size = rawSizes.find((s) => String(s.id) === selectedSize)
+
+    clearCart()
+    addItem(product, quantity, color, size)
+    router.push('/cart?step=2')
+  }, [
+    isAgreed,
+    needsColor,
+    needsSize,
+    selectedColor,
+    selectedSize,
+    product,
+    quantity,
+    addItem,
+    router,
+  ])
 
   const handleToggleWishlist = useCallback(() => toggleWishlist(product), [toggleWishlist, product])
   const decreaseQty = useCallback(() => setQuantity((q) => Math.max(1, q - 1)), [])
@@ -146,6 +207,11 @@ export const ProductInfoPanel = ({
           <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-widest">
             24 Reviews
           </span>
+          {isOutOfStockOverall && (
+            <span className="text-[10px] font-bold uppercase tracking-widest text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 ml-2">
+              Out of Stock
+            </span>
+          )}
         </div>
         <div className="flex items-baseline gap-3">
           <span className="text-2xl font-semibold text-neutral-900">
@@ -223,25 +289,40 @@ export const ProductInfoPanel = ({
         </div>
       </div>
 
-      <div className="panel-item py-5 flex flex-col sm:flex-row gap-3 border-b border-neutral-100">
-        <QuantitySelector value={quantity} onDecrease={decreaseQty} onIncrease={increaseQty} />
+      <div className="panel-item py-5 flex flex-col gap-3 border-b border-neutral-100">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <QuantitySelector value={quantity} onDecrease={decreaseQty} onIncrease={increaseQty} />
+          <Button
+            onClick={handleAddToCart}
+            disabled={isAdded || !canAddToCart}
+            fullWidth
+            variant="secondary"
+            leftIcon={
+              isAdded ? <Check className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5" />
+            }
+            className={cn(
+              'h-12 text-[10px] font-bold uppercase tracking-[0.18em] rounded-none sm:flex-1',
+              isAdded && 'bg-emerald-600 hover:bg-emerald-600 border-emerald-600 text-white cursor-default',
+              !isAdded &&
+                !canAddToCart &&
+                'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
+            )}
+          >
+            {getAddToCartText()}
+          </Button>
+        </div>
+
         <Button
-          onClick={handleAddToCart}
-          disabled={isAdded}
+          onClick={handleBuyNow}
+          disabled={!canAddToCart}
           fullWidth
           variant="primary"
-          leftIcon={
-            isAdded ? <Check className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5" />
-          }
           className={cn(
-            'h-12 text-[10px] font-bold uppercase tracking-[0.18em] rounded-none sm:flex-1',
-            isAdded && 'bg-emerald-600 hover:bg-emerald-600 border-emerald-600 cursor-default',
-            !isAdded &&
-              !canAddToCart &&
-              'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
+            'h-12 text-[10px] font-bold uppercase tracking-[0.18em] rounded-none',
+            !canAddToCart && 'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
           )}
         >
-          {isAdded ? (pdpStatic?.cta?.addedToCart ?? 'Added to Cart') : (pdpStatic?.cta?.buyNow ?? 'Buy Now')}
+          {pdpStatic?.cta?.buyNow ?? 'Buy it Now'}
         </Button>
       </div>
 

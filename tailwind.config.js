@@ -8,9 +8,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        primary: ['var(--font-bricolage)', 'sans-serif'],
-        anton: ['var(--font-anton)', 'sans-serif'],
-        sans: ['var(--font-sans)', 'sans-serif'],
+        primary: ['var(--font-next-bricolage)', 'sans-serif'],
+        anton: ['var(--font-next-anton)', 'sans-serif'],
+        sans: ['var(--font-next-sans)', 'sans-serif'],
       },
     },
   },
