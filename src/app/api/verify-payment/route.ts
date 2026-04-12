@@ -19,12 +19,22 @@ export const OPTIONS = async (request: Request) => {
 }
 
 export const POST = async (request: Request): Promise<Response> => {
+  const origin = request.headers.get('origin')
+  const host = request.headers.get('host')
+  const referer = request.headers.get('referer')
   const body = (await request.json().catch(() => null)) as {
     razorpay_order_id?: string
     razorpay_payment_id?: string
     razorpay_signature?: string
   } | null
 
+  console.info('[verify-payment] Request context:', {
+    host,
+    origin,
+    referer,
+    nextAuthUrl: process.env.NEXTAUTH_URL || null,
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || null,
+  })
   console.info('[verify-payment] Received payload:', {
     razorpayOrderId: body?.razorpay_order_id,
     razorpayPaymentId: body?.razorpay_payment_id,

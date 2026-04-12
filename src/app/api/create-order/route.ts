@@ -74,6 +74,9 @@ export const OPTIONS = async (request: Request) => {
 
 export const POST = async (request: Request): Promise<Response> => {
   const ip = getClientIp(request)
+  const origin = request.headers.get('origin')
+  const host = request.headers.get('host')
+  const referer = request.headers.get('referer')
   const rate = checkRateLimit({
     key: `razorpay-create:${ip}`,
     limit: 20,
@@ -118,6 +121,14 @@ export const POST = async (request: Request): Promise<Response> => {
 
   const payload = await getPayload({ config: configPromise })
   const session = await getServerSession(authOptions)
+  console.info('[create-order] Request context', {
+    host,
+    origin,
+    referer,
+    hasSessionUserId: Boolean(session?.user?.id),
+    nextAuthUrl: process.env.NEXTAUTH_URL || null,
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || null,
+  })
 
   const payloadUser = session?.user?.id ? await requirePayloadUser(payload, session.user.id) : null
 

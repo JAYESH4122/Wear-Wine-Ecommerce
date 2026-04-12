@@ -45,6 +45,12 @@ export const OPTIONS = async (request: Request) => {
 
 export const GET = async (request: Request): Promise<Response> => {
   const session = await getServerSession(authOptions)
+  console.info('[orders:get] Request context', {
+    host: request.headers.get('host'),
+    origin: request.headers.get('origin'),
+    referer: request.headers.get('referer'),
+    hasSessionUserId: Boolean(session?.user?.id),
+  })
   if (!session?.user?.id) return unauthorized(request)
 
   const payload = await getPayload({ config: configPromise })
