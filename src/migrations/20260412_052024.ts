@@ -319,7 +319,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_parent_id" integer NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
   	"product_id_id" integer NOT NULL,
-  	"quantity" numeric NOT NULL
+  	"quantity" numeric NOT NULL,
+  	"size_id" integer,
+  	"color_id" integer
   );
   
   CREATE TABLE "carts" (
@@ -334,7 +336,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
-  	"product_id_id" integer NOT NULL
+  	"product_id_id" integer NOT NULL,
+  	"size_id" integer,
+  	"color_id" integer
   );
   
   CREATE TABLE "wishlists" (
@@ -511,6 +515,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"cta_add_to_cart" varchar NOT NULL,
   	"cta_buy_now" varchar NOT NULL,
   	"cta_added_to_cart" varchar NOT NULL,
+  	"cta_already_in_cart" varchar NOT NULL,
   	"cta_out_of_stock" varchar NOT NULL,
   	"updated_at" timestamp(3) with time zone,
   	"created_at" timestamp(3) with time zone
@@ -560,9 +565,13 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "policies_sections" ADD CONSTRAINT "policies_sections_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."policies"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "policies_faqs" ADD CONSTRAINT "policies_faqs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."policies"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "carts_items" ADD CONSTRAINT "carts_items_product_id_id_products_id_fk" FOREIGN KEY ("product_id_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "carts_items" ADD CONSTRAINT "carts_items_size_id_sizes_id_fk" FOREIGN KEY ("size_id") REFERENCES "public"."sizes"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "carts_items" ADD CONSTRAINT "carts_items_color_id_colors_id_fk" FOREIGN KEY ("color_id") REFERENCES "public"."colors"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "carts_items" ADD CONSTRAINT "carts_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."carts"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "carts" ADD CONSTRAINT "carts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "wishlists_products" ADD CONSTRAINT "wishlists_products_product_id_id_products_id_fk" FOREIGN KEY ("product_id_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "wishlists_products" ADD CONSTRAINT "wishlists_products_size_id_sizes_id_fk" FOREIGN KEY ("size_id") REFERENCES "public"."sizes"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "wishlists_products" ADD CONSTRAINT "wishlists_products_color_id_colors_id_fk" FOREIGN KEY ("color_id") REFERENCES "public"."colors"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "wishlists_products" ADD CONSTRAINT "wishlists_products_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."wishlists"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "orders_items" ADD CONSTRAINT "orders_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
@@ -672,12 +681,16 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "carts_items_order_idx" ON "carts_items" USING btree ("_order");
   CREATE INDEX "carts_items_parent_id_idx" ON "carts_items" USING btree ("_parent_id");
   CREATE INDEX "carts_items_product_id_idx" ON "carts_items" USING btree ("product_id_id");
+  CREATE INDEX "carts_items_size_idx" ON "carts_items" USING btree ("size_id");
+  CREATE INDEX "carts_items_color_idx" ON "carts_items" USING btree ("color_id");
   CREATE UNIQUE INDEX "carts_user_idx" ON "carts" USING btree ("user_id");
   CREATE INDEX "carts_updated_at_idx" ON "carts" USING btree ("updated_at");
   CREATE INDEX "carts_created_at_idx" ON "carts" USING btree ("created_at");
   CREATE INDEX "wishlists_products_order_idx" ON "wishlists_products" USING btree ("_order");
   CREATE INDEX "wishlists_products_parent_id_idx" ON "wishlists_products" USING btree ("_parent_id");
   CREATE INDEX "wishlists_products_product_id_idx" ON "wishlists_products" USING btree ("product_id_id");
+  CREATE INDEX "wishlists_products_size_idx" ON "wishlists_products" USING btree ("size_id");
+  CREATE INDEX "wishlists_products_color_idx" ON "wishlists_products" USING btree ("color_id");
   CREATE UNIQUE INDEX "wishlists_user_idx" ON "wishlists" USING btree ("user_id");
   CREATE INDEX "wishlists_updated_at_idx" ON "wishlists" USING btree ("updated_at");
   CREATE INDEX "wishlists_created_at_idx" ON "wishlists" USING btree ("created_at");

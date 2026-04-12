@@ -8,6 +8,7 @@ import { ShoppingBag, Check, Loader2, Star, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { gsap } from 'gsap'
 
+import type { Color, Size } from '@/payload-types'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import type { CartProduct } from '@/providers/cart'
@@ -58,7 +59,12 @@ export const ProductCard = ({
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { addItem } = useCart()
 
-  const isFavorite = isInWishlist(id)
+  const variants = product?.variants ?? []
+  const defaultVariant = variants.length > 0 ? variants[0] : null
+  const defaultSize = typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : null
+  const defaultColor = typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : null
+
+  const isFavorite = isInWishlist(id, defaultSize?.id, defaultColor?.id)
   const discountPct = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : null
 
   // ── GSAP Animation System ─────────────────────────────────────────────────
@@ -215,6 +221,14 @@ export const ProductCard = ({
     if (!isInStock || cartState !== 'idle') return
 
     setCartState('loading')
+
+    const variants = product?.variants ?? []
+    const defaultVariant = variants.length > 0 ? variants[0] : null
+    
+    // Size is required, Color is optional
+    const size = typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : undefined
+    const color = typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : undefined
+
     try {
       if (onAddToCart) {
         await onAddToCart(id)
@@ -225,9 +239,11 @@ export const ProductCard = ({
             name: title,
             slug: slug ?? null,
             price,
-            images: [{ image: typeof image === 'string' ? image : image.src }],
+            images: [{ image: typeof image === 'string' ? image : (image as any).src }],
           },
           1,
+          color,
+          size,
         )
       }
       setCartState('added')
@@ -241,8 +257,15 @@ export const ProductCard = ({
   const handleWishlistToggle = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    const wasIn = isFavorite
-    toggleWishlist((product as WishlistItem) || { id, name: title, price })
+    
+    const variants = product?.variants ?? []
+    const defaultVariant = variants.length > 0 ? variants[0] : null
+    const size = typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : undefined
+    const color = typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : undefined
+
+    const wasIn = isInWishlist(id, size?.id, color?.id)
+    toggleWishlist((product as WishlistItem) || { id, name: title, price }, size, color)
+    
     onFavorite?.(id)
     setWishState(wasIn ? 'removed' : 'added')
     setTimeout(() => setWishState('idle'), 1800)
@@ -463,6 +486,22 @@ export const ProductCard = ({
             </span>
           )}
         </div>
+
+        {defaultSize && (
+          <div className="mt-1 flex items-center gap-1.5">
+             <span className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">
+               Default:
+             </span>
+             <span className="text-[9px] font-black uppercase tracking-wider text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded-[2px]">
+               {defaultSize.label}
+             </span>
+             {defaultColor && (
+               <span className="text-[9px] font-black uppercase tracking-wider text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded-[2px]">
+                 {defaultColor.name}
+               </span>
+             )}
+          </div>
+        )}
       </Link>
     </div>
   )

@@ -39,6 +39,16 @@ export const Carts: CollectionConfig = {
           required: true,
           min: 1,
         },
+        {
+          name: 'size',
+          type: 'relationship',
+          relationTo: 'sizes',
+        },
+        {
+          name: 'color',
+          type: 'relationship',
+          relationTo: 'colors',
+        },
       ],
       defaultValue: [],
     },

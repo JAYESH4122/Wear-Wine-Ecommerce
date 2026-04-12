@@ -833,6 +833,8 @@ export interface Cart {
     | {
         productId: number | Product;
         quantity: number;
+        size?: (number | null) | Size;
+        color?: (number | null) | Color;
         id?: string | null;
       }[]
     | null;
@@ -850,6 +852,8 @@ export interface Wishlist {
   products?:
     | {
         productId: number | Product;
+        size?: (number | null) | Size;
+        color?: (number | null) | Color;
         id?: string | null;
       }[]
     | null;
@@ -1319,6 +1323,8 @@ export interface CartsSelect<T extends boolean = true> {
     | {
         productId?: T;
         quantity?: T;
+        size?: T;
+        color?: T;
         id?: T;
       };
   lastMergedGuestHash?: T;
@@ -1335,6 +1341,8 @@ export interface WishlistsSelect<T extends boolean = true> {
     | T
     | {
         productId?: T;
+        size?: T;
+        color?: T;
         id?: T;
       };
   updatedAt?: T;
@@ -1508,6 +1516,7 @@ export interface PdpStatic {
     addToCart: string;
     buyNow: string;
     addedToCart: string;
+    alreadyInCart: string;
     outOfStock: string;
   };
   accordions?:
@@ -1647,6 +1656,7 @@ export interface PdpStaticSelect<T extends boolean = true> {
         addToCart?: T;
         buyNow?: T;
         addedToCart?: T;
+        alreadyInCart?: T;
         outOfStock?: T;
       };
   accordions?:

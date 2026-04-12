@@ -4,13 +4,13 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import { authOptions } from '@/lib/auth'
 import {
-  collectionRowsToWishlistIds,
-  filterValidWishlistIds,
+  collectionRowsToWishlistItems,
+  filterValidWishlistItems,
   hydrateWishlistItems,
   mergeWishlistIds,
-  normalizeWishlistProductIds,
+  normalizeWishlistItems,
   requirePayloadUser,
-  wishlistIdsToCollectionRows,
+  wishlistItemsToCollectionRows,
 } from '@/lib/server/commerce'
 import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
 import { withCors } from '@/lib/server/cors'
@@ -24,7 +24,11 @@ const invalidBody = (request: Request, message: string) =>
 const tooManyRequests = (request: Request) =>
   withCors(request, Response.json({ error: 'Too many requests' }, { status: 429 }))
 
-const getUserWishlist = async (payload: Awaited<ReturnType<typeof getPayload>>, payloadUserId: string | number, user: unknown) => {
+const getUserWishlist = async (
+  payload: Awaited<ReturnType<typeof getPayload>>,
+  payloadUserId: string | number,
+  user: unknown,
+) => {
   const found = await payload.find({
     collection: 'wishlists',
     where: {
@@ -61,26 +65,37 @@ export const POST = async (request: Request): Promise<Response> => {
   const body = (await request.json().catch(() => null)) as { productIds?: unknown } | null
   if (!body) return invalidBody(request, 'Invalid request body')
 
-  const incomingIds = normalizeWishlistProductIds(body.productIds)
+  const incomingItems = normalizeWishlistItems(
+    Array.isArray(body.productIds) ? body.productIds.map((productId) => ({ productId })) : [],
+  )
 
   // Security: Limit wishlist size
-  if (incomingIds.length > 100) return invalidBody(request, 'Too many items in wishlist')
+  if (incomingItems.length > 100) return invalidBody(request, 'Too many items in wishlist')
 
   const payload = await getPayload({ config: configPromise })
   const payloadUser = await requirePayloadUser(payload, session.user.id)
   if (!payloadUser) return unauthorized(request)
 
-  const validIncomingIds = await filterValidWishlistIds(payload, incomingIds)
+  const validIncomingItems = await filterValidWishlistItems(payload, incomingItems)
   const wishlistDoc = await getUserWishlist(payload, payloadUser.id, payloadUser)
-  const existingIds = await filterValidWishlistIds(payload, collectionRowsToWishlistIds(wishlistDoc?.products))
-  const mergedIds = mergeWishlistIds(existingIds, validIncomingIds)
+  const existingItems = await filterValidWishlistItems(
+    payload,
+    collectionRowsToWishlistItems(wishlistDoc?.products),
+  )
+
+  const existingItemById = new Map(existingItems.map((item) => [item.productId, item] as const))
+  const mergedIds = mergeWishlistIds(
+    existingItems.map((item) => item.productId),
+    validIncomingItems.map((item) => item.productId),
+  )
+  const mergedItems = mergedIds.map((id) => existingItemById.get(id) ?? { productId: id })
 
   if (!wishlistDoc) {
     await payload.create({
       collection: 'wishlists',
       data: {
         user: payloadUser.id,
-        products: wishlistIdsToCollectionRows(mergedIds),
+        products: wishlistItemsToCollectionRows(mergedItems),
       },
       user: payloadUser,
       overrideAccess: false,
@@ -90,14 +105,14 @@ export const POST = async (request: Request): Promise<Response> => {
       collection: 'wishlists',
       id: wishlistDoc.id,
       data: {
-        products: wishlistIdsToCollectionRows(mergedIds),
+        products: wishlistItemsToCollectionRows(mergedItems),
       },
       user: payloadUser,
       overrideAccess: false,
     })
   }
 
-  const products = await hydrateWishlistItems(payload, mergedIds)
+  const products = await hydrateWishlistItems(payload, mergedItems)
 
   return withCors(
     request,

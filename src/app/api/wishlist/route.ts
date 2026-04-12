@@ -4,12 +4,13 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import { authOptions } from '@/lib/auth'
 import {
-  collectionRowsToWishlistIds,
-  filterValidWishlistIds,
+  collectionRowsToWishlistItems,
+  fetchProductsByIds,
+  filterValidWishlistItems,
   hydrateWishlistItems,
-  normalizeWishlistProductIds,
+  normalizeWishlistItems,
   requirePayloadUser,
-  wishlistIdsToCollectionRows,
+  wishlistItemsToCollectionRows,
 } from '@/lib/server/commerce'
 import { withCors } from '@/lib/server/cors'
 
@@ -49,8 +50,9 @@ export const GET = async (request: Request): Promise<Response> => {
   if (!payloadUser) return unauthorized(request)
 
   const wishlistDoc = await getUserWishlist(payload, payloadUser.id, payloadUser)
-  const productIds = await filterValidWishlistIds(payload, collectionRowsToWishlistIds(wishlistDoc?.products))
-  const products = await hydrateWishlistItems(payload, productIds)
+  const wishlistItems = collectionRowsToWishlistItems(wishlistDoc?.products)
+  const validItems = await filterValidWishlistItems(payload, wishlistItems)
+  const products = await hydrateWishlistItems(payload, validItems)
 
   return withCors(
     request,
@@ -64,16 +66,16 @@ export const PUT = async (request: Request): Promise<Response> => {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return unauthorized(request)
 
-  const body = (await request.json().catch(() => null)) as { productIds?: unknown } | null
+  const body = (await request.json().catch(() => null)) as { items?: unknown } | null
   if (!body) return invalidBody(request, 'Invalid request body')
 
-  const normalizedIds = normalizeWishlistProductIds(body.productIds)
+  const normalizedItems = normalizeWishlistItems(body.items)
 
   const payload = await getPayload({ config: configPromise })
   const payloadUser = await requirePayloadUser(payload, session.user.id)
   if (!payloadUser) return unauthorized(request)
 
-  const validIds = await filterValidWishlistIds(payload, normalizedIds)
+  const validItems = await filterValidWishlistItems(payload, normalizedItems)
   const wishlistDoc = await getUserWishlist(payload, payloadUser.id, payloadUser)
 
   if (!wishlistDoc) {
@@ -81,7 +83,7 @@ export const PUT = async (request: Request): Promise<Response> => {
       collection: 'wishlists',
       data: {
         user: payloadUser.id,
-        products: wishlistIdsToCollectionRows(validIds),
+        products: wishlistItemsToCollectionRows(validItems),
       },
       user: payloadUser,
       overrideAccess: false,
@@ -91,14 +93,14 @@ export const PUT = async (request: Request): Promise<Response> => {
       collection: 'wishlists',
       id: wishlistDoc.id,
       data: {
-        products: wishlistIdsToCollectionRows(validIds),
+        products: wishlistItemsToCollectionRows(validItems),
       },
       user: payloadUser,
       overrideAccess: false,
     })
   }
 
-  const products = await hydrateWishlistItems(payload, validIds)
+  const products = await hydrateWishlistItems(payload, validItems)
 
   return withCors(
     request,

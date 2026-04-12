@@ -28,7 +28,7 @@ export type CartProduct = {
   }[]
 }
 
-const toCartProduct = (product: Product | CartProduct): CartProduct => ({
+export const toCartProduct = (product: Product | CartProduct): CartProduct => ({
   id: product.id,
   name: product.name,
   slug: product.slug ?? null,
@@ -79,6 +79,16 @@ const LOCAL_STORAGE_KEY = 'cart'
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+const getRelationId = (value: unknown): string | null => {
+  if (value == null) return null
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (typeof value === 'object' && 'id' in (value as { id?: unknown })) {
+    const id = (value as { id?: unknown }).id
+    if (typeof id === 'string' || typeof id === 'number') return String(id)
+  }
+  return null
+}
+
 const readLocalCart = (): CartItem[] => {
   const savedCart = localStorage.getItem(LOCAL_STORAGE_KEY)
   if (!savedCart) return []
@@ -117,19 +127,49 @@ const normalizeRemoteCartItems = (value: unknown): CartItem[] => {
 
   return value
     .map((raw): CartItem | null => {
-      const item = raw as RemoteCartItem
+      const item = raw as RemoteCartItem & { selectedColor?: unknown; selectedSize?: unknown }
       const product = isCartProduct(item.product) ? toCartProduct(item.product) : null
       const quantity = typeof item.quantity === 'number' ? Math.max(1, Math.floor(item.quantity)) : null
+      const selectedColorId = getRelationId(item.selectedColor)
+      const selectedSizeId = getRelationId(item.selectedSize)
 
       if (!product || !quantity) return null
+
+      // Find the actual color and size objects if they are just IDs from the API
+      // In a real scenario, the API might return the IDs, and we find them in product.variants
+      // or the API handles hydration. Here we'll try to find them in the product's variants.
+      let color: Color | undefined = undefined
+      let size: Size | undefined = undefined
+
+      if (selectedColorId) {
+        const variantWithColor = product.variants?.find(v => {
+           const vColorId = typeof v.color === 'object' && v.color ? v.color.id : v.color
+           return String(vColorId) === selectedColorId
+        })
+        if (variantWithColor && typeof variantWithColor.color === 'object') {
+           color = variantWithColor.color as Color
+        }
+      }
+
+      if (selectedSizeId) {
+        const variantWithSize = product.variants?.find(v => {
+           const vSizeId = typeof v.size === 'object' && v.size ? v.size.id : v.size
+           return String(vSizeId) === selectedSizeId
+        })
+        if (variantWithSize && typeof variantWithSize.size === 'object') {
+           size = variantWithSize.size as Size
+        }
+      }
 
       return {
         cartItemId:
           typeof item.cartItemId === 'string'
             ? item.cartItemId
-            : `${String(product.id)}-no-color-no-size`,
+            : `${String(product.id)}-${selectedColorId || color?.id || 'no-color'}-${selectedSizeId || size?.id || 'no-size'}`,
         product,
         quantity,
+        selectedColor: color,
+        selectedSize: size,
       }
     })
     .filter(Boolean) as CartItem[]
@@ -139,6 +179,8 @@ const toServerCartItems = (items: CartItem[]) => {
   return items.map((item) => ({
     productId: item.product.id,
     quantity: item.quantity,
+    size: item.selectedSize?.id || null,
+    color: item.selectedColor?.id || null,
   }))
 }
 
@@ -247,15 +289,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addItem = (product: Product | CartProduct, quantity = 1, color?: Color, size?: Size) => {
     const normalizedProduct = toCartProduct(product)
-    const cartItemId = `${normalizedProduct.id}-${color?.id || 'no-color'}-${size?.id || 'no-size'}`
+    const colorId = getRelationId(color)
+    const sizeId = getRelationId(size)
+    const safeQuantity = Math.max(1, Math.floor(quantity))
+    const cartItemId = `${normalizedProduct.id}-${colorId || 'no-color'}-${sizeId || 'no-size'}`
 
     setCart((prev) => {
       const existingItem = prev.find((item) => item.cartItemId === cartItemId)
 
       if (existingItem) {
-        return prev.map((item) =>
-          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + quantity } : item,
-        )
+        return prev
       }
 
       return [
@@ -263,7 +306,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         {
           cartItemId,
           product: normalizedProduct,
-          quantity,
+          quantity: safeQuantity,
           selectedColor: color,
           selectedSize: size,
         },

@@ -25,6 +25,7 @@ export interface PDPStaticData {
     addToCart: string
     buyNow: string
     addedToCart: string
+    alreadyInCart: string
     outOfStock: string
   }
   accordions: {
@@ -67,6 +68,7 @@ sizeChart: {
     addToCart: 'Add to Bag',
     buyNow: 'Buy it Now',
     addedToCart: 'Added to Bag',
+    alreadyInCart: 'Already in Bag',
     outOfStock: 'Out of Stock',
   },
 

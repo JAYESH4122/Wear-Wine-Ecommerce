@@ -3,96 +3,91 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 
 import { getApiUrl } from '@/lib/api/getApiUrl'
-import type { Category, Media, Product } from '@/payload-types'
+import type { Category, Color, Media, Product, Size } from '@/payload-types'
 import { useAuth } from '@/providers/auth'
+import { toCartProduct, type CartProduct } from './cart'
 
-type WishlistImage = number | Media | string | { url?: string | null } | null | undefined
-
-export type WishlistItem = {
-  id: number | string
-  name: string
-  slug?: string | null
-  category?: number | Category | null
-  price: number
-  salePrice?: number | null
-  images: {
-    image: WishlistImage
-    id?: string | null
-  }[]
-}
-
-const toWishlistItem = (product: Product | WishlistItem): WishlistItem => ({
-  id: product.id,
-  name: product.name,
-  slug: product.slug ?? null,
-  category: 'category' in product ? product.category ?? null : null,
-  price: product.price,
-  salePrice: product.salePrice ?? null,
-  images: Array.isArray(product.images)
-    ? product.images.map((img) => ({ image: img?.image ?? null, id: img?.id ?? null }))
-    : [],
-})
-
-const isWishlistItem = (value: unknown): value is WishlistItem => {
-  if (!value || typeof value !== 'object') return false
-
-  const candidate = value as Partial<WishlistItem>
-  if (typeof candidate.id !== 'number' && typeof candidate.id !== 'string') return false
-  if (typeof candidate.name !== 'string') return false
-  if (typeof candidate.price !== 'number') return false
-  if (!Array.isArray(candidate.images)) return false
-
-  return true
+export interface WishlistItem extends CartProduct {
+  selectedSize?: Size | null
+  selectedColor?: Color | null
 }
 
 interface WishlistContextType {
   wishlist: WishlistItem[]
   wishlistCount: number
   isHydrated: boolean
-  isInWishlist: (productId: string) => boolean
-  toggleWishlist: (product: Product | WishlistItem) => void
+  isInWishlist: (productId: string | number, sizeId?: string | number, colorId?: string | number) => boolean
+  toggleWishlist: (product: Product | WishlistItem, size?: Size | null, color?: Color | null) => void
   removeFromWishlist: (productId: string) => void
   clearWishlist: () => void
 }
 
-const LOCAL_STORAGE_KEY = 'wishlist-items'
-
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined)
 
-const readLocalWishlist = (): WishlistItem[] => {
-  try {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
-    if (!saved) return []
+const LOCAL_STORAGE_KEY = 'wishlist-items'
 
-    const parsed = JSON.parse(saved) as unknown
-    if (!Array.isArray(parsed)) return []
+const toWishlistItem = (
+  obj: Product | CartProduct | { product: Product; selectedSize?: any; selectedColor?: any },
+  size?: Size | null,
+  color?: Color | null,
+): WishlistItem => {
+  if ('product' in obj && obj.product) {
+    const product = obj.product
+    const base = toCartProduct(product)
 
-    return parsed
-      .map((item) => (isWishlistItem(item) ? toWishlistItem(item) : null))
-      .filter(Boolean) as WishlistItem[]
-  } catch {
-    return []
+    // Attempt to find full size/color objects in variants if only IDs are provided
+    let finalSize = size || null
+    let finalColor = color || null
+
+    if (!finalSize && obj.selectedSize) {
+      const sizeId = typeof obj.selectedSize === 'object' ? obj.selectedSize.id : obj.selectedSize
+      const found = product.variants?.find((v) => {
+        const vSizeId = typeof v.size === 'object' && v.size ? v.size.id : v.size
+        return String(vSizeId) === String(sizeId)
+      })
+      if (found && typeof found.size === 'object') finalSize = found.size as Size
+    }
+
+    if (!finalColor && obj.selectedColor) {
+      const colorId = typeof obj.selectedColor === 'object' ? obj.selectedColor.id : obj.selectedColor
+      const found = product.variants?.find((v) => {
+        const vColorId = typeof v.color === 'object' && v.color ? v.color.id : v.color
+        return String(vColorId) === String(colorId)
+      })
+      if (found && typeof found.color === 'object') finalColor = found.color as Color
+    }
+
+    return {
+      ...base,
+      selectedSize: finalSize,
+      selectedColor: finalColor,
+    }
   }
-}
 
-const normalizeRemoteWishlist = (value: unknown): WishlistItem[] => {
-  if (!Array.isArray(value)) return []
-
-  return value
-    .map((item) => (isWishlistItem(item) ? toWishlistItem(item) : null))
-    .filter(Boolean) as WishlistItem[]
+  const base = toCartProduct(obj as Product | CartProduct)
+  return {
+    ...base,
+    selectedSize: size || (obj as WishlistItem).selectedSize || null,
+    selectedColor: color || (obj as WishlistItem).selectedColor || null,
+  }
 }
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isHydrated: isAuthHydrated } = useAuth()
-
   const [wishlist, setWishlist] = useState<WishlistItem[]>([])
   const [isHydrated, setIsHydrated] = useState(false)
   const skipNextRemoteSync = useRef(false)
   const hasLoadedRemoteWishlist = useRef(false)
 
   useEffect(() => {
-    setWishlist(readLocalWishlist())
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
+    if (saved) {
+      try {
+        setWishlist(JSON.parse(saved))
+      } catch (e) {
+        console.error('Failed to parse wishlist from local storage', e)
+      }
+    }
     setIsHydrated(true)
   }, [])
 
@@ -106,9 +101,12 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (!response.ok) return
 
-      const data = (await response.json()) as { items?: unknown }
-      skipNextRemoteSync.current = true
-      setWishlist(normalizeRemoteWishlist(data.items))
+      const data = (await response.json()) as { items?: any[] }
+      if (data.items) {
+        const normalizedItems = data.items.map((item) => toWishlistItem(item))
+        skipNextRemoteSync.current = true
+        setWishlist(normalizedItems)
+      }
     } finally {
       hasLoadedRemoteWishlist.current = true
     }
@@ -119,21 +117,16 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     if (!user) {
       hasLoadedRemoteWishlist.current = false
-      setWishlist(readLocalWishlist())
+      const saved = localStorage.getItem(LOCAL_STORAGE_KEY)
+      if (saved) {
+        try {
+          setWishlist(JSON.parse(saved))
+        } catch {}
+      }
       return
     }
 
-    hasLoadedRemoteWishlist.current = false
     void loadRemoteWishlist()
-
-    const handleMerged = () => {
-      void loadRemoteWishlist()
-    }
-
-    window.addEventListener('commerce:merged', handleMerged)
-    return () => {
-      window.removeEventListener('commerce:merged', handleMerged)
-    }
   }, [isHydrated, isAuthHydrated, user, loadRemoteWishlist])
 
   useEffect(() => {
@@ -161,12 +154,16 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          productIds: wishlist.map((item) => item.id),
+          items: wishlist.map((item) => ({
+            productId: item.id,
+            size: item.selectedSize?.id || null,
+            color: item.selectedColor?.id || null,
+          })),
         }),
         credentials: 'include',
         signal: controller.signal,
       }).catch(() => undefined)
-    }, 200)
+    }, 500)
 
     return () => {
       controller.abort()
@@ -174,16 +171,34 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [wishlist, isHydrated, user])
 
-  const isInWishlist = (productId: string) =>
-    wishlist.some((item) => String(item.id) === String(productId))
-
-  const toggleWishlist = (product: Product | WishlistItem) => {
-    const nextItem = toWishlistItem(product)
-
+  const toggleWishlist = (product: Product | WishlistItem, size?: Size | null, color?: Color | null) => {
     setWishlist((prev) => {
-      const exists = prev.some((i) => String(i.id) === String(nextItem.id))
-      return exists ? prev.filter((i) => String(i.id) !== String(nextItem.id)) : [...prev, nextItem]
+      const productId = 'id' in product ? product.id : (product as any).productId
+      const sizeId = size ? size.id : (product as WishlistItem).selectedSize?.id || null
+      const colorId = color ? color.id : (product as WishlistItem).selectedColor?.id || null
+
+      const exists = prev.find(
+        (item) =>
+          String(item.id) === String(productId) &&
+          String(item.selectedSize?.id || null) === String(sizeId) &&
+          String(item.selectedColor?.id || null) === String(colorId),
+      )
+
+      if (exists) {
+        return prev.filter((item) => item !== exists)
+      }
+
+      return [...prev, toWishlistItem(product as any, size, color)]
     })
+  }
+
+  const isInWishlist = (productId: string | number, sizeId?: string | number, colorId?: string | number) => {
+    return wishlist.some(
+      (item) =>
+        String(item.id) === String(productId) &&
+        (!sizeId || String(item.selectedSize?.id) === String(sizeId)) &&
+        (!colorId || String(item.selectedColor?.id) === String(colorId)),
+    )
   }
 
   const removeFromWishlist = (productId: string) =>

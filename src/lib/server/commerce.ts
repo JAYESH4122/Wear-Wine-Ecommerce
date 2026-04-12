@@ -8,6 +8,14 @@ export type PrimitiveId = number
 export type CartInputItem = {
   productId: PrimitiveId
   quantity: number
+  size?: PrimitiveId | null
+  color?: PrimitiveId | null
+}
+
+export type WishlistInputItem = {
+  productId: PrimitiveId
+  size?: PrimitiveId | null
+  color?: PrimitiveId | null
 }
 
 const toIdKey = (id: PrimitiveId): string => String(id)
@@ -33,63 +41,80 @@ const normalizeProductId = (value: unknown): PrimitiveId | null => {
 export const normalizeCartItems = (value: unknown): CartInputItem[] => {
   if (!Array.isArray(value)) return []
 
-  const byProductId = new Map<string, CartInputItem>()
+  return value
+    .map((raw): CartInputItem | null => {
+      if (!raw || typeof raw !== 'object') return null
 
-  for (const raw of value) {
-    if (!raw || typeof raw !== 'object') continue
+      const candidate = raw as {
+        productId?: unknown
+        quantity?: unknown
+        size?: unknown
+        color?: unknown
+      }
+      const productId = normalizeProductId(candidate.productId)
+      const quantity = Number(candidate.quantity)
+      const size = normalizeProductId(candidate.size)
+      const color = normalizeProductId(candidate.color)
 
-    const candidate = raw as { productId?: unknown; quantity?: unknown }
-    const productId = normalizeProductId(candidate.productId)
-    const quantity = Number(candidate.quantity)
+      if (!productId || !Number.isFinite(quantity) || quantity <= 0) return null
 
-    if (!productId || !Number.isFinite(quantity) || quantity <= 0) continue
-
-    const safeQuantity = Math.max(1, Math.floor(quantity))
-    const key = toIdKey(productId)
-    const existing = byProductId.get(key)
-
-    byProductId.set(key, {
-      productId,
-      quantity: (existing?.quantity ?? 0) + safeQuantity,
+      return {
+        productId,
+        quantity: Math.max(1, Math.floor(quantity)),
+        size,
+        color,
+      }
     })
-  }
-
-  return Array.from(byProductId.values())
+    .filter(Boolean) as CartInputItem[]
 }
 
-export const normalizeWishlistProductIds = (value: unknown): PrimitiveId[] => {
+export const normalizeWishlistItems = (value: unknown): WishlistInputItem[] => {
   if (!Array.isArray(value)) return []
 
-  const seen = new Set<string>()
-  const output: PrimitiveId[] = []
+  return value
+    .map((raw): WishlistInputItem | null => {
+      if (!raw || typeof raw !== 'object') return null
 
-  for (const raw of value) {
-    const id = normalizeProductId(raw)
-    if (!id) continue
+      const candidate = raw as { productId?: unknown; size?: unknown; color?: unknown }
+      const productId = normalizeProductId(candidate.productId)
+      const size = normalizeProductId(candidate.size)
+      const color = normalizeProductId(candidate.color)
 
-    const key = toIdKey(id)
-    if (seen.has(key)) continue
+      if (!productId) return null
 
-    seen.add(key)
-    output.push(id)
-  }
-
-  return output
+      return {
+        productId,
+        size,
+        color,
+      }
+    })
+    .filter(Boolean) as WishlistInputItem[]
 }
 
 export const cartItemsToCollectionRows = (items: CartInputItem[]) => {
   return items.map((item) => ({
     productId: item.productId,
     quantity: item.quantity,
+    size: item.size,
+    color: item.color,
   }))
 }
 
-export const wishlistIdsToCollectionRows = (productIds: PrimitiveId[]) => {
-  return productIds.map((productId) => ({ productId }))
+export const wishlistItemsToCollectionRows = (items: WishlistInputItem[]) => {
+  return items.map((item) => ({
+    productId: item.productId,
+    size: item.size,
+    color: item.color,
+  }))
 }
 
 export const collectionRowsToCartItems = (
-  rows: Array<{ productId?: unknown; quantity?: unknown } | null | undefined> | null | undefined,
+  rows: Array<{
+    productId?: unknown
+    quantity?: unknown
+    size?: unknown
+    color?: unknown
+  } | null | undefined> | null | undefined,
 ): CartInputItem[] => {
   if (!Array.isArray(rows)) return []
 
@@ -99,12 +124,16 @@ export const collectionRowsToCartItems = (
 
       const productId = normalizeProductId(row.productId)
       const quantity = Number(row.quantity)
+      const size = normalizeProductId(row.size)
+      const color = normalizeProductId(row.color)
 
       if (!productId || !Number.isFinite(quantity) || quantity <= 0) return null
 
       return {
         productId,
         quantity: Math.max(1, Math.floor(quantity)),
+        size,
+        color,
       }
     })
     .filter(Boolean)
@@ -112,11 +141,11 @@ export const collectionRowsToCartItems = (
   return normalizeCartItems(mapped)
 }
 
-export const collectionRowsToWishlistIds = (
-  rows: Array<{ productId?: unknown } | null | undefined> | null | undefined,
-): PrimitiveId[] => {
+export const collectionRowsToWishlistItems = (
+  rows: Array<{ productId?: unknown; size?: unknown; color?: unknown } | null | undefined> | null | undefined,
+): WishlistInputItem[] => {
   if (!Array.isArray(rows)) return []
-  return normalizeWishlistProductIds(rows.map((row) => row?.productId))
+  return normalizeWishlistItems(rows)
 }
 
 export const fetchProductsByIds = async (payload: Payload, ids: PrimitiveId[]): Promise<Map<string, Product>> => {
@@ -132,7 +161,7 @@ export const fetchProductsByIds = async (payload: Payload, ids: PrimitiveId[]): 
   const products = await payload.find({
     collection: 'products',
     where,
-    depth: 1,
+    depth: 2,
     limit: uniqueIds.length,
     overrideAccess: true,
   })
@@ -154,9 +183,15 @@ export const filterValidCartItems = async (payload: Payload, items: CartInputIte
   return items.filter((item) => productMap.has(toIdKey(item.productId)))
 }
 
-export const filterValidWishlistIds = async (payload: Payload, ids: PrimitiveId[]): Promise<PrimitiveId[]> => {
-  const productMap = await fetchProductsByIds(payload, ids)
-  return ids.filter((id) => productMap.has(toIdKey(id)))
+export const filterValidWishlistItems = async (
+  payload: Payload,
+  items: WishlistInputItem[],
+): Promise<WishlistInputItem[]> => {
+  const productMap = await fetchProductsByIds(
+    payload,
+    items.map((item) => item.productId),
+  )
+  return items.filter((item) => productMap.has(toIdKey(item.productId)))
 }
 
 export const hashGuestCartMerge = (userId: PrimitiveId, items: CartInputItem[]): string => {
@@ -179,21 +214,44 @@ export const hydrateCartItems = async (
       const product = productMap.get(toIdKey(item.productId))
       if (!product) return null
 
+      // Since the frontend uses more specific types, we let it handle the full objects
+      // but we return the product with depth 2 hydration.
       return {
-        cartItemId: `${String(product.id)}-no-color-no-size`,
+        cartItemId: `${String(product.id)}-${item.color || 'no-color'}-${item.size || 'no-size'}`,
         product,
         quantity: item.quantity,
+        selectedSize: item.size,
+        selectedColor: item.color,
       }
     })
     .filter(Boolean) as Array<{ cartItemId: string; product: Product; quantity: number }>
 }
 
-export const hydrateWishlistItems = async (payload: Payload, productIds: PrimitiveId[]): Promise<Product[]> => {
-  const productMap = await fetchProductsByIds(payload, productIds)
+export const hydrateWishlistItems = async (
+  payload: Payload,
+  items: WishlistInputItem[],
+): Promise<Array<{ product: Product; selectedSize?: PrimitiveId | null; selectedColor?: PrimitiveId | null }>> => {
+  const productMap = await fetchProductsByIds(
+    payload,
+    items.map((item) => item.productId),
+  )
 
-  return productIds
-    .map((id) => productMap.get(toIdKey(id)) ?? null)
-    .filter(Boolean) as Product[]
+  return items
+    .map((item) => {
+      const product = productMap.get(toIdKey(item.productId))
+      if (!product) return null
+
+      return {
+        product,
+        selectedSize: item.size,
+        selectedColor: item.color,
+      }
+    })
+    .filter(Boolean) as Array<{
+    product: Product
+    selectedSize?: PrimitiveId | null
+    selectedColor?: PrimitiveId | null
+  }>
 }
 
 export const requirePayloadUser = async (payload: Payload, sessionUserId: string): Promise<User | null> => {

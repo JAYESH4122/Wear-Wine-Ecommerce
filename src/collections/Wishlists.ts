@@ -33,6 +33,16 @@ export const Wishlists: CollectionConfig = {
           relationTo: 'products',
           required: true,
         },
+        {
+          name: 'size',
+          type: 'relationship',
+          relationTo: 'sizes',
+        },
+        {
+          name: 'color',
+          type: 'relationship',
+          relationTo: 'colors',
+        },
       ],
       defaultValue: [],
     },

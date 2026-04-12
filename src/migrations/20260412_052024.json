@@ -3180,6 +3180,18 @@
           "type": "numeric",
           "primaryKey": false,
           "notNull": true
+        },
+        "size_id": {
+          "name": "size_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "color_id": {
+          "name": "color_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -3227,6 +3239,36 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "carts_items_size_idx": {
+          "name": "carts_items_size_idx",
+          "columns": [
+            {
+              "expression": "size_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "carts_items_color_idx": {
+          "name": "carts_items_color_idx",
+          "columns": [
+            {
+              "expression": "color_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -3236,6 +3278,32 @@
           "tableTo": "products",
           "columnsFrom": [
             "product_id_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "carts_items_size_id_sizes_id_fk": {
+          "name": "carts_items_size_id_sizes_id_fk",
+          "tableFrom": "carts_items",
+          "tableTo": "sizes",
+          "columnsFrom": [
+            "size_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "carts_items_color_id_colors_id_fk": {
+          "name": "carts_items_color_id_colors_id_fk",
+          "tableFrom": "carts_items",
+          "tableTo": "colors",
+          "columnsFrom": [
+            "color_id"
           ],
           "columnsTo": [
             "id"
@@ -3395,6 +3463,18 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "size_id": {
+          "name": "size_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "color_id": {
+          "name": "color_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -3442,6 +3522,36 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "wishlists_products_size_idx": {
+          "name": "wishlists_products_size_idx",
+          "columns": [
+            {
+              "expression": "size_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "wishlists_products_color_idx": {
+          "name": "wishlists_products_color_idx",
+          "columns": [
+            {
+              "expression": "color_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -3451,6 +3561,32 @@
           "tableTo": "products",
           "columnsFrom": [
             "product_id_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "wishlists_products_size_id_sizes_id_fk": {
+          "name": "wishlists_products_size_id_sizes_id_fk",
+          "tableFrom": "wishlists_products",
+          "tableTo": "sizes",
+          "columnsFrom": [
+            "size_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "wishlists_products_color_id_colors_id_fk": {
+          "name": "wishlists_products_color_id_colors_id_fk",
+          "tableFrom": "wishlists_products",
+          "tableTo": "colors",
+          "columnsFrom": [
+            "color_id"
           ],
           "columnsTo": [
             "id"
@@ -5620,6 +5756,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "cta_already_in_cart": {
+          "name": "cta_already_in_cart",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "cta_out_of_stock": {
           "name": "cta_out_of_stock",
           "type": "varchar",
@@ -6418,6 +6560,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "f2acb02e-bda7-4b94-9450-74b567a8db93",
+  "id": "4c4c254b-0e3e-4a1d-aa29-0f0933a219f4",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

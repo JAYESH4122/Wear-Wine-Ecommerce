@@ -59,7 +59,7 @@ export const ProductInfoPanel = ({
   const [openAccordion, setOpenAccordion] = useState<string | null>('details')
 
   const { isInWishlist, toggleWishlist } = useWishlist()
-  const { addItem, clearCart } = useCart()
+  const { cart, addItem, clearCart } = useCart()
 
   const isWishlisted = isInWishlist(String(product.id))
   const hasSale = !!product.salePrice && product.salePrice < product.price
@@ -144,28 +144,58 @@ export const ProductInfoPanel = ({
     [variants, selectedColor, needsColor],
   )
 
-  const currentVariant = (product.variants ?? []).find(v => {
+  const resolveSelectedVariantOptions = useCallback(() => {
+    const rawColors = (product.variants ?? []).reduce<Color[]>((acc, v) => {
+      if (v.color && typeof v.color === 'object') acc.push(v.color as Color)
+      return acc
+    }, [])
+    const rawSizes = (product.variants ?? []).reduce<Size[]>((acc, v) => {
+      if (v.size && typeof v.size === 'object') acc.push(v.size as Size)
+      return acc
+    }, [])
+
+    let color = rawColors.find((c) => String(c.id) === selectedColor)
+    let size = rawSizes.find((s) => String(s.id) === selectedSize)
+
+    if (!color && selectedColor) {
+      const fallbackColor = colors.find((c) => c.id === selectedColor)
+      if (fallbackColor) color = { id: selectedColor, name: fallbackColor.name } as unknown as Color
+    }
+
+    if (!size && selectedSize) {
+      const fallbackSize = sizes.find((s) => s.id === selectedSize)
+      if (fallbackSize) size = { id: selectedSize, label: fallbackSize.label } as unknown as Size
+    }
+
+    return { color, size }
+  }, [product.variants, selectedColor, selectedSize, colors, sizes])
+
+  const currentVariant = (product.variants ?? []).find((v) => {
     const vColorId = getRelationId(v.color)
     const vSizeId = getRelationId(v.size)
-    
-    const matchesColor = !needsColor || vColorId === selectedColor;
-    const matchesSize = !needsSize || vSizeId === selectedSize;
-    
-    return matchesColor && matchesSize;
-  });
 
-  const totalStock = (product.variants ?? []).reduce((acc, v) => acc + (v.stock ?? 0), 0);
-  const isOutOfStockOverall = totalStock === 0;
-  
-  const isVariantSelected = (!needsColor || !!selectedColor) && (!needsSize || !!selectedSize);
-  const currentStock = currentVariant ? (currentVariant.stock ?? 0) : 0;
-  const isVariantOutOfStock = isVariantSelected && currentStock < quantity;
+    const matchesColor = !needsColor || vColorId === selectedColor
+    const matchesSize = !needsSize || vSizeId === selectedSize
 
-  const canAddToCart = isVariantSelected && isAgreed && !isOutOfStockOverall && !isVariantOutOfStock;
+    return matchesColor && matchesSize
+  })
+
+  const totalStock = (product.variants ?? []).reduce((acc, v) => acc + (v.stock ?? 0), 0)
+  const isOutOfStockOverall = totalStock === 0
+
+  const isVariantSelected = (!needsColor || !!selectedColor) && (!needsSize || !!selectedSize)
+  const currentStock = currentVariant ? (currentVariant.stock ?? 0) : 0
+  const isVariantOutOfStock = isVariantSelected && currentStock < quantity
+
+  const canAddToCart = isVariantSelected && isAgreed && !isOutOfStockOverall && !isVariantOutOfStock
+
+  const currentCartItemId = `${product.id}-${selectedColor || 'no-color'}-${selectedSize || 'no-size'}`
+  const isAlreadyInCart = cart.some((item) => item.cartItemId === currentCartItemId)
 
   const getAddToCartText = () => {
     if (isOutOfStockOverall) return pdpStatic?.cta?.outOfStock ?? 'Out of Stock'
     if (isVariantSelected && isVariantOutOfStock) return pdpStatic?.cta?.outOfStock ?? 'Out of Stock'
+    if (isAlreadyInCart) return pdpStatic?.cta?.alreadyInCart ?? 'Already in Bag'
     if (isAdded) return pdpStatic?.cta?.addedToCart ?? 'Added to Bag'
     return pdpStatic?.cta?.addToCart ?? 'Add to Bag'
   }
@@ -176,24 +206,26 @@ export const ProductInfoPanel = ({
       setTimeout(() => setShowError(false), 3000)
       return
     }
+    if (isAlreadyInCart) return
     if ((needsColor && !selectedColor) || (needsSize && !selectedSize)) return
 
-    const rawColors = (product.variants ?? []).reduce<Color[]>((acc, v) => {
-      if (v.color && typeof v.color === 'object') acc.push(v.color as Color)
-      return acc
-    }, [])
-    const rawSizes = (product.variants ?? []).reduce<Size[]>((acc, v) => {
-      if (v.size && typeof v.size === 'object') acc.push(v.size as Size)
-      return acc
-    }, [])
-
-    const color = rawColors.find((c) => String(c.id) === selectedColor)
-    const size = rawSizes.find((s) => String(s.id) === selectedSize)
+    const { color, size } = resolveSelectedVariantOptions()
 
     addItem(product, quantity, color, size)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2500)
-  }, [isAgreed, needsColor, needsSize, selectedColor, selectedSize, product, quantity, addItem])
+  }, [
+    isAgreed,
+    isAlreadyInCart,
+    needsColor,
+    needsSize,
+    selectedColor,
+    selectedSize,
+    resolveSelectedVariantOptions,
+    product,
+    quantity,
+    addItem,
+  ])
 
   const handleBuyNow = useCallback(() => {
     if (!isAgreed) {
@@ -203,17 +235,7 @@ export const ProductInfoPanel = ({
     }
     if ((needsColor && !selectedColor) || (needsSize && !selectedSize)) return
 
-    const rawColors = (product.variants ?? []).reduce<Color[]>((acc, v) => {
-      if (v.color && typeof v.color === 'object') acc.push(v.color as Color)
-      return acc
-    }, [])
-    const rawSizes = (product.variants ?? []).reduce<Size[]>((acc, v) => {
-      if (v.size && typeof v.size === 'object') acc.push(v.size as Size)
-      return acc
-    }, [])
-
-    const color = rawColors.find((c) => String(c.id) === selectedColor)
-    const size = rawSizes.find((s) => String(s.id) === selectedSize)
+    const { color, size } = resolveSelectedVariantOptions()
 
     clearCart()
     addItem(product, quantity, color, size)
@@ -224,6 +246,7 @@ export const ProductInfoPanel = ({
     needsSize,
     selectedColor,
     selectedSize,
+    resolveSelectedVariantOptions,
     product,
     quantity,
     addItem,
@@ -231,7 +254,21 @@ export const ProductInfoPanel = ({
     clearCart,
   ])
 
-  const handleToggleWishlist = useCallback(() => toggleWishlist(product), [toggleWishlist, product])
+  const handleToggleWishlist = useCallback(() => {
+    const rawColors = (product.variants ?? []).reduce<Color[]>((acc, v) => {
+      if (v.color && typeof v.color === 'object') acc.push(v.color as Color)
+      return acc
+    }, [])
+    const rawSizes = (product.variants ?? []).reduce<Size[]>((acc, v) => {
+      if (v.size && typeof v.size === 'object') acc.push(v.size as Size)
+      return acc
+    }, [])
+
+    const color = rawColors.find((c) => String(c.id) === selectedColor)
+    const size = rawSizes.find((s) => String(s.id) === selectedSize)
+
+    toggleWishlist(product, size, color)
+  }, [toggleWishlist, product, selectedColor, selectedSize])
   const decreaseQty = useCallback(() => setQuantity((q) => Math.max(1, q - 1)), [])
   const increaseQty = useCallback(() => setQuantity((q) => q + 1), [])
   const toggleAgreed = useCallback(() => setIsAgreed((v) => !v), [])
@@ -378,16 +415,21 @@ export const ProductInfoPanel = ({
           <QuantitySelector value={quantity} onDecrease={decreaseQty} onIncrease={increaseQty} />
           <Button
             onClick={handleAddToCart}
-            disabled={isAdded || !canAddToCart}
+            disabled={isAdded || isAlreadyInCart || !canAddToCart}
             fullWidth
             variant="secondary"
             leftIcon={
-              isAdded ? <Check className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5" />
+              isAdded || isAlreadyInCart ? (
+                <Check className="w-3.5 h-3.5" />
+              ) : (
+                <ShoppingBag className="w-3.5 h-3.5" />
+              )
             }
             className={cn(
               'h-12 text-[10px] font-bold uppercase tracking-[0.18em] rounded-none sm:flex-1',
-              isAdded && 'bg-emerald-600 hover:bg-emerald-600 border-emerald-600 text-white cursor-default',
-              !isAdded &&
+              (isAdded || isAlreadyInCart) &&
+                'bg-emerald-600 hover:bg-emerald-600 border-emerald-600 text-white cursor-default',
+              !(isAdded || isAlreadyInCart) &&
                 !canAddToCart &&
                 'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
             )}
@@ -398,15 +440,16 @@ export const ProductInfoPanel = ({
 
         <Button
           onClick={handleBuyNow}
-          disabled={!canAddToCart}
+          disabled={isAlreadyInCart || !canAddToCart}
           fullWidth
           variant="primary"
           className={cn(
             'h-12 text-[10px] font-bold uppercase tracking-[0.18em] rounded-none',
-            !canAddToCart && 'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
+            (isAlreadyInCart || !canAddToCart) &&
+              'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
           )}
         >
-          {pdpStatic?.cta?.buyNow ?? 'Buy it Now'}
+          {isAlreadyInCart ? (pdpStatic?.cta?.alreadyInCart ?? 'Already in Bag') : (pdpStatic?.cta?.buyNow ?? 'Buy it Now')}
         </Button>
       </div>
 

@@ -22,16 +22,36 @@ export const seedGlobals = async (payload: Payload) => {
   payload.logger.info('Seeding Policies...')
   const policyDocs: Record<string, string | number> = {}
   for (const [key, val] of Object.entries(policyPages)) {
-    const doc = await payload.create({
+    const existing = await payload.find({
       collection: 'policies',
-      data: {
-        title: val.title,
-        slug: val.slug,
-        lastUpdated: val.lastUpdated,
-        sections: val.sections || [],
-        faqs: val.faqs || [],
+      where: {
+        slug: {
+          equals: val.slug,
+        },
       },
+      limit: 1,
+      depth: 0,
     })
+
+    const policyData = {
+      title: val.title,
+      slug: val.slug,
+      lastUpdated: val.lastUpdated,
+      sections: val.sections || [],
+      faqs: val.faqs || [],
+    }
+
+    const doc =
+      existing.docs.length > 0
+        ? await payload.update({
+            collection: 'policies',
+            id: existing.docs[0].id,
+            data: policyData,
+          })
+        : await payload.create({
+            collection: 'policies',
+            data: policyData,
+          })
     policyDocs[key] = doc.id
   }
 
@@ -92,7 +112,10 @@ export const seedGlobals = async (payload: Payload) => {
             )?.id) as unknown as number,
           description: pdpStaticData.sizeChart.description,
         },
-        cta: pdpStaticData.cta,
+        cta: {
+          ...pdpStaticData.cta,
+          alreadyInCart: pdpStaticData.cta.alreadyInCart || 'Already in Bag',
+        },
         accordions: pdpStaticData.accordions.map((a) => ({
           title: a.title,
           content: a.content,

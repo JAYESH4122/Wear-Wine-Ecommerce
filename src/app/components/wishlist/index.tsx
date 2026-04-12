@@ -8,7 +8,7 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 
 import { cn, formatPriceINR } from '@/lib/utils'
-import type { Media } from '@/payload-types'
+import type { Color, Media, Size } from '@/payload-types'
 import { useWishlist, type WishlistItem } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import { Button } from '@/components/ui/button/Button'
@@ -19,12 +19,17 @@ import { Button } from '@/components/ui/button/Button'
 const getImageUrl = (item: WishlistItem): string | null => {
   const img = item.images?.[0]?.image
   if (!img) return null
-  if (typeof img === 'string') return img
-  if (typeof img === 'number') return null
+  let url: string | null = null
+  if (typeof img === 'string') url = img
   if (typeof img === 'object') {
-    return (img as Media).url ?? (img as { url?: string | null }).url ?? null
+    url = (img as Media).url ?? (img as { url?: string | null }).url ?? null
   }
-  return null
+
+  if (url && url.startsWith('/')) {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || ''
+    return `${apiUrl}${url}`
+  }
+  return url
 }
 
 /**
@@ -43,6 +48,34 @@ export const WishlistItemRow = ({
   const imageUrl = getImageUrl(item)
   const hasDiscount = item.salePrice && item.salePrice < item.price
   const currentPrice = hasDiscount ? item.salePrice! : item.price
+
+  const variantInfo = React.useMemo(() => {
+    // If we have a specifically selected size/color, show only those
+    if (item.selectedSize || item.selectedColor) {
+      return {
+        sizes: item.selectedSize ? [item.selectedSize.label] : [],
+        colors: item.selectedColor ? [item.selectedColor.name] : [],
+        isSelected: true
+      }
+    }
+
+    if (!item.variants || !Array.isArray(item.variants)) return null
+    const sizes = Array.from(
+      new Set(
+        item.variants
+          .map((v) => (typeof v.size === 'object' ? (v.size as Size).label : null))
+          .filter(Boolean),
+      ),
+    )
+    const colors = Array.from(
+      new Set(
+        item.variants
+          .map((v) => (v.color && typeof v.color === 'object' ? (v.color as Color).name : null))
+          .filter(Boolean),
+      ),
+    )
+    return { sizes, colors, isSelected: false }
+  }, [item.selectedSize, item.selectedColor, item.variants])
 
   useGSAP(
     () => {
@@ -117,7 +150,7 @@ export const WishlistItemRow = ({
       <div className="flex gap-4 md:hidden">
         {/* Image */}
         <Link
-          href={`/products/${item.slug}`}
+          href={`/product/${item.slug}`}
           className="relative w-24 h-28 bg-neutral-50 rounded shrink-0 overflow-hidden"
         >
           {imageUrl ? (
@@ -144,11 +177,30 @@ export const WishlistItemRow = ({
                 </span>
               )}
               <Link
-                href={`/products/${item.slug}`}
+                href={`/product/${item.slug}`}
                 className="font-medium text-sm text-neutral-900 hover:text-neutral-600 transition-colors leading-snug"
               >
                 {item.name}
               </Link>
+              {variantInfo && (variantInfo.sizes.length > 0 || variantInfo.colors.length > 0) && (
+                <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
+                  {variantInfo.isSelected && (
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-neutral-400 w-full mb-0.5">
+                      Selected Variant:
+                    </span>
+                  )}
+                  {variantInfo.sizes.length > 0 && (
+                    <span className="text-[9px] text-neutral-500 font-medium">
+                      Size: <span className="text-neutral-900">{variantInfo.sizes.join(', ')}</span>
+                    </span>
+                  )}
+                  {variantInfo.colors.length > 0 && (
+                    <span className="text-[9px] text-neutral-500 font-medium border-l border-neutral-200 pl-2">
+                      Color: <span className="text-neutral-900">{variantInfo.colors.join(', ')}</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             {/* Remove icon — top right */}
             <button
@@ -212,7 +264,7 @@ export const WishlistItemRow = ({
           />
 
           <Link
-            href={`/products/${item.slug}`}
+            href={`/product/${item.slug}`}
             className="relative w-20 h-24 bg-neutral-50 rounded flex-shrink-0 overflow-hidden group"
           >
             {imageUrl ? (
@@ -236,11 +288,30 @@ export const WishlistItemRow = ({
               </span>
             )}
             <Link
-              href={`/products/${item.slug}`}
+              href={`/product/${item.slug}`}
               className="font-medium text-neutral-900 hover:text-neutral-600 transition-colors"
             >
               {item.name}
             </Link>
+            {variantInfo && (variantInfo.sizes.length > 0 || variantInfo.colors.length > 0) && (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5">
+                {variantInfo.isSelected && (
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 w-full mb-0.5">
+                    Selected Variant:
+                  </span>
+                )}
+                {variantInfo.sizes.length > 0 && (
+                  <span className="text-[10px] text-neutral-500 font-medium">
+                    Size: <span className="text-neutral-900">{variantInfo.sizes.join(', ')}</span>
+                  </span>
+                )}
+                {variantInfo.colors.length > 0 && (
+                  <span className="text-[10px] text-neutral-500 font-medium border-l border-neutral-200 pl-3">
+                    Color: <span className="text-neutral-900">{variantInfo.colors.join(', ')}</span>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -314,7 +385,7 @@ export const WishlistPage = () => {
 
   const handleAddToCart = useCallback(
     (item: WishlistItem) => {
-      addItem(item)
+      addItem(item, 1, item.selectedColor || undefined, item.selectedSize || undefined)
     },
     [addItem],
   )

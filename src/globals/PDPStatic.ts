@@ -53,6 +53,7 @@ export const PDPStatic: GlobalConfig = {
         { name: 'addToCart', type: 'text', required: true },
         { name: 'buyNow', type: 'text', required: true },
         { name: 'addedToCart', type: 'text', required: true },
+        { name: 'alreadyInCart', type: 'text', required: true },
         { name: 'outOfStock', type: 'text', required: true },
       ],
     },
