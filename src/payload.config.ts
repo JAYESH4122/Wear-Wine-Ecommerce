@@ -53,7 +53,9 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: requireEnv('DATABASE_URI'),
+      // DATABASE_URI is the Payload-conventional name; fall back to DATABASE_URL
+      // so a single variable works across Vercel, Render, and local environments.
+      connectionString: process.env.DATABASE_URI ?? requireEnv('DATABASE_URL'),
     },
   }),
   sharp,

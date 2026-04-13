@@ -8,7 +8,13 @@ export const POST = async (request: Request): Promise<Response> => {
   const signature = request.headers.get('x-razorpay-signature')
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET
 
+  console.info('[razorpay-webhook] Received webhook', {
+    hasSignature: !!signature,
+    hasSecret: !!secret,
+  })
+
   if (!signature || !secret) {
+    console.error('[razorpay-webhook] Missing signature or RAZORPAY_WEBHOOK_SECRET env var')
     return Response.json({ error: 'Missing signature or secret' }, { status: 400 })
   }
 
@@ -19,6 +25,9 @@ export const POST = async (request: Request): Promise<Response> => {
     .digest('hex')
 
   if (signature !== expectedSignature) {
+    console.error('[razorpay-webhook] Signature mismatch — check RAZORPAY_WEBHOOK_SECRET matches Razorpay dashboard', {
+      receivedSignature: signature.slice(0, 10) + '…',
+    })
     return Response.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
@@ -26,20 +35,26 @@ export const POST = async (request: Request): Promise<Response> => {
   try {
     event = JSON.parse(body)
   } catch {
+    console.error('[razorpay-webhook] Failed to parse webhook body as JSON')
     return Response.json({ error: 'Invalid webhook payload' }, { status: 400 })
   }
 
   const eventName = typeof event?.event === 'string' ? event.event : null
+  console.info('[razorpay-webhook] Event received', { event: eventName })
+
   const handledEvents = new Set(['order.paid', 'payment.captured', 'payment.failed'])
   if (!eventName || !handledEvents.has(eventName)) {
+    console.info('[razorpay-webhook] Unhandled event type, skipping', { event: eventName })
     return Response.json({ received: true })
   }
 
   const razorpayOrderId = event.payload?.order?.entity?.id ?? event.payload?.payment?.entity?.order_id ?? null
   if (!razorpayOrderId) {
-    console.error('[razorpay-webhook] Missing razorpayOrderId', { event: eventName })
+    console.error('[razorpay-webhook] Missing razorpayOrderId in webhook payload', { event: eventName })
     return Response.json({ received: true })
   }
+
+  console.info('[razorpay-webhook] Looking up order', { razorpayOrderId, event: eventName })
 
   const payload = await getPayload({ config: configPromise })
   const orders = await payload.find({
@@ -54,8 +69,13 @@ export const POST = async (request: Request): Promise<Response> => {
     depth: 0,
   })
 
+  console.info('[razorpay-webhook] Order lookup result', {
+    razorpayOrderId,
+    found: orders.totalDocs,
+  })
+
   if (orders.docs.length === 0) {
-    console.error('[razorpay-webhook] Order not found', {
+    console.error('[razorpay-webhook] Order not found in DB — create-order may have failed or DB env var is wrong', {
       event: eventName,
       razorpayOrderId,
     })
@@ -74,7 +94,7 @@ export const POST = async (request: Request): Promise<Response> => {
 
   if (eventName === 'order.paid' || eventName === 'payment.captured') {
     if (order.status === 'paid') {
-      console.info('[razorpay-webhook] Already paid, skipping', {
+      console.info('[razorpay-webhook] Already paid, skipping duplicate event', {
         orderId: String(order.id),
         razorpayOrderId,
         event: eventName,
@@ -95,7 +115,7 @@ export const POST = async (request: Request): Promise<Response> => {
       overrideAccess: true,
     })
 
-    console.info('[razorpay-webhook] Marked order as paid', {
+    console.info('[razorpay-webhook] ✅ Marked order as paid', {
       orderId: String(order.id),
       razorpayOrderId,
       event: eventName,

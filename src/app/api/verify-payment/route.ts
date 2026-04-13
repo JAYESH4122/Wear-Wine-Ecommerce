@@ -65,6 +65,17 @@ export const POST = async (request: Request): Promise<Response> => {
     }
 
     const order = orders.docs[0]
+
+    // Idempotency guard: if webhook already marked this order as paid,
+    // return success without re-updating (prevents race condition / double-write).
+    if (order.status === 'paid') {
+      console.info('[verify-payment] Order already paid (webhook beat us), returning success', {
+        orderId: String(order.id),
+        razorpayOrderId: body.razorpay_order_id,
+      })
+      return withCors(request, Response.json({ success: true, orderId: order.id }))
+    }
+
     const isValid = verifySignature(body.razorpay_order_id, body.razorpay_payment_id, body.razorpay_signature)
 
     const updatedOrder = await payload.update({
