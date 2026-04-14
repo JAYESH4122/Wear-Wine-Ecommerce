@@ -66,7 +66,7 @@ const AuthContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const localCart = parseArray(window.localStorage.getItem('cart'))
-    const localWishlist = parseArray(window.localStorage.getItem('wishlist-items'))
+    const localWishlist = parseArray(window.localStorage.getItem('wishlist-items-v2'))
 
     const [cartMergeResponse, wishlistMergeResponse] = await Promise.all([
       fetch(`${API_URL}/api/cart/merge`, {
@@ -91,11 +91,11 @@ const AuthContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children 
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          productIds: localWishlist.map((item) =>
-            typeof item === 'object' && item && 'id' in item
-              ? (item as { id?: string | number }).id
-              : undefined,
-          ),
+          items: localWishlist.map((item: any) => ({
+            productId: item.productId,
+            size: item.sizeId,
+            color: item.colorId
+          })),
         }),
       }),
     ])
@@ -103,6 +103,8 @@ const AuthContextWrapper: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!cartMergeResponse.ok || !wishlistMergeResponse.ok) return
 
     window.localStorage.removeItem('cart')
+    window.localStorage.removeItem('wishlist-items-v2')
+    // Also remove the old one just in case
     window.localStorage.removeItem('wishlist-items')
     window.dispatchEvent(new CustomEvent('commerce:merged'))
   }, [])

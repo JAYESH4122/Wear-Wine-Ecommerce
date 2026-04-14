@@ -7,10 +7,10 @@ import {
   collectionRowsToWishlistItems,
   filterValidWishlistItems,
   hydrateWishlistItems,
-  mergeWishlistIds,
   normalizeWishlistItems,
   requirePayloadUser,
   wishlistItemsToCollectionRows,
+  type WishlistInputItem,
 } from '@/lib/server/commerce'
 import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
 import { withCors } from '@/lib/server/cors'
@@ -62,11 +62,14 @@ export const POST = async (request: Request): Promise<Response> => {
 
   if (rate.limited) return tooManyRequests(request)
 
-  const body = (await request.json().catch(() => null)) as { productIds?: unknown } | null
+  const body = (await request.json().catch(() => null)) as {
+    items?: unknown
+    productIds?: unknown
+  } | null
   if (!body) return invalidBody(request, 'Invalid request body')
 
   const incomingItems = normalizeWishlistItems(
-    Array.isArray(body.productIds) ? body.productIds.map((productId) => ({ productId })) : [],
+    body.items || (Array.isArray(body.productIds) ? body.productIds.map((productId) => ({ productId })) : []),
   )
 
   // Security: Limit wishlist size
@@ -83,12 +86,25 @@ export const POST = async (request: Request): Promise<Response> => {
     collectionRowsToWishlistItems(wishlistDoc?.products),
   )
 
-  const existingItemById = new Map(existingItems.map((item) => [item.productId, item] as const))
-  const mergedIds = mergeWishlistIds(
-    existingItems.map((item) => item.productId),
-    validIncomingItems.map((item) => item.productId),
-  )
-  const mergedItems = mergedIds.map((id) => existingItemById.get(id) ?? { productId: id })
+  const getItemKey = (item: WishlistInputItem) =>
+    `${item.productId}-${item.size || 'any'}-${item.color || 'any'}`
+
+  const mergedItemsMap = new Map<string, WishlistInputItem>()
+
+  // Add existing items
+  for (const item of existingItems) {
+    mergedItemsMap.set(getItemKey(item), item)
+  }
+
+  // Add incoming items (if not already exists)
+  for (const item of validIncomingItems) {
+    const key = getItemKey(item)
+    if (!mergedItemsMap.has(key)) {
+      mergedItemsMap.set(key, item)
+    }
+  }
+
+  const mergedItems = Array.from(mergedItemsMap.values())
 
   if (!wishlistDoc) {
     await payload.create({
