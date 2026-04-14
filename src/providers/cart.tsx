@@ -72,6 +72,7 @@ interface CartContextType {
   removeItem: (cartItemId: string) => void
   updateQuantity: (cartItemId: string, quantity: number) => void
   clearCart: () => void
+  isInCart: (productId: string | number, sizeId?: string | number, colorId?: string | number) => boolean
   subtotal: number
 }
 
@@ -333,6 +334,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCart([])
   }
 
+  const isInCart = (productId: string | number, sizeId?: string | number, colorId?: string | number) => {
+    return cart.some(
+      (item) =>
+        String(item.product.id) === String(productId) &&
+        (!sizeId || String(item.selectedSize?.id) === String(sizeId)) &&
+        (!colorId || String(item.selectedColor?.id) === String(colorId)),
+    )
+  }
+
   return (
     <CartContext.Provider
       value={{
@@ -343,6 +353,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeItem,
         updateQuantity,
         clearCart,
+        isInCart,
         subtotal,
       }}
     >

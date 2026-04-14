@@ -178,6 +178,7 @@ export const ProductListSection = ({
           categorySlug: category?.slug,
           slug: p.slug ?? undefined,
           isInStock,
+          product: p as any,
         }
       }),
     [dbProducts],

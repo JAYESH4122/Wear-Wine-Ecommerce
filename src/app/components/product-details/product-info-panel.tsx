@@ -61,7 +61,7 @@ export const ProductInfoPanel = ({
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { cart, addItem, clearCart } = useCart()
 
-  const isWishlisted = isInWishlist(String(product.id))
+  const isWishlisted = isInWishlist(String(product.id), selectedSize ?? undefined, selectedColor ?? undefined)
   const hasSale = !!product.salePrice && product.salePrice < product.price
   const discountPercentage = hasSale
     ? Math.round(((product.price - product.salePrice!) / product.price) * 100)
@@ -315,7 +315,7 @@ export const ProductInfoPanel = ({
   return (
     <div ref={panelRef} className="flex flex-col gap-0">
       {/* Title & Rating */}
-      <div className="panel-item pb-6 border-b border-neutral-100">
+      <div className="panel-item border-b border-neutral-100">
         <h1 className="text-2xl lg:text-3xl font-light font-anton text-neutral-900 tracking-tight mb-3 leading-tight">
           {product.name}
         </h1>
@@ -440,16 +440,15 @@ export const ProductInfoPanel = ({
 
         <Button
           onClick={handleBuyNow}
-          disabled={isAlreadyInCart || !canAddToCart}
+          disabled={!canAddToCart}
           fullWidth
           variant="primary"
           className={cn(
             'h-12 text-[10px] font-bold uppercase tracking-[0.18em] rounded-none',
-            (isAlreadyInCart || !canAddToCart) &&
-              'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
+            !canAddToCart && 'bg-neutral-100 text-neutral-400 cursor-not-allowed border-neutral-100',
           )}
         >
-          {isAlreadyInCart ? (pdpStatic?.cta?.alreadyInCart ?? 'Already in Bag') : (pdpStatic?.cta?.buyNow ?? 'Buy it Now')}
+          {pdpStatic?.cta?.buyNow ?? 'Buy it Now'}
         </Button>
       </div>
 

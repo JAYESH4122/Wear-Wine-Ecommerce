@@ -57,7 +57,7 @@ export const ProductCard = ({
   const gsapContext = useRef<gsap.Context | null>(null)
 
   const { isInWishlist, toggleWishlist } = useWishlist()
-  const { addItem } = useCart()
+  const { addItem, isInCart } = useCart()
 
   const variants = product?.variants ?? []
   const defaultVariant = variants.length > 0 ? variants[0] : null
@@ -65,6 +65,7 @@ export const ProductCard = ({
   const defaultColor = typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : null
 
   const isFavorite = isInWishlist(id, defaultSize?.id, defaultColor?.id)
+  const isAddedToCart = isInCart(id, defaultSize?.id, defaultColor?.id)
   const discountPct = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : null
 
   // ── GSAP Animation System ─────────────────────────────────────────────────
@@ -247,7 +248,7 @@ export const ProductCard = ({
         )
       }
       setCartState('added')
-      setTimeout(() => setCartState('idle'), 1800)
+      setTimeout(() => setCartState('idle'), 2000)
     } catch {
       setCartState('idle')
     }
@@ -348,7 +349,7 @@ export const ProductCard = ({
                 aria-label="Add to cart"
                 className={clsx(
                   'flex-1 h-11 rounded-full flex items-center justify-center gap-2 transition-all duration-300',
-                  cartState === 'added'
+                  cartState === 'added' || isAddedToCart
                     ? 'bg-emerald-600 text-white shadow-lg'
                     : 'bg-white/95 backdrop-blur-md text-neutral-900 shadow-md hover:bg-black hover:text-white active:scale-95'
                 )}
@@ -363,14 +364,16 @@ export const ProductCard = ({
                     >
                       <Loader2 className="w-4 h-4 animate-spin" />
                     </motion.span>
-                  ) : cartState === 'added' ? (
+                  ) : cartState === 'added' || isAddedToCart ? (
                     <motion.span
                       key="check"
                       initial={{ opacity: 0, scale: 0.4 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.4 }}
+                      className="flex items-center gap-2"
                     >
                       <Check className="w-4 h-4" strokeWidth={2.5} />
+                      <span className="text-[10px] font-black uppercase tracking-wide">In Bag</span>
                     </motion.span>
                   ) : (
                     <motion.span
@@ -487,19 +490,24 @@ export const ProductCard = ({
           )}
         </div>
 
-        {defaultSize && (
-          <div className="mt-1 flex items-center gap-1.5">
-             <span className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">
-               Default:
-             </span>
-             <span className="text-[9px] font-black uppercase tracking-wider text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded-[2px]">
-               {defaultSize.label}
-             </span>
-             {defaultColor && (
-               <span className="text-[9px] font-black uppercase tracking-wider text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded-[2px]">
-                 {defaultColor.name}
-               </span>
-             )}
+        {(defaultSize || defaultColor) && (
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 pt-2 border-t border-neutral-50">
+            {defaultSize && (
+              <div className="flex items-center gap-1.5 text-[10px]">
+                <span className="text-neutral-400 font-medium uppercase tracking-tight">Size:</span>
+                <span className="text-neutral-900 font-black">{defaultSize.label}</span>
+              </div>
+            )}
+            {defaultColor && (
+              <div className="flex items-center gap-1.5 text-[10px]">
+                <span className="text-neutral-400 font-medium uppercase tracking-tight">Color:</span>
+                <span
+                  className="w-2 h-2 rounded-full border border-neutral-200 shadow-sm shrink-0"
+                  style={{ backgroundColor: defaultColor.hex || '#ddd' }}
+                />
+                <span className="text-neutral-900 font-black">{defaultColor.name}</span>
+              </div>
+            )}
           </div>
         )}
       </Link>
