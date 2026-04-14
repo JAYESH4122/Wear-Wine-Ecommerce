@@ -22,3 +22,7 @@ export const adminOnly: Access = ({ req: { user } }) => {
   if (!user) return false
   return hasAdminRole((user as { roles?: unknown }).roles)
 }
+
+export const isAdmin = ({ req: { user } }: { req: { user?: any } }): boolean => {
+  return hasAdminRole(user?.roles)
+}

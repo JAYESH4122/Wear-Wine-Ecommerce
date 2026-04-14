@@ -6,6 +6,10 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
   },
   access: {
+    admin: ({ req: { user } }) => {
+      if (!user) return true
+      return user.roles?.includes('admin')
+    },
     read: () => true,
     create: () => true,
   },
