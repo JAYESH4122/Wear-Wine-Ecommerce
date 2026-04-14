@@ -5,6 +5,7 @@ import Razorpay from 'razorpay'
 import configPromise from '@/payload.config'
 import { authOptions } from '@/lib/auth'
 import {
+  checkVariantStock,
   fetchProductsByIds,
   normalizeCartItems,
   requirePayloadUser,
@@ -146,6 +147,26 @@ export const POST = async (request: Request): Promise<Response> => {
     .filter((item): item is NonNullable<typeof item> => item !== null)
 
   if (validItems.length === 0) return invalidBody(request, 'No valid products were provided')
+
+  // Stock availability check before charging the customer
+  const stockErrors = checkVariantStock(normalizedItems, productsById)
+  if (stockErrors.length > 0) {
+    const detail = stockErrors
+      .map((e) => `"${e.productName}" (requested: ${e.requested}, available: ${e.available})`)
+      .join('; ')
+    console.warn('[create-order] Stock unavailable for items', { stockErrors })
+    return withCors(
+      request,
+      Response.json(
+        {
+          error: 'Insufficient stock for one or more items',
+          stockErrors,
+          detail,
+        },
+        { status: 400 },
+      ),
+    )
+  }
 
   const computedTotal = validItems.reduce((sum, item) => {
     return sum + item.price * item.quantity

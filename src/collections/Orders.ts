@@ -127,6 +127,26 @@ export const Orders: CollectionConfig = {
           required: true,
         },
         {
+          name: 'size',
+          type: 'relationship',
+          relationTo: 'sizes',
+          required: false,
+          admin: {
+            readOnly: true,
+            description: 'The size variant ordered',
+          },
+        },
+        {
+          name: 'color',
+          type: 'relationship',
+          relationTo: 'colors',
+          required: false,
+          admin: {
+            readOnly: true,
+            description: 'The color variant ordered',
+          },
+        },
+        {
           name: 'price',
           type: 'number',
           required: true,

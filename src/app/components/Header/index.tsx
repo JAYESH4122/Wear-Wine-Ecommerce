@@ -600,7 +600,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
               <Heart className="w-4 h-4 text-secondary" />
               Wishlist
               {isWishlistHydrated && wishlistCount > 0 && (
-                <span className="ml-auto text-xs bg-icon-red text-primary font-semibold px-2 py-0.5 rounded-full">
+                <span className="ml-auto text-xs bg-icon-red text-white font-semibold px-2 py-0.5 rounded-full">
                   {wishlistCount}
                 </span>
               )}
@@ -613,7 +613,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
               <ShoppingBag className="w-4 h-4 text-secondary" />
               Cart
               {isCartHydrated && cartCount > 0 && (
-                <span className="ml-auto text-xs bg-accent/10 text-accent font-semibold px-2 py-0.5 rounded-full">
+                <span className="ml-auto text-xs bg-icon-red text-white font-semibold px-2 py-0.5 rounded-full">
                   {cartCount}
                 </span>
               )}

@@ -3,7 +3,13 @@ import crypto from 'crypto'
 
 import configPromise from '@/payload.config'
 import { withCors } from '@/lib/server/cors'
-import { fetchProductsByIds, normalizeCartItems, normalizeShippingAddress, normalizeMoney } from '@/lib/server/commerce'
+import {
+  deductVariantStock,
+  fetchProductsByIds,
+  normalizeCartItems,
+  normalizeShippingAddress,
+  normalizeMoney,
+} from '@/lib/server/commerce'
 
 const verifySignature = (orderId: string, paymentId: string, signature: string) => {
   const secret = process.env.RAZORPAY_KEY_SECRET!
@@ -48,7 +54,7 @@ export const POST = async (request: Request): Promise<Response> => {
   const payload = await getPayload({ config: configPromise })
 
   try {
-    // 1. Idempotency Check: Prevent duplicate orders using paymentId
+    // 1. Idempotency Check: Prevent duplicate orders + double stock deduction
     const existingOrders = await payload.find({
       collection: 'orders',
       where: {
@@ -97,6 +103,9 @@ export const POST = async (request: Request): Promise<Response> => {
         if (!product) return null
         return {
           product: item.productId,
+          // Persist the variant IDs so admin & stock logic can reference them
+          size: item.size ?? undefined,
+          color: item.color ?? undefined,
           quantity: item.quantity,
           name: product.name,
           price: typeof product.salePrice === 'number' ? product.salePrice : product.price,
@@ -107,10 +116,7 @@ export const POST = async (request: Request): Promise<Response> => {
     const computedTotal = validItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
     const normalizedComputedTotal = normalizeMoney(computedTotal)
 
-    // Note: We should also verify this against the actual Razorpay order amount if possible,
-    // but re-calculating here is a strong first step.
-    
-    // 4. Create Order in Payload
+    // 4. Create Order in Payload (with variant snapshot)
     const orderId = `ORD-${Date.now()}`
     const order = await payload.create({
       collection: 'orders',
@@ -143,6 +149,9 @@ export const POST = async (request: Request): Promise<Response> => {
       orderId: order.orderId,
       razorpayPaymentId: body.razorpay_payment_id,
     })
+
+    // 5. Deduct stock for each ordered variant (non-blocking — order is already confirmed)
+    await deductVariantStock(payload, normalizedItems, productsById)
 
     return withCors(request, Response.json({ success: true, orderId: order.orderId }))
   } catch (error) {

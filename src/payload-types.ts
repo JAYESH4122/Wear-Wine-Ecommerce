@@ -883,6 +883,14 @@ export interface Order {
   items: {
     product: number | Product;
     name: string;
+    /**
+     * The size variant ordered
+     */
+    size?: (number | null) | Size;
+    /**
+     * The color variant ordered
+     */
+    color?: (number | null) | Color;
     price: number;
     quantity: number;
     id?: string | null;
@@ -1378,6 +1386,8 @@ export interface OrdersSelect<T extends boolean = true> {
     | {
         product?: T;
         name?: T;
+        size?: T;
+        color?: T;
         price?: T;
         quantity?: T;
         id?: T;
