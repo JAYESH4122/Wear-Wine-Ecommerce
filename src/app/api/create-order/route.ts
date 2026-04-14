@@ -158,96 +158,38 @@ export const POST = async (request: Request): Promise<Response> => {
 
   // Razorpay expects amount in paise (multiply by 100)
   const amountInPaise = Math.round(normalizedComputedTotal * 100)
-  let createdOrderId: string | number | null = null
 
   try {
-    // 1. Create Order in Payload CMS
-    const order = await payload.create({
-      collection: 'orders',
-      data: {
-        user: payloadUser?.id || null,
-        email,
-        phone,
-        shippingAddress: {
-          fullName: shippingAddress.fullName!,
-          addressLine1: shippingAddress.addressLine1!,
-          addressLine2: shippingAddress.addressLine2 || '',
-          city: shippingAddress.city!,
-          state: shippingAddress.state!,
-          country: shippingAddress.country!,
-          postalCode: shippingAddress.postalCode!,
-          landmark: shippingAddress.landmark || '',
-        },
-        items: validItems,
-        total: normalizedComputedTotal,
-        status: 'pending',
-      },
-      overrideAccess: true,
-    })
-    createdOrderId = order.id
-    console.info('[create-order] CMS order created', {
-      orderId: String(order.id),
-      isGuest: !payloadUser?.id,
-      itemCount: validItems.length,
-      total: normalizedComputedTotal,
-    })
-
-    // 2. Create Order in Razorpay
+    // 1. Create Order in Razorpay ONLY
+    // We do NOT create the Payload order record yet to avoid "zombie" entries.
     const razorpayOrder = await razorpay.orders.create({
       amount: amountInPaise,
       currency: 'INR',
-      receipt: String(order.id),
+      receipt: `RCPT-${Date.now()}`,
       notes: {
-        orderId: String(order.id),
         email,
+        itemCount: String(validItems.length),
       },
     })
 
-    // 3. Update Payload order with razorpayOrderId
-    const updatedOrder = await payload.update({
-      collection: 'orders',
-      id: order.id,
-      data: {
-        razorpayOrderId: razorpayOrder.id,
-      },
-      overrideAccess: true,
-    })
-
-    if (!updatedOrder.razorpayOrderId) {
-      throw new Error('Order was created without razorpayOrderId')
-    }
-    console.info('[create-order] Razorpay order linked', {
-      orderId: String(order.id),
+    console.info('[create-order] Razorpay order generated', {
       razorpayOrderId: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      isGuest: !payloadUser?.id,
     })
 
     return withCors(
       request,
       Response.json({
-        orderId: order.id,
-        id: order.id,
         razorpayOrderId: razorpayOrder.id,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
+        // We return validItems and total so the frontend can pass them to verify-payment
+        // or just keep them in state.
       })
     )
   } catch (error) {
-    if (createdOrderId) {
-      try {
-        await payload.delete({
-          collection: 'orders',
-          id: createdOrderId,
-          overrideAccess: true,
-        })
-      } catch (cleanupError) {
-        console.error('[create-order] Failed to cleanup unlinked order', {
-          orderId: String(createdOrderId),
-          error: cleanupError instanceof Error ? cleanupError.message : 'unknown',
-        })
-      }
-    }
-    console.error('[create-order] Failed to create linked payment order', {
-      orderId: createdOrderId ? String(createdOrderId) : null,
+    console.error('[create-order] Failed to create Razorpay order', {
       error: error instanceof Error ? error.stack || error.message : String(error),
     })
     return withCors(request, Response.json({ error: error instanceof Error ? error.message : 'Failed to create payment order' }, { status: 500 }))

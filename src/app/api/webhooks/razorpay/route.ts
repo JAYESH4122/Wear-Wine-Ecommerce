@@ -93,8 +93,9 @@ export const POST = async (request: Request): Promise<Response> => {
   const order = orders.docs[0]
 
   if (eventName === 'order.paid' || eventName === 'payment.captured') {
-    if (order.status === 'paid') {
-      console.info('[razorpay-webhook] Already paid, skipping duplicate event', {
+    // If it's already placed (or any further fulfillment step), we don't need to re-mark it.
+    if (order.status !== 'failed' && order.status !== 'cancelled') {
+      console.info('[razorpay-webhook] Already processed, skipping duplicate event', {
         orderId: String(order.id),
         razorpayOrderId,
         event: eventName,
@@ -103,7 +104,7 @@ export const POST = async (request: Request): Promise<Response> => {
     }
 
     const updateData: Partial<Order> = {
-      status: 'paid',
+      status: 'placed',
       razorpayPaymentId: event.payload?.payment?.entity?.id ?? order.razorpayPaymentId,
       razorpaySignature: order.razorpaySignature,
     }
@@ -123,7 +124,7 @@ export const POST = async (request: Request): Promise<Response> => {
     return Response.json({ received: true })
   }
 
-  if (eventName === 'payment.failed' && order.status !== 'paid') {
+  if (eventName === 'payment.failed' && order.status !== 'placed') {
     await payload.update({
       collection: 'orders',
       id: order.id,

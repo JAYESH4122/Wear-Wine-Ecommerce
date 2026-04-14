@@ -231,6 +231,12 @@ const CartPageContent = () => {
     else if (step === 3) transitionTo(2, 'back')
   }, [step, transitionTo])
 
+  const router = React.useMemo(() => ({
+    push: (url: string) => {
+      window.location.href = url
+    }
+  }), [])
+
   const handleAddressChange = useCallback(
     (field: keyof AddressForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setAddress((prev) => ({ ...prev, [field]: e.target.value }))
@@ -322,6 +328,26 @@ const CartPageContent = () => {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
+                  orderData: {
+                    email: address.email,
+                    phone: address.phone,
+                    shippingAddress: {
+                      fullName: address.fullName,
+                      addressLine1: address.addressLine1,
+                      addressLine2: address.addressLine2,
+                      city: address.city,
+                      state: address.state,
+                      country: address.country,
+                      postalCode: address.zip,
+                      landmark: address.landmark,
+                    },
+                    items: cart.map((item) => ({
+                      productId: item.product.id,
+                      quantity: item.quantity,
+                    })),
+                    total: subtotal,
+                    userId: user?.id || null,
+                  },
                 }),
               })
 
@@ -332,7 +358,11 @@ const CartPageContent = () => {
 
               clearCart()
               setOrderSuccess('Payment successful! Your order has been placed.')
-              transitionTo(1, 'back')
+              
+              // Redirect to tracking page
+              setTimeout(() => {
+                router.push(`/order/${verifyData.orderId}?email=${encodeURIComponent(address.email)}`)
+              }, 1500)
             } catch (err) {
               setOrderError(err instanceof Error ? err.message : 'Verification failed')
               setIsPlacingOrder(false)

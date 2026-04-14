@@ -18,6 +18,17 @@ export type WishlistInputItem = {
   color?: PrimitiveId | null
 }
 
+export type ShippingAddressInput = {
+  fullName?: string
+  addressLine1?: string
+  addressLine2?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
+  landmark?: string
+}
+
 const toIdKey = (id: PrimitiveId): string => String(id)
 
 const normalizeProductId = (value: unknown): PrimitiveId | null => {
@@ -36,6 +47,38 @@ const normalizeProductId = (value: unknown): PrimitiveId | null => {
   }
 
   return null
+}
+
+export const normalizeMoney = (value: number) => Math.round(value * 100) / 100
+
+const toTrimmedString = (value: unknown): string => (typeof value === 'string' ? value.trim() : '')
+
+export const normalizeShippingAddress = (shippingAddress: ShippingAddressInput | undefined) => {
+  if (!shippingAddress) return null
+
+  const normalized = {
+    fullName: toTrimmedString(shippingAddress.fullName),
+    addressLine1: toTrimmedString(shippingAddress.addressLine1),
+    addressLine2: toTrimmedString(shippingAddress.addressLine2),
+    city: toTrimmedString(shippingAddress.city),
+    state: toTrimmedString(shippingAddress.state),
+    country: toTrimmedString(shippingAddress.country),
+    postalCode: toTrimmedString(shippingAddress.postalCode),
+    landmark: toTrimmedString(shippingAddress.landmark),
+  }
+
+  if (
+    !normalized.fullName ||
+    !normalized.addressLine1 ||
+    !normalized.city ||
+    !normalized.state ||
+    !normalized.country ||
+    !normalized.postalCode
+  ) {
+    return null
+  }
+
+  return normalized
 }
 
 export const normalizeCartItems = (value: unknown): CartInputItem[] => {

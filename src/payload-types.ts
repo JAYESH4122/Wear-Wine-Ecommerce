@@ -866,6 +866,7 @@ export interface Wishlist {
  */
 export interface Order {
   id: number;
+  orderId: string;
   user?: (number | null) | User;
   email: string;
   phone: string;
@@ -887,7 +888,10 @@ export interface Order {
     id?: string | null;
   }[];
   total: number;
-  status: 'pending' | 'processing' | 'paid' | 'delivered' | 'cancelled' | 'failed';
+  status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'failed';
+  courier?: 'dtdc' | null;
+  awbNumber?: string | null;
+  trackingUrl?: string | null;
   razorpayOrderId?: string | null;
   razorpayPaymentId?: string | null;
   razorpaySignature?: string | null;
@@ -1353,6 +1357,7 @@ export interface WishlistsSelect<T extends boolean = true> {
  * via the `definition` "orders_select".
  */
 export interface OrdersSelect<T extends boolean = true> {
+  orderId?: T;
   user?: T;
   email?: T;
   phone?: T;
@@ -1379,6 +1384,9 @@ export interface OrdersSelect<T extends boolean = true> {
       };
   total?: T;
   status?: T;
+  courier?: T;
+  awbNumber?: T;
+  trackingUrl?: T;
   razorpayOrderId?: T;
   razorpayPaymentId?: T;
   razorpaySignature?: T;

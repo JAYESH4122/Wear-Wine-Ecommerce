@@ -153,12 +153,14 @@ export const POST = async (request: Request): Promise<Response> => {
     return sum + item.price * item.quantity
   }, 0)
 
-  // Security: Status MUST be pending for new orders from this endpoint
-  const status = 'pending'
+  // Security: Status MUST be placed for new orders from this endpoint
+  const status = 'placed'
+  const orderId = `ORD-LEGACY-${Date.now()}`
 
   const order = await payload.create({
     collection: 'orders',
     data: {
+      orderId,
       user: payloadUser?.id,
       email,
       phone: (typeof body.phone === 'string' ? body.phone : '') || '9999999999', // Placeholder if not provided

@@ -3,6 +3,7 @@ import crypto from 'crypto'
 
 import configPromise from '@/payload.config'
 import { withCors } from '@/lib/server/cors'
+import { fetchProductsByIds, normalizeCartItems, normalizeShippingAddress, normalizeMoney } from '@/lib/server/commerce'
 
 const verifySignature = (orderId: string, paymentId: string, signature: string) => {
   const secret = process.env.RAZORPAY_KEY_SECRET!
@@ -23,6 +24,14 @@ export const POST = async (request: Request): Promise<Response> => {
     razorpay_order_id?: string
     razorpay_payment_id?: string
     razorpay_signature?: string
+    orderData?: {
+      email?: string
+      phone?: string
+      shippingAddress?: any
+      items?: any
+      total?: number
+      userId?: string | null
+    }
   } | null
 
   console.info('[verify-payment] Received payload:', {
@@ -31,87 +40,115 @@ export const POST = async (request: Request): Promise<Response> => {
     hasSignature: !!body?.razorpay_signature,
   })
 
-  if (!body || !body.razorpay_order_id || !body.razorpay_payment_id || !body.razorpay_signature) {
+  if (!body || !body.razorpay_order_id || !body.razorpay_payment_id || !body.razorpay_signature || !body.orderData) {
     return withCors(request, Response.json({ error: 'Missing required fields' }, { status: 400 }))
   }
 
+  const { orderData } = body
   const payload = await getPayload({ config: configPromise })
 
   try {
-    const orders = await payload.find({
+    // 1. Idempotency Check: Prevent duplicate orders using paymentId
+    const existingOrders = await payload.find({
       collection: 'orders',
       where: {
-        razorpayOrderId: {
-          equals: body.razorpay_order_id,
+        razorpayPaymentId: {
+          equals: body.razorpay_payment_id,
         },
       },
       overrideAccess: true,
-      limit: 2,
-      depth: 0,
+      limit: 1,
     })
 
-    if (orders.docs.length === 0) {
-      console.error('[verify-payment] Order not found', {
-        razorpayOrderId: body.razorpay_order_id,
+    if (existingOrders.docs.length > 0) {
+      console.info('[verify-payment] Order already exists for this paymentId (Idempotency), returning success', {
+        paymentId: body.razorpay_payment_id,
+        orderId: existingOrders.docs[0].orderId,
       })
-      return withCors(request, Response.json({ error: 'Order not found' }, { status: 404 }))
-    }
-    if (orders.totalDocs > 1) {
-      console.error('[verify-payment] Duplicate orders found for razorpayOrderId', {
-        razorpayOrderId: body.razorpay_order_id,
-        matches: orders.totalDocs,
-      })
-      return withCors(request, Response.json({ error: 'Order mapping conflict' }, { status: 409 }))
+      return withCors(request, Response.json({ success: true, orderId: existingOrders.docs[0].orderId }))
     }
 
-    const order = orders.docs[0]
-
-    // Idempotency guard: if webhook already marked this order as paid,
-    // return success without re-updating (prevents race condition / double-write).
-    if (order.status === 'paid') {
-      console.info('[verify-payment] Order already paid (webhook beat us), returning success', {
-        orderId: String(order.id),
-        razorpayOrderId: body.razorpay_order_id,
-      })
-      return withCors(request, Response.json({ success: true, orderId: order.id }))
-    }
-
+    // 2. Signature Verification
     const isValid = verifySignature(body.razorpay_order_id, body.razorpay_payment_id, body.razorpay_signature)
-
-    const updatedOrder = await payload.update({
-      collection: 'orders',
-      id: order.id,
-      data: isValid
-        ? {
-            status: 'paid',
-            razorpayPaymentId: body.razorpay_payment_id,
-            razorpaySignature: body.razorpay_signature,
-          }
-        : {
-            status: 'failed',
-            razorpayPaymentId: body.razorpay_payment_id,
-            razorpaySignature: body.razorpay_signature,
-          },
-      overrideAccess: true,
-    })
-
-    console.info('[verify-payment] Verification completed', {
-      orderId: String(order.id),
-      razorpayOrderId: body.razorpay_order_id,
-      status: updatedOrder.status,
-      validSignature: isValid,
-    })
-
     if (!isValid) {
+      console.error('[verify-payment] Invalid signature', {
+        razorpayOrderId: body.razorpay_order_id,
+        razorpayPaymentId: body.razorpay_payment_id,
+      })
       return withCors(request, Response.json({ error: 'Invalid signature' }, { status: 400 }))
     }
 
-    return withCors(request, Response.json({ success: true, orderId: updatedOrder.id }))
+    // 3. Security Re-validation (Prevent trust of frontend data)
+    const normalizedItems = normalizeCartItems(orderData.items)
+    const shippingAddress = normalizeShippingAddress(orderData.shippingAddress)
+
+    if (!normalizedItems.length || !shippingAddress || !orderData.email || !orderData.phone) {
+      return withCors(request, Response.json({ error: 'Invalid order data' }, { status: 400 }))
+    }
+
+    const productsById = await fetchProductsByIds(
+      payload,
+      normalizedItems.map((item) => item.productId),
+    )
+
+    const validItems = normalizedItems
+      .map((item) => {
+        const product = productsById.get(String(item.productId))
+        if (!product) return null
+        return {
+          product: item.productId,
+          quantity: item.quantity,
+          name: product.name,
+          price: typeof product.salePrice === 'number' ? product.salePrice : product.price,
+        }
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+
+    const computedTotal = validItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    const normalizedComputedTotal = normalizeMoney(computedTotal)
+
+    // Note: We should also verify this against the actual Razorpay order amount if possible,
+    // but re-calculating here is a strong first step.
+    
+    // 4. Create Order in Payload
+    const orderId = `ORD-${Date.now()}`
+    const order = await payload.create({
+      collection: 'orders',
+      data: {
+        orderId,
+        user: orderData.userId ? Number(orderData.userId) : null,
+        email: orderData.email.toLowerCase().trim(),
+        phone: orderData.phone.trim(),
+        shippingAddress: {
+          fullName: shippingAddress.fullName!,
+          addressLine1: shippingAddress.addressLine1!,
+          addressLine2: shippingAddress.addressLine2 || '',
+          city: shippingAddress.city!,
+          state: shippingAddress.state!,
+          country: shippingAddress.country!,
+          postalCode: shippingAddress.postalCode!,
+          landmark: shippingAddress.landmark || '',
+        },
+        items: validItems,
+        total: normalizedComputedTotal,
+        status: 'placed',
+        razorpayOrderId: body.razorpay_order_id,
+        razorpayPaymentId: body.razorpay_payment_id,
+        razorpaySignature: body.razorpay_signature,
+      },
+      overrideAccess: true,
+    })
+
+    console.info('[verify-payment] Order created successfully', {
+      orderId: order.orderId,
+      razorpayPaymentId: body.razorpay_payment_id,
+    })
+
+    return withCors(request, Response.json({ success: true, orderId: order.orderId }))
   } catch (error) {
-    console.error('[verify-payment] Failed to verify payment', {
-      razorpayOrderId: body.razorpay_order_id,
+    console.error('[verify-payment] System error during verification/creation', {
       error: error instanceof Error ? error.message : 'unknown',
     })
-    return withCors(request, Response.json({ error: 'Failed to update order' }, { status: 500 }))
+    return withCors(request, Response.json({ error: 'Internal server error' }, { status: 500 }))
   }
 }

@@ -3851,6 +3851,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "order_id": {
+          "name": "order_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
         "user_id": {
           "name": "user_id",
           "type": "integer",
@@ -3930,7 +3936,27 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'pending'"
+          "default": "'placed'"
+        },
+        "courier": {
+          "name": "courier",
+          "type": "enum_orders_courier",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'dtdc'"
+        },
+        "awb_number": {
+          "name": "awb_number",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tracking_url": {
+          "name": "tracking_url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "razorpay_order_id": {
           "name": "razorpay_order_id",
@@ -3966,6 +3992,21 @@
         }
       },
       "indexes": {
+        "orders_order_id_idx": {
+          "name": "orders_order_id_idx",
+          "columns": [
+            {
+              "expression": "order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "orders_user_idx": {
           "name": "orders_user_idx",
           "columns": [
@@ -6531,12 +6572,20 @@
       "name": "enum_orders_status",
       "schema": "public",
       "values": [
-        "pending",
-        "processing",
-        "paid",
+        "placed",
+        "packed",
+        "shipped",
+        "out_for_delivery",
         "delivered",
         "cancelled",
         "failed"
+      ]
+    },
+    "public.enum_orders_courier": {
+      "name": "enum_orders_courier",
+      "schema": "public",
+      "values": [
+        "dtdc"
       ]
     },
     "public.enum_site_settings_social_links_platform": {
@@ -6560,6 +6609,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "4c4c254b-0e3e-4a1d-aa29-0f0933a219f4",
+  "id": "5113c547-2131-4e54-aef0-b2c834489016",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

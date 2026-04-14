@@ -26,17 +26,26 @@ export const Orders: CollectionConfig = {
         }
       }
 
-      // Guest access control could be handled by a query param or token in a real scenario,
-      // but here we might want to restrict guest read access via API if not authenticated.
-      // However, for the 'orders' page to show something for guests, they usually need to provide an email.
-      // For now, let's keep it restricted to authenticated users or admins for list view.
-      // If we need guests to view a specific order, they'll likely use a public 'success' page with order ID.
+      // Guest access control:
+      // We do NOT allow public read access to the orders collection via REST API.
+      // The tracking page will use the Local API with overrideAccess: true
+      // ONLY after verifying both email and orderId.
       return false
     },
     update: adminOnly,
     delete: adminOnly,
   },
   fields: [
+    {
+      name: 'orderId',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
+      admin: {
+        readOnly: true,
+      },
+    },
     {
       name: 'user',
       type: 'relationship',
@@ -141,33 +150,32 @@ export const Orders: CollectionConfig = {
       name: 'status',
       type: 'select',
       required: true,
-      defaultValue: 'pending',
+      defaultValue: 'placed',
       options: [
-        {
-          label: 'Pending',
-          value: 'pending',
-        },
-        {
-          label: 'Processing',
-          value: 'processing',
-        },
-        {
-          label: 'Paid',
-          value: 'paid',
-        },
-        {
-          label: 'Delivered',
-          value: 'delivered',
-        },
-        {
-          label: 'Cancelled',
-          value: 'cancelled',
-        },
-        {
-          label: 'Failed',
-          value: 'failed',
-        },
+        { label: 'Placed', value: 'placed' },
+        { label: 'Packed', value: 'packed' },
+        { label: 'Shipped', value: 'shipped' },
+        { label: 'Out for Delivery', value: 'out_for_delivery' },
+        { label: 'Delivered', value: 'delivered' },
+        { label: 'Cancelled', value: 'cancelled' },
+        { label: 'Failed', value: 'failed' },
       ],
+    },
+    {
+      name: 'courier',
+      type: 'select',
+      defaultValue: 'dtdc',
+      options: [
+        { label: 'DTDC', value: 'dtdc' },
+      ],
+    },
+    {
+      name: 'awbNumber',
+      type: 'text',
+    },
+    {
+      name: 'trackingUrl',
+      type: 'text',
     },
     {
       name: 'razorpayOrderId',
