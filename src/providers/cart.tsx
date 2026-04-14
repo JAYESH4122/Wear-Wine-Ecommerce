@@ -192,6 +192,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isHydrated, setIsHydrated] = useState(false)
   const skipNextRemoteSync = useRef(false)
   const hasLoadedRemoteCart = useRef(false)
+  const isFetchingRemote = useRef(false)
 
   useEffect(() => {
     setCart(readLocalCart())
@@ -200,6 +201,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadRemoteCart = React.useCallback(async () => {
     const API_URL = getApiUrl()
+    isFetchingRemote.current = true
 
     try {
       const response = await fetch(`${API_URL}/api/cart`, {
@@ -213,6 +215,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       skipNextRemoteSync.current = true
       setCart(normalizeRemoteCartItems(data.items))
     } finally {
+      isFetchingRemote.current = false
       hasLoadedRemoteCart.current = true
     }
   }, [])
@@ -246,6 +249,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cart))
       return
     }
+
+    // Don't sync while initial remote load is in-flight; the load will set
+    // skipNextRemoteSync which handles the state replacement gracefully.
+    if (isFetchingRemote.current) return
 
     if (!hasLoadedRemoteCart.current) return
 

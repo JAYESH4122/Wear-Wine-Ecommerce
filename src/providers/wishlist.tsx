@@ -88,6 +88,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const skipNextRemoteSync = useRef(false)
   const hasLoadedRemoteWishlist = useRef(false)
   const isInitialLoad = useRef(true)
+  const isFetchingRemote = useRef(false)
 
   const hydrateGuestWishlist = React.useCallback(async (items: GuestWishlistItem[]) => {
     if (items.length === 0) return []
@@ -149,6 +150,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const loadRemoteWishlist = React.useCallback(async () => {
     const API_URL = getApiUrl()
+    isFetchingRemote.current = true
     try {
       setIsLoading(true)
       const response = await fetch(`${API_URL}/api/wishlist`, {
@@ -165,6 +167,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setWishlist(normalizedItems)
       }
     } finally {
+      isFetchingRemote.current = false
       hasLoadedRemoteWishlist.current = true
       setIsLoading(false)
     }
@@ -196,6 +199,9 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(minimalItems))
       return
     }
+
+    // Don't sync while initial remote load is in-flight
+    if (isFetchingRemote.current) return
 
     if (!hasLoadedRemoteWishlist.current) return
 
