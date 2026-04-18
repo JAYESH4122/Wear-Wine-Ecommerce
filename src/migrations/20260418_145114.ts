@@ -28,7 +28,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE TYPE "public"."enum_product_list_section_properties_padding_bottom_mobile" AS ENUM('NONE', 'SM1', 'SM2', 'SM3', 'MD1', 'MD2', 'MD3', 'LG1', 'LG2', 'LG3', 'XL1', 'XL2', 'XL3', 'XXL1', 'XXL2', 'XXL3');
   CREATE TYPE "public"."enum_product_list_section_properties_background_color" AS ENUM('primary', 'secondary', 'alt');
   CREATE TYPE "public"."enum_product_list_section_properties_background_color_mobile" AS ENUM('primary', 'secondary', 'alt');
-  CREATE TYPE "public"."enum_pages_blocks_contact_methods_type" AS ENUM('Email', 'Phone', 'Live Chat', 'Support Hours');
+  CREATE TYPE "public"."enum_pages_blocks_contact_methods_type" AS ENUM('Email', 'Phone', 'Chat');
   CREATE TYPE "public"."enum_pages_blocks_contact_social_links_platform" AS ENUM('Instagram', 'Twitter', 'LinkedIn', 'Facebook');
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_padding_top" AS ENUM('NONE', 'SM1', 'SM2', 'SM3', 'MD1', 'MD2', 'MD3', 'LG1', 'LG2', 'LG3', 'XL1', 'XL2', 'XL3', 'XXL1', 'XXL2', 'XXL3');
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_padding_top_mobile" AS ENUM('NONE', 'SM1', 'SM2', 'SM3', 'MD1', 'MD2', 'MD3', 'LG1', 'LG2', 'LG3', 'XL1', 'XL2', 'XL3', 'XXL1', 'XXL2', 'XXL3');
@@ -38,6 +38,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_background_color_mobile" AS ENUM('primary', 'secondary', 'alt');
   CREATE TYPE "public"."enum_orders_status" AS ENUM('placed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'failed');
   CREATE TYPE "public"."enum_orders_courier" AS ENUM('dtdc');
+  CREATE TYPE "public"."enum_header_nav_items_type" AS ENUM('page', 'section');
+  CREATE TYPE "public"."enum_header_nav_items_section" AS ENUM('hero', 'collectionGallery', 'depthDeckCarousel', 'productListSection', 'contact');
   CREATE TYPE "public"."enum_site_settings_social_links_platform" AS ENUM('Instagram', 'Twitter', 'LinkedIn', 'Facebook');
   CREATE TABLE "users_roles" (
   	"order" integer NOT NULL,
@@ -276,9 +278,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"badge" varchar DEFAULT 'Get In Touch' NOT NULL,
   	"title" varchar NOT NULL,
   	"description" varchar NOT NULL,
-  	"newsletter_title" varchar DEFAULT 'Join Our Community' NOT NULL,
-  	"newsletter_description" varchar DEFAULT 'Subscribe for exclusive offers, early access, and styling inspiration.' NOT NULL,
-  	"newsletter_button_text" varchar DEFAULT 'Subscribe' NOT NULL,
+  	"cta_label" varchar DEFAULT 'Subscribe' NOT NULL,
+  	"cta_href" varchar DEFAULT '#subscribe' NOT NULL,
   	"block_name" varchar
   );
   
@@ -355,6 +356,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"id" varchar PRIMARY KEY NOT NULL,
   	"product_id" integer NOT NULL,
   	"name" varchar NOT NULL,
+  	"size_id" integer,
+  	"color_id" integer,
   	"price" numeric NOT NULL,
   	"quantity" numeric NOT NULL
   );
@@ -445,7 +448,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
+  	"type" "enum_header_nav_items_type" DEFAULT 'page',
   	"link_id" integer,
+  	"section" "enum_header_nav_items_section",
   	"label" varchar
   );
   
@@ -580,6 +585,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "wishlists_products" ADD CONSTRAINT "wishlists_products_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."wishlists"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "orders_items" ADD CONSTRAINT "orders_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "orders_items" ADD CONSTRAINT "orders_items_size_id_sizes_id_fk" FOREIGN KEY ("size_id") REFERENCES "public"."sizes"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "orders_items" ADD CONSTRAINT "orders_items_color_id_colors_id_fk" FOREIGN KEY ("color_id") REFERENCES "public"."colors"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "orders_items" ADD CONSTRAINT "orders_items_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."orders"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "orders" ADD CONSTRAINT "orders_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."payload_locked_documents"("id") ON DELETE cascade ON UPDATE no action;
@@ -702,6 +709,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "orders_items_order_idx" ON "orders_items" USING btree ("_order");
   CREATE INDEX "orders_items_parent_id_idx" ON "orders_items" USING btree ("_parent_id");
   CREATE INDEX "orders_items_product_idx" ON "orders_items" USING btree ("product_id");
+  CREATE INDEX "orders_items_size_idx" ON "orders_items" USING btree ("size_id");
+  CREATE INDEX "orders_items_color_idx" ON "orders_items" USING btree ("color_id");
   CREATE UNIQUE INDEX "orders_order_id_idx" ON "orders" USING btree ("order_id");
   CREATE INDEX "orders_user_idx" ON "orders" USING btree ("user_id");
   CREATE INDEX "orders_email_idx" ON "orders" USING btree ("email");
@@ -842,5 +851,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TYPE "public"."enum_pages_blocks_contact_properties_background_color_mobile";
   DROP TYPE "public"."enum_orders_status";
   DROP TYPE "public"."enum_orders_courier";
+  DROP TYPE "public"."enum_header_nav_items_type";
+  DROP TYPE "public"."enum_header_nav_items_section";
   DROP TYPE "public"."enum_site_settings_social_links_platform";`)
 }
