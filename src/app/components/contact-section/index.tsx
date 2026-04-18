@@ -2,271 +2,286 @@
 
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { SectionWrapper } from '../SectionWrapper'
 import type { ContainerPropsType } from '@types-frontend/types'
-
-import {
-  Phone,
-  Mail,
-  Clock,
-  ChevronRight,
-  Instagram,
-  Twitter,
-  Linkedin,
-  Facebook,
-  ArrowUpRight,
-  Headphones,
-} from 'lucide-react'
+import { Mail, Phone, Headphones, ArrowUpRight, Send } from 'lucide-react'
+import { FaInstagram, FaWhatsapp } from 'react-icons/fa6'
+import { cn } from '@/lib/utils'
 
 export interface ContactSectionProps {
-  badge: string
+  badge?: string
   title: string
-  description: string
+  description?: string
   methods: {
-    type: string
+    type: 'Email' | 'Phone' | 'Chat'
     value: string
     href: string
   }[]
-  socialLinks: {
-    platform: 'Instagram' | 'Twitter' | 'LinkedIn' | 'Facebook'
-    href: string
-  }[]
-  newsletter: {
-    title: string
-    description: string
-    buttonText: string
-  }
+  instagramHref?: string
+  whatsappHref?: string
   properties?: ContainerPropsType
 }
 
 gsap.registerPlugin(ScrollTrigger)
 
-const getSocialIcon = (platform: string) => {
-  switch (platform) {
-    case 'Instagram': return Instagram
-    case 'Twitter': return Twitter
-    case 'LinkedIn': return Linkedin
-    case 'Facebook': return Facebook
-    default: return ArrowUpRight
+const METHOD_CONFIG: Record<
+  string,
+  {
+    icon: React.ElementType
+    bg: string
+    hoverBg: string
+    iconColor: string
+    labelColor: string
+    valueColor: string
   }
-}
-
-const getMethodIcon = (type: string) => {
-  switch (type) {
-    case 'Email': return Mail
-    case 'Phone': return Phone
-    case 'Chat': return Headphones
-    default: return Clock
-  }
+> = {
+  Email: {
+    icon: Mail,
+    bg: 'bg-[#f0f4ff]',
+    hoverBg: 'hover:bg-[#e2eaff]',
+    iconColor: 'text-[#4361ee]',
+    labelColor: 'text-[#4361ee]/70',
+    valueColor: 'text-[#1a2563]',
+  },
+  Phone: {
+    icon: Phone,
+    bg: 'bg-[#f0faf4]',
+    hoverBg: 'hover:bg-[#dcf5e7]',
+    iconColor: 'text-[#2d9b5a]',
+    labelColor: 'text-[#2d9b5a]/70',
+    valueColor: 'text-[#14472a]',
+  },
+  Chat: {
+    icon: Headphones,
+    bg: 'bg-[#fdf4ef]',
+    hoverBg: 'hover:bg-[#fce8db]',
+    iconColor: 'text-[#e07b39]',
+    labelColor: 'text-[#e07b39]/70',
+    valueColor: 'text-[#5c2d0a]',
+  },
 }
 
 export const ContactSection = ({
-  badge,
+  badge = 'Get in Touch',
   title,
   description,
   methods,
-  socialLinks,
-  newsletter,
+  instagramHref = 'https://instagram.com/wearvine',
+  whatsappHref = 'https://wa.me/18009328746',
   properties,
 }: ContactSectionProps) => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const headerRef = useRef<HTMLDivElement>(null)
-  const methodsRef = useRef<HTMLDivElement>(null)
-  const footerRef = useRef<HTMLDivElement>(null)
-  const bannerRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [formState, setFormState] = useState({ name: '', email: '', message: '' })
+  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia()
 
-      mm.add('(min-width: 1024px)', () => {
-        // Desktop Entrance
-        gsap.from(headerRef.current, {
-          y: 50,
-          opacity: 0,
-          duration: 1,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: headerRef.current,
-            start: 'top 85%',
-          },
-        })
-
-        gsap.from('.method-card', {
+      mm.add('(pointer: fine)', () => {
+        gsap.from('.cs-fade', {
           y: 40,
           opacity: 0,
           duration: 1,
           stagger: 0.1,
           ease: 'power3.out',
-          scrollTrigger: {
-            trigger: methodsRef.current,
-            start: 'top 80%',
-          },
+          scrollTrigger: { trigger: rootRef.current, start: 'top 80%' },
         })
-
-        gsap.from(footerRef.current, {
-          y: 30,
-          opacity: 0,
-          duration: 1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: footerRef.current,
-            start: 'top 90%',
-          },
-        })
-
-        if (bannerRef.current) {
-          gsap.from(bannerRef.current, {
-            scale: 0.98,
-            opacity: 0,
-            duration: 1.2,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: bannerRef.current,
-              start: 'top 85%',
-            },
-          })
-        }
       })
 
-      mm.add('(max-width: 1023px)', () => {
-        // Mobile Entrance
-        gsap.from([headerRef.current, '.method-card'], {
+      mm.add('(pointer: coarse)', () => {
+        gsap.from('.cs-fade', {
           y: 20,
           opacity: 0,
           duration: 0.7,
-          stagger: 0.08,
+          stagger: 0.07,
           ease: 'power2.out',
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: 'top 90%',
-          },
+          scrollTrigger: { trigger: rootRef.current, start: 'top 90%' },
         })
       })
-    }, containerRef)
+    }, rootRef)
 
     return () => ctx.revert()
   }, [])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitted(true)
+  }
+
   return (
     <SectionWrapper containerProps={properties ?? {}}>
-      <div ref={containerRef} className="relative z-10">
-        {/* Header */}
-        <div ref={headerRef} className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
-          <span className="text-xs font-medium tracking-wider uppercase text-neutral-500 block mb-6">
-            {badge}
-          </span>
-
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-neutral-900 mb-6">
-            {title}
-          </h2>
-
-          <p className="text-base text-neutral-500 max-w-2xl mx-auto leading-relaxed">
-            {description}
-          </p>
-        </div>
-
-        {/* Contact Methods Grid */}
-        <div ref={methodsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-16 md:mb-20">
-          {methods.map((method) => {
-            const Icon = getMethodIcon(method.type)
-            return (
-              <a
-                key={method.type}
-                href={method.href}
-                className="method-card group relative bg-gradient-to-br from-white to-neutral-50/80 border border-neutral-200 p-6 md:p-8 hover:border-neutral-300 transition-all duration-500 cursor-pointer overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-neutral-900 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                
-                <div className="relative z-10">
-                  <div className="w-14 h-14 border border-neutral-200 group-hover:border-white/30 flex items-center justify-center mb-6 transition-all duration-500 bg-gradient-to-br from-white to-neutral-50 group-hover:from-white/10 group-hover:to-white/5">
-                    <Icon
-                      className="w-6 h-6 text-neutral-600 group-hover:text-white transition-colors duration-500"
-                      strokeWidth={1.2}
-                    />
-                  </div>
-
-                  <span className="text-xs font-medium tracking-wider uppercase text-neutral-400 group-hover:text-white/70 block mb-2 transition-colors duration-500">
-                    {method.type}
-                  </span>
-
-                  <p className="text-base font-medium text-neutral-900 group-hover:text-white transition-colors duration-500">
-                    {method.value}
-                  </p>
-
-                  <div className="absolute top-2 right-2">
-                    <ArrowUpRight
-                      className="w-5 h-5 text-neutral-900 group-hover:text-white transition-colors duration-500"
-                      strokeWidth={1.2}
-                    />
-                  </div>
-                </div>
-              </a>
-            )
-          })}
-        </div>
-
-        {/* Divider */}
-        <div className="border-b border-neutral-200 mb-16 md:mb-20" />
-
-        {/* Social Section */}
-        <div ref={footerRef} className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div>
-            <span className="text-xs font-medium tracking-wider uppercase text-neutral-500 block mb-3">
-              Follow Us
+      <div ref={rootRef} className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-24">
+        {/* ── LEFT COLUMN ─────────────────────────────────────── */}
+        <div className="flex flex-col gap-10">
+          {/* Header */}
+          <div className="cs-fade">
+            <span className="text-[10px] tracking-[0.25em] uppercase text-neutral-400 block mb-4">
+              {badge}
             </span>
-            <p className="text-base text-neutral-900">Stay connected for updates & new arrivals</p>
+            <h2 className="text-5xl md:text-6xl font-light tracking-tight text-neutral-900 leading-none mb-4 whitespace-pre-line">
+              {title}
+            </h2>
+            {description && (
+              <p className="text-sm text-neutral-500 leading-relaxed max-w-sm">{description}</p>
+            )}
           </div>
 
-          <div className="flex items-center gap-3">
-            {socialLinks.map((social) => {
-              const Icon = getSocialIcon(social.platform)
+          {/* Method Cards */}
+          <div className="cs-fade flex flex-col gap-2.5">
+            {methods.map((m) => {
+              const config = METHOD_CONFIG[m.type]
+              const Icon = config.icon
               return (
                 <a
-                  key={social.platform}
-                  href={social.href}
-                  className="group relative w-14 h-14 border border-neutral-200 bg-gradient-to-br from-white to-neutral-50 hover:border-transparent flex items-center justify-center transition-all duration-300 overflow-hidden"
-                  aria-label={social.platform}
+                  key={m.type}
+                  href={m.href}
+                  className={cn(
+                    'group flex items-center gap-4 px-5 py-4 transition-colors duration-300',
+                    config.bg,
+                    config.hoverBg,
+                  )}
                 >
-                  <div className="absolute inset-0 bg-neutral-900 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <Icon
-                    className="w-5 h-5 text-neutral-500 group-hover:text-white transition-colors duration-500 relative z-10"
-                    strokeWidth={1.2}
+                  <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                    <Icon className={cn('w-4 h-4', config.iconColor)} strokeWidth={1.5} />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span
+                      className={cn(
+                        'text-[10px] tracking-[0.18em] uppercase font-medium',
+                        config.labelColor,
+                      )}
+                    >
+                      {m.type}
+                    </span>
+                    <span className={cn('text-sm font-medium truncate', config.valueColor)}>
+                      {m.value}
+                    </span>
+                  </div>
+                  <ArrowUpRight
+                    className={cn(
+                      'w-4 h-4 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300',
+                      config.iconColor,
+                    )}
+                    strokeWidth={1.5}
                   />
                 </a>
               )
             })}
           </div>
+
+          {/* Socials */}
+          <div className="cs-fade flex items-center gap-3 border-t border-neutral-100 pt-8">
+            <span className="text-[10px] tracking-[0.2em] uppercase text-neutral-400 mr-2">
+              Follow
+            </span>
+            <a
+              href={instagramHref}
+              aria-label="Instagram"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group w-10 h-10 border border-neutral-200 flex items-center justify-center hover:border-[#E1306C] hover:bg-[#E1306C] transition-all duration-300"
+            >
+              <FaInstagram className="w-4 h-4 text-neutral-400 group-hover:text-white transition-colors duration-300" />
+            </a>
+            <a
+              href={whatsappHref}
+              aria-label="WhatsApp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group w-10 h-10 border border-neutral-200 flex items-center justify-center hover:border-[#25D366] hover:bg-[#25D366] transition-all duration-300"
+            >
+              <FaWhatsapp className="w-4 h-4 text-neutral-400 group-hover:text-white transition-colors duration-300" />
+            </a>
+          </div>
         </div>
 
-        {/* CTA Banner */}
-        {newsletter && (
-          <div ref={bannerRef} className="mt-16 md:mt-20 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 text-white relative overflow-hidden group">
-            <div className="relative p-10 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
-              <div>
-                <span className="text-xs font-medium tracking-wider uppercase text-neutral-400 block mb-4">
-                  Newsletter
-                </span>
+        {/* ── RIGHT COLUMN — FORM ──────────────────────────────── */}
+        <div className="cs-fade">
+          {submitted ? (
+            <div className="h-full min-h-[360px] flex flex-col items-center justify-center text-center gap-4 bg-neutral-50 px-8 py-16">
+              <div className="w-12 h-12 border border-neutral-900 flex items-center justify-center">
+                <Send className="w-5 h-5 text-neutral-900" strokeWidth={1.3} />
+              </div>
+              <h3 className="text-2xl font-light tracking-tight text-neutral-900">Message Sent</h3>
+              <p className="text-sm text-neutral-500 max-w-xs leading-relaxed">
+                We'll get back to you within 24 hours. Keep an eye on your inbox.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSubmitted(false)
+                  setFormState({ name: '', email: '', message: '' })
+                }}
+                className="mt-4 text-[10px] tracking-[0.2em] uppercase text-neutral-400 hover:text-neutral-900 transition-colors duration-300 underline underline-offset-4"
+              >
+                Send another
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* Name */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] tracking-[0.2em] uppercase text-neutral-400">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Your name"
+                    value={formState.name}
+                    onChange={(e) => setFormState((p) => ({ ...p, name: e.target.value }))}
+                    className="bg-neutral-50 border border-neutral-200 px-4 py-3.5 text-sm text-neutral-900 placeholder:text-neutral-300 focus:outline-none focus:border-neutral-900 transition-colors duration-200"
+                  />
+                </div>
 
-                <h3 className="text-2xl md:text-3xl lg:text-4xl font-light tracking-tight mb-3">
-                  {newsletter.title}
-                </h3>
-
-                <p className="text-base text-neutral-400 max-w-md leading-relaxed">
-                  {newsletter.description}
-                </p>
+                {/* Email */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] tracking-[0.2em] uppercase text-neutral-400">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="you@email.com"
+                    value={formState.email}
+                    onChange={(e) => setFormState((p) => ({ ...p, email: e.target.value }))}
+                    className="bg-neutral-50 border border-neutral-200 px-4 py-3.5 text-sm text-neutral-900 placeholder:text-neutral-300 focus:outline-none focus:border-neutral-900 transition-colors duration-200"
+                  />
+                </div>
               </div>
 
-              <a
-                href="#subscribe"
-                className="group/btn inline-flex items-center gap-3 bg-white text-neutral-900 text-sm font-medium tracking-wide uppercase px-12 py-5 hover:bg-neutral-50 transition-all duration-300 cursor-pointer flex-shrink-0 relative overflow-hidden"
+              {/* Message */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] tracking-[0.2em] uppercase text-neutral-400">
+                  Message
+                </label>
+                <textarea
+                  required
+                  rows={6}
+                  placeholder="Tell us what's on your mind…"
+                  value={formState.message}
+                  onChange={(e) => setFormState((p) => ({ ...p, message: e.target.value }))}
+                  className="bg-neutral-50 border border-neutral-200 px-4 py-3.5 text-sm text-neutral-900 placeholder:text-neutral-300 focus:outline-none focus:border-neutral-900 transition-colors duration-200 resize-none"
+                />
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="group flex items-center justify-center gap-3 bg-neutral-900 text-white text-[11px] tracking-[0.22em] uppercase px-8 py-4 hover:bg-neutral-700 active:bg-neutral-800 transition-colors duration-300 w-full"
               >
-                <span className="relative z-10">{newsletter.buttonText}</span>
-                <ChevronRight className="w-4 h-4 relative z-10" strokeWidth={1.5} />
-              </a>
-            </div>
-          </div>
-        )}
+                Send Message
+                <Send
+                  className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
+                  strokeWidth={1.5}
+                />
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </SectionWrapper>
   )

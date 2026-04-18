@@ -774,7 +774,7 @@ export interface ContactBlock {
   description: string;
   methods?:
     | {
-        type: 'Email' | 'Phone' | 'Live Chat' | 'Support Hours';
+        type: 'Email' | 'Phone' | 'Chat';
         value: string;
         href?: string | null;
         id?: string | null;
@@ -787,11 +787,8 @@ export interface ContactBlock {
         id?: string | null;
       }[]
     | null;
-  newsletter: {
-    title: string;
-    description: string;
-    buttonText: string;
-  };
+  ctaLabel: string;
+  ctaHref: string;
   id?: string | null;
   blockName?: string | null;
   blockType: 'contact';
@@ -1289,13 +1286,8 @@ export interface ContactBlockSelect<T extends boolean = true> {
         href?: T;
         id?: T;
       };
-  newsletter?:
-    | T
-    | {
-        title?: T;
-        description?: T;
-        buttonText?: T;
-      };
+  ctaLabel?: T;
+  ctaHref?: T;
   id?: T;
   blockName?: T;
 }

@@ -33,7 +33,7 @@ export const Contact: Block = {
         {
           name: 'type',
           type: 'select',
-          options: ['Email', 'Phone', 'Live Chat', 'Support Hours'],
+          options: ['Email', 'Phone', 'Chat'],
           required: true,
         },
         {
@@ -65,28 +65,16 @@ export const Contact: Block = {
       ],
     },
     {
-      name: 'newsletter',
-      type: 'group',
-      fields: [
-        {
-          name: 'title',
-          type: 'text',
-          required: true,
-          defaultValue: 'Join Our Community',
-        },
-        {
-          name: 'description',
-          type: 'textarea',
-          required: true,
-          defaultValue: 'Subscribe for exclusive offers, early access, and styling inspiration.',
-        },
-        {
-          name: 'buttonText',
-          type: 'text',
-          required: true,
-          defaultValue: 'Subscribe',
-        },
-      ],
+      name: 'ctaLabel',
+      type: 'text',
+      required: true,
+      defaultValue: 'Subscribe',
+    },
+    {
+      name: 'ctaHref',
+      type: 'text',
+      required: true,
+      defaultValue: '#subscribe',
     },
   ],
 }
