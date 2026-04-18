@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { formatSlug } from './lib'
+import { formatSlug, generateSlug } from './lib'
 import { validateVariantCombination } from './validation'
 
 export const Products: CollectionConfig = {
@@ -14,14 +14,7 @@ export const Products: CollectionConfig = {
   },
 
   hooks: {
-    beforeValidate: [
-      ({ data }) => {
-        if (data?.name && !data?.slug) {
-          data.slug = formatSlug(data.name)
-        }
-        return data
-      },
-    ],
+    beforeValidate: [generateSlug('name')],
   },
 
   fields: [

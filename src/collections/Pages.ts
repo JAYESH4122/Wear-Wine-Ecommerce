@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload'
+import { generateSlug } from './lib'
 import { CollectionGallery } from './CollectionGallery'
 import { DepthDeckCarousel } from './DepthDeckCarousel'
 import { ProductListSection } from './ProductListSection'
@@ -13,6 +14,9 @@ export const Pages: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    beforeValidate: [generateSlug('title')],
   },
   fields: [
     {
@@ -29,17 +33,6 @@ export const Pages: CollectionConfig = {
       admin: {
         position: 'sidebar',
       },
-      hooks: {
-        beforeValidate: [
-          ({ value, data }) => {
-            if (value) return value
-            if (data?.title) {
-              return data.title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
-            }
-            return value
-          }
-        ]
-      }
     },
     {
       name: 'layout',

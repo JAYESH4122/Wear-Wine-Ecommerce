@@ -143,11 +143,17 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
     cmsData?.navItems
       ?.map((item) => {
         if (!item?.label) return null
+        
+        const type = (item as any).type || 'page'
+        if (type === 'section' && (item as any).section) {
+          return { name: item.label, href: `/#${(item as any).section}`, isSection: true }
+        }
+
         const href =
           item.link && typeof item.link === 'object' ? `/${(item.link as Page).slug}` : '/'
-        return { name: item.label, href }
+        return { name: item.label, href, isSection: false }
       })
-      .filter((item): item is { name: string; href: string } => Boolean(item)) ?? []
+      .filter((item): item is { name: string; href: string; isSection: boolean } => Boolean(item)) ?? []
 
   return (
     <>
@@ -222,11 +228,17 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
             {/* Desktop nav */}
             <nav className="hidden lg:flex items-center gap-2">
               {navItems.map((item) => {
-                const isActive = pathname === item.href
+                const isActive = item.isSection ? false : pathname === item.href
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
+                    onClick={(e) => {
+                      if (item.isSection && pathname === '/') {
+                        e.preventDefault()
+                        document.getElementById(item.href.split('#')[1])?.scrollIntoView({ behavior: 'smooth' })
+                      }
+                    }}
                     className={clsx(
                       'px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all duration-300 relative group',
                       isActive ? 'text-primary' : 'text-secondary hover:text-text',
@@ -532,12 +544,18 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <nav className="px-3 py-4 pt-16">
             {navItems.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = item.isSection ? false : pathname === item.href
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={closeMenu}
+                  onClick={(e) => {
+                    if (item.isSection && pathname === '/') {
+                      e.preventDefault()
+                      document.getElementById(item.href.split('#')[1])?.scrollIntoView({ behavior: 'smooth' })
+                    }
+                    closeMenu()
+                  }}
                   className={clsx(
                     'flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold uppercase tracking-wider transition-colors',
                     isActive ? 'text-primary' : 'text-text hover:bg-secondary/5',

@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { generateSlug } from './lib'
 
 export const Tags: CollectionConfig = {
   slug: 'tags',
@@ -9,6 +10,10 @@ export const Tags: CollectionConfig = {
 
   access: {
     read: () => true,
+  },
+
+  hooks: {
+    beforeValidate: [generateSlug('name')],
   },
 
   fields: [

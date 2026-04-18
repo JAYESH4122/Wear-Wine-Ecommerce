@@ -26,7 +26,11 @@ export const RenderBlocks: React.FC<{ blocks: Block[] }> = ({ blocks }) => {
 
         if (BlockComponent) {
           const Component = BlockComponent as unknown as React.ComponentType<Record<string, unknown>>
-          return <Component key={index} {...(block as unknown as Record<string, unknown>)} />
+          return (
+            <section id={String(blockType)} key={index}>
+              <Component {...(block as unknown as Record<string, unknown>)} />
+            </section>
+          )
         }
 
         return <div key={index}>Block component not found: {String(blockType)}</div>

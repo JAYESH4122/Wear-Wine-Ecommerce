@@ -1451,7 +1451,9 @@ export interface Header {
   id: number;
   navItems?:
     | {
+        type?: ('page' | 'section') | null;
         link?: (number | null) | Page;
+        section?: ('hero' | 'collectionGallery' | 'depthDeckCarousel' | 'productListSection' | 'contact') | null;
         label?: string | null;
         id?: string | null;
       }[]
@@ -1576,7 +1578,9 @@ export interface HeaderSelect<T extends boolean = true> {
   navItems?:
     | T
     | {
+        type?: T;
         link?: T;
+        section?: T;
         label?: T;
         id?: T;
       };

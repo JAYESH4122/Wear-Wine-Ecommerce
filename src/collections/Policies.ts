@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload'
+import { generateSlug } from './lib'
 
 export const Policies: CollectionConfig = {
   slug: 'policies',
@@ -8,6 +9,9 @@ export const Policies: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    beforeValidate: [generateSlug('title')],
   },
   fields: [
     {
