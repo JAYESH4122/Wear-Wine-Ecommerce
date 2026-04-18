@@ -204,10 +204,10 @@ export const ContactSection = ({
               <div className="w-12 h-12 border border-neutral-900 flex items-center justify-center">
                 <Send className="w-5 h-5 text-neutral-900" strokeWidth={1.3} />
               </div>
-              <h3 className="text-2xl font-light tracking-tight text-neutral-900">Message Sent</h3>
-              <p className="text-sm text-neutral-500 max-w-xs leading-relaxed">
-                We'll get back to you within 24 hours. Keep an eye on your inbox.
-              </p>
+	              <h3 className="text-2xl font-light tracking-tight text-neutral-900">Message Sent</h3>
+	              <p className="text-sm text-neutral-500 max-w-xs leading-relaxed">
+	                We&apos;ll get back to you within 24 hours. Keep an eye on your inbox.
+	              </p>
               <button
                 type="button"
                 onClick={() => {
