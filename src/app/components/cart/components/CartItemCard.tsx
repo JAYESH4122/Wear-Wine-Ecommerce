@@ -44,12 +44,8 @@ export const CartItemCard = React.memo(function CartItemCard({
 
       const setActive = (active: boolean) => {
         const value = active ? 'true' : 'false'
-        mediaEls.forEach((el) => {
-          el.dataset.active = value
-        })
-        imageEls.forEach((el) => {
-          el.dataset.active = value
-        })
+        mediaEls.forEach((el) => { el.dataset.active = value })
+        imageEls.forEach((el) => { el.dataset.active = value })
       }
 
       const resetAll = () => {
@@ -192,156 +188,172 @@ export const CartItemCard = React.memo(function CartItemCard({
 
   const productHref = product.slug ? `/product/${product.slug}` : '#'
 
+  const subtotalBlock = (
+    <div className="text-right">
+      <p className="text-sm sm:text-base font-semibold text-neutral-900 tabular-nums">
+        {formatPriceINR(subtotal)}
+      </p>
+      {hasDiscount && savings > 0 && (
+        <p className="text-[11px] text-emerald-600 mt-0.5 tabular-nums">
+          Save {formatPriceINR(savings)}
+        </p>
+      )}
+      {quantity > 1 && (
+        <p className="text-[11px] text-neutral-400 tabular-nums">
+          {formatPriceINR(currentPrice)} × {quantity}
+        </p>
+      )}
+    </div>
+  )
+
   return (
     <div ref={cardRef} className="py-5 border-b border-neutral-100 last:border-b-0">
-      <div className="flex gap-3 sm:gap-4">
-        {/* ── Image ── */}
-        <Link
-          href={productHref}
-          className={cn(mediaShell, 'w-24 h-32 sm:w-28 sm:h-36 md:w-36 md:h-44')}
-          data-cart-media
-          data-active="false"
-        >
-          <div className={imageWrap} data-cart-image data-active="false">
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt={product.name}
-                fill
-                sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 144px"
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-neutral-300">
-                <ShoppingBag className="w-5 h-5" />
-              </div>
-            )}
-          </div>
-          <div
-            className="absolute inset-0 bg-black/20 opacity-30 pointer-events-none"
-            data-cart-overlay
-          />
-          <div
-            className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/50 blur-2xl opacity-0 pointer-events-none mix-blend-screen"
-            data-cart-spotlight
-          />
-          {hasDiscount && (
-            <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-              Sale
-            </div>
-          )}
-        </Link>
-
-        {/* ── Content ── */}
-        <div className="flex-1 min-w-0 flex flex-col">
-          {/* Name row + remove */}
-          <div className="flex items-start gap-2">
-            <div className="flex-1 min-w-0">
-              {categoryName && (
-                <p className="text-[10px] sm:text-[11px] text-neutral-400 uppercase tracking-wide mb-0.5 truncate">
-                  {categoryName}
-                </p>
-              )}
-              <Link href={productHref}>
-                <h3 className="text-sm sm:text-[15px] font-medium text-neutral-900 hover:text-neutral-600 transition-colors leading-snug line-clamp-2">
-                  {product.name}
-                </h3>
-              </Link>
-            </div>
-
-            {/* Remove button */}
-            <button
-              ref={removeBtnRef}
-              type="button"
-              onClick={() => onRemove(cartItemId)}
-              aria-label="Remove item"
-              onPointerEnter={handleRemoveEnter}
-              onPointerLeave={handleRemoveLeave}
-              className="group/remove shrink-0 flex items-center justify-center w-8 h-8 -mt-0.5 -mr-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
-            >
-              <X
-                className={cn(
-                  'w-[18px] h-[18px] text-neutral-300',
-                  'transition-all duration-300 ease-out',
-                  'group-hover/remove:text-red-500 group-hover/remove:rotate-90',
-                  'group-active/remove:text-red-600',
-                  '[button[data-hovered=true]_&]:text-red-500 [button[data-hovered=true]_&]:rotate-90',
-                )}
-              />
-            </button>
-          </div>
-
-          {/* Variants + stock */}
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-            {selectedColor && (
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-neutral-400">Color:</span>
-                <span
-                  className="w-2.5 h-2.5 rounded-full border border-neutral-200 shadow-sm shrink-0"
-                  style={{ backgroundColor: selectedColor.hex || '#ddd' }}
+      <div className="md:grid md:grid-cols-12 md:items-center md:gap-4">
+        {/* ── col-span-6: Product ── */}
+        <div className="md:col-span-6 flex gap-3 sm:gap-4">
+          {/* Image */}
+          <Link
+            href={productHref}
+            className={cn(mediaShell, 'w-24 h-32 sm:w-28 sm:h-36 md:w-36 md:h-44')}
+            data-cart-media
+            data-active="false"
+          >
+            <div className={imageWrap} data-cart-image data-active="false">
+              {imageUrl ? (
+                <Image
+                  src={imageUrl}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 144px"
+                  className="object-cover"
                 />
-                <span className="text-neutral-700">{selectedColor.name}</span>
-              </div>
-            )}
-            {selectedSize && (
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-neutral-400">Size:</span>
-                <span className="text-neutral-700 font-medium">{selectedSize.label}</span>
-              </div>
-            )}
-            {stock !== null && (
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  stock > 10 ? 'text-emerald-600' : stock > 0 ? 'text-amber-600' : 'text-red-600',
-                )}
-              >
-                {stock > 10 ? 'In Stock' : stock > 0 ? `Only ${stock} left` : 'Out of Stock'}
-              </span>
-            )}
-          </div>
-
-          {/* Price */}
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <span className="text-sm font-medium text-neutral-900 tabular-nums">
-              {formatPriceINR(currentPrice)}
-            </span>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-neutral-300">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+            <div
+              className="absolute inset-0 bg-black/20 opacity-30 pointer-events-none"
+              data-cart-overlay
+            />
+            <div
+              className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/50 blur-2xl opacity-0 pointer-events-none mix-blend-screen"
+              data-cart-spotlight
+            />
             {hasDiscount && (
-              <span className="text-xs text-neutral-400 line-through tabular-nums">
-                {formatPriceINR(product.price)}
-              </span>
+              <div className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
+                Sale
+              </div>
             )}
-          </div>
+          </Link>
 
-          {/* Qty + subtotal */}
-          <div className="mt-auto pt-3 flex items-end justify-between gap-2">
-            <div>
-              <p className="text-[10px] text-neutral-400 uppercase tracking-wider mb-1.5">Qty</p>
-              <QuantitySelector
-                quantity={quantity}
-                onIncrease={() => onUpdateQuantity(cartItemId, quantity + 1)}
-                onDecrease={() => onUpdateQuantity(cartItemId, Math.max(1, quantity - 1))}
-              />
+          {/* Info */}
+          <div className="flex-1 min-w-0 flex flex-col">
+            {/* Name row + remove */}
+            <div className="flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                {categoryName && (
+                  <p className="text-[10px] sm:text-[11px] text-neutral-400 uppercase tracking-wide mb-0.5 truncate">
+                    {categoryName}
+                  </p>
+                )}
+                <Link href={productHref}>
+                  <h3 className="text-sm sm:text-[15px] font-medium text-neutral-900 hover:text-neutral-600 transition-colors leading-snug line-clamp-2">
+                    {product.name}
+                  </h3>
+                </Link>
+              </div>
+
+              {/* Remove button */}
+              <button
+                ref={removeBtnRef}
+                type="button"
+                onClick={() => onRemove(cartItemId)}
+                aria-label="Remove item"
+                onPointerEnter={handleRemoveEnter}
+                onPointerLeave={handleRemoveLeave}
+                className="group/remove shrink-0 flex items-center justify-center w-8 h-8 -mt-0.5 -mr-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+              >
+                <X
+                  className={cn(
+                    'w-[18px] h-[18px] text-neutral-300',
+                    'transition-all duration-300 ease-out',
+                    'group-hover/remove:text-red-500 group-hover/remove:rotate-90',
+                    'group-active/remove:text-red-600',
+                    '[button[data-hovered=true]_&]:text-red-500 [button[data-hovered=true]_&]:rotate-90',
+                  )}
+                />
+              </button>
             </div>
 
-            <div className="text-right">
-              <p className="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">Subtotal</p>
-              <p className="text-sm sm:text-base font-semibold text-neutral-900 tabular-nums">
-                {formatPriceINR(subtotal)}
-              </p>
-              {hasDiscount && savings > 0 && (
-                <p className="text-[11px] text-emerald-600 mt-0.5 tabular-nums">
-                  Save {formatPriceINR(savings)}
-                </p>
+            {/* Variants + stock */}
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+              {selectedColor && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="text-neutral-400">Color:</span>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full border border-neutral-200 shadow-sm shrink-0"
+                    style={{ backgroundColor: selectedColor.hex || '#ddd' }}
+                  />
+                  <span className="text-neutral-700">{selectedColor.name}</span>
+                </div>
               )}
-              {quantity > 1 && (
-                <p className="text-[11px] text-neutral-400 tabular-nums">
-                  {formatPriceINR(currentPrice)} × {quantity}
-                </p>
+              {selectedSize && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="text-neutral-400">Size:</span>
+                  <span className="text-neutral-700 font-medium">{selectedSize.label}</span>
+                </div>
+              )}
+              {stock !== null && (
+                <span
+                  className={cn(
+                    'text-xs font-medium',
+                    stock > 10 ? 'text-emerald-600' : stock > 0 ? 'text-amber-600' : 'text-red-600',
+                  )}
+                >
+                  {stock > 10 ? 'In Stock' : stock > 0 ? `Only ${stock} left` : 'Out of Stock'}
+                </span>
+              )}
+            </div>
+
+            {/* Price */}
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className="text-sm font-medium text-neutral-900 tabular-nums">
+                {formatPriceINR(currentPrice)}
+              </span>
+              {hasDiscount && (
+                <span className="text-xs text-neutral-400 line-through tabular-nums">
+                  {formatPriceINR(product.price)}
+                </span>
               )}
             </div>
           </div>
         </div>
+
+        {/* ── col-span-3: Quantity (desktop only) ── */}
+        <div className="hidden md:flex md:col-span-3 justify-center">
+          <QuantitySelector
+            quantity={quantity}
+            onIncrease={() => onUpdateQuantity(cartItemId, quantity + 1)}
+            onDecrease={() => onUpdateQuantity(cartItemId, Math.max(1, quantity - 1))}
+          />
+        </div>
+
+        {/* ── col-span-3: Subtotal (desktop only) ── */}
+        <div className="hidden md:flex md:col-span-3 justify-end">
+          {subtotalBlock}
+        </div>
+      </div>
+
+      {/* ── Mobile: full-width bottom bar ── */}
+      <div className="md:hidden flex items-center justify-between mt-3 pt-3 border-t border-neutral-100">
+        <QuantitySelector
+          quantity={quantity}
+          onIncrease={() => onUpdateQuantity(cartItemId, quantity + 1)}
+          onDecrease={() => onUpdateQuantity(cartItemId, Math.max(1, quantity - 1))}
+        />
+        {subtotalBlock}
       </div>
     </div>
   )

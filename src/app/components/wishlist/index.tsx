@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, Heart, ShoppingBag, Trash2, X } from 'lucide-react'
@@ -12,6 +12,7 @@ import type { Color, Media, Size } from '@/payload-types'
 import { useWishlist, type WishlistItem } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
 import { Button } from '@/components/ui/button/Button'
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
 
 /**
  * Helper to extract image URL from WishlistItem
@@ -381,6 +382,7 @@ export const EmptyWishlist = () => (
 export const WishlistPage = () => {
   const { wishlist, wishlistCount, isHydrated, removeFromWishlist, clearWishlist } = useWishlist()
   const { addItem } = useCart()
+  const [showClearModal, setShowClearModal] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const handleAddToCart = useCallback(
@@ -444,7 +446,7 @@ export const WishlistPage = () => {
 
             {isHydrated && wishlistCount > 0 && (
               <Button
-                onClick={() => window.confirm('Clear all items?') && clearWishlist()}
+                onClick={() => setShowClearModal(true)}
                 variant="text"
                 size="sm"
                 leftIcon={<Trash2 className="w-3.5 h-3.5" />}
@@ -489,6 +491,17 @@ export const WishlistPage = () => {
           </div>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={showClearModal}
+        onClose={() => setShowClearModal(false)}
+        onConfirm={clearWishlist}
+        title="Clear Wishlist"
+        message="Can I delete all wishlist items?"
+        confirmText="Remove All"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </main>
   )
 }
