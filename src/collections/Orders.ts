@@ -210,6 +210,7 @@ export const Orders: CollectionConfig = {
     {
       name: 'razorpayPaymentId',
       type: 'text',
+      index: true,
       admin: {
         readOnly: true,
       },
