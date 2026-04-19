@@ -361,7 +361,7 @@ const CartPageContent = () => {
               
               // Redirect to tracking page
               setTimeout(() => {
-                router.push(`/order/${verifyData.orderId}?email=${encodeURIComponent(address.email)}`)
+                router.push(`/track-order?orderId=${verifyData.orderId}&email=${encodeURIComponent(address.email)}`)
               }, 1500)
             } catch (err) {
               setOrderError(err instanceof Error ? err.message : 'Verification failed')

@@ -40,7 +40,7 @@ export async function generateMetadata() {
   }
 }
 
-export const RootLayout = async (props: { children: React.ReactNode }) => {
+const RootLayout = async (props: { children: React.ReactNode }) => {
   const { children } = props
 
   const headerData = await getGlobal<HeaderType>('header')

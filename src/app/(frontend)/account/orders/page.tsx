@@ -10,9 +10,10 @@ import { formatPriceINR } from '@/lib/utils'
 
 type OrderSummary = {
   id: number | string
+  orderId: string
   createdAt: string
   total: number
-  status: 'pending' | 'processing' | 'delivered' | 'cancelled'
+  status: 'placed' | 'shipped'
   itemsCount: number
 }
 
@@ -83,7 +84,8 @@ const OrdersPage = () => {
     if (!term) return orders
 
     return orders.filter((order) => {
-      const idMatch = String(order.id).toLowerCase().includes(term)
+      const idMatch =
+        String(order.orderId).toLowerCase().includes(term) || String(order.id).toLowerCase().includes(term)
       const statusMatch = order.status.toLowerCase().includes(term)
       return idMatch || statusMatch
     })
@@ -186,54 +188,57 @@ const OrdersPage = () => {
         ) : (
           <motion.div key="content" className="space-y-4">
             {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => (
-                <motion.div
-                  key={order.id}
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 hover:border-neutral-300 transition-colors cursor-pointer group"
-                >
-                  <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-neutral-50 flex items-center justify-center rounded-xl border border-neutral-100 group-hover:scale-105 transition-transform">
-                        <Package className="w-5 h-5 text-neutral-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-neutral-900">{order.id}</p>
-                        <p className="text-xs text-neutral-500 mt-0.5">
-                          Placed on {formatDate(order.createdAt)} • {order.itemsCount} item
-                          {order.itemsCount !== 1 && 's'}
-                        </p>
-                      </div>
-                    </div>
+              filteredOrders.map((order) => {
+                const trackingHref = `/track-order?orderId=${encodeURIComponent(order.orderId)}&email=${encodeURIComponent(user.email || '')}`
 
-                    <div className="flex items-center gap-6 w-full md:w-auto mt-2 md:mt-0 pt-2 md:pt-0 border-t md:border-t-0 border-neutral-100">
-                      <div className="flex-1 md:flex-none text-left md:text-right">
-                        <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-0.5">
-                          Total
-                        </p>
-                        <p className="text-sm font-bold text-neutral-900">{formatPriceINR(order.total)}</p>
-                      </div>
+                return (
+                  <Link key={order.id} href={trackingHref} className="block">
+                    <motion.div className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 hover:border-neutral-300 transition-colors cursor-pointer group">
+                      <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-neutral-50 flex items-center justify-center rounded-xl border border-neutral-100 group-hover:scale-105 transition-transform">
+                            <Package className="w-5 h-5 text-neutral-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-neutral-900">{order.orderId}</p>
+                            <p className="text-xs text-neutral-500 mt-0.5">
+                              Placed on {formatDate(order.createdAt)} • {order.itemsCount} item
+                              {order.itemsCount !== 1 && 's'}
+                            </p>
+                          </div>
+                        </div>
 
-                      <div className="flex-1 md:flex-none">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            order.status === 'delivered'
-                              ? 'bg-green-100 text-green-700'
-                              : order.status === 'cancelled'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-blue-100 text-blue-700'
-                          }`}
-                        >
-                          {toDisplayStatus(order.status)}
-                        </span>
-                      </div>
+                        <div className="flex items-center gap-6 w-full md:w-auto mt-2 md:mt-0 pt-2 md:pt-0 border-t md:border-t-0 border-neutral-100">
+                          <div className="flex-1 md:flex-none text-left md:text-right">
+                            <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-0.5">
+                              Total
+                            </p>
+                            <p className="text-sm font-bold text-neutral-900">
+                              {formatPriceINR(order.total)}
+                            </p>
+                          </div>
 
-                      <div className="hidden sm:flex text-neutral-300 group-hover:text-black transition-colors group-hover:translate-x-1 duration-300">
-                        <ChevronRight className="w-5 h-5" />
+                          <div className="flex-1 md:flex-none">
+                            <span
+                              className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                order.status === 'shipped'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-orange-100 text-orange-700'
+                              }`}
+                            >
+                              {order.status === 'shipped' ? 'Shipped' : 'Placed'}
+                            </span>
+                          </div>
+
+                          <div className="hidden sm:flex text-neutral-300 group-hover:text-black transition-colors group-hover:translate-x-1 duration-300">
+                            <ChevronRight className="w-5 h-5" />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
+                    </motion.div>
+                  </Link>
+                )
+              })
             ) : (
               <motion.div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-neutral-100">
                 <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-neutral-100">

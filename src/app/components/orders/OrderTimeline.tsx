@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
 
-type OrderStatus = 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'failed'
+type OrderStatus = 'placed' | 'shipped'
 
 interface OrderTimelineProps {
   status: OrderStatus
@@ -13,18 +13,13 @@ interface OrderTimelineProps {
 
 const steps: { label: string; value: OrderStatus }[] = [
   { label: 'Order Placed', value: 'placed' },
-  { label: 'Packed', value: 'packed' },
   { label: 'Shipped', value: 'shipped' },
-  { label: 'Out for Delivery', value: 'out_for_delivery' },
-  { label: 'Delivered', value: 'delivered' },
 ]
 
 export const OrderTimeline = ({ status, className }: OrderTimelineProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   
   const currentIndex = steps.findIndex(step => step.value === status)
-  const isCancelled = status === 'cancelled'
-  const isFailed = status === 'failed'
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -51,15 +46,7 @@ export const OrderTimeline = ({ status, className }: OrderTimelineProps) => {
 
   }, [status])
 
-  if (isCancelled || isFailed) {
-    return (
-      <div className={cn("p-6 rounded-2xl bg-red-50 border border-red-100", className)}>
-        <p className="text-red-600 font-medium text-center">
-          This order has been {status}. Please contact support for more information.
-        </p>
-      </div>
-    )
-  }
+
 
   return (
     <div ref={containerRef} className={cn("w-full py-8", className)}>

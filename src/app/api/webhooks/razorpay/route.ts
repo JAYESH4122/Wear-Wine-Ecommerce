@@ -93,8 +93,8 @@ export const POST = async (request: Request): Promise<Response> => {
   const order = orders.docs[0]
 
   if (eventName === 'order.paid' || eventName === 'payment.captured') {
-    // If it's already placed (or any further fulfillment step), we don't need to re-mark it.
-    if (order.status !== 'failed' && order.status !== 'cancelled') {
+    // If it's already placed or shipped, we don't need to re-mark it.
+    if (order.status === 'placed' || order.status === 'shipped') {
       console.info('[razorpay-webhook] Already processed, skipping duplicate event', {
         orderId: String(order.id),
         razorpayOrderId,
@@ -129,13 +129,12 @@ export const POST = async (request: Request): Promise<Response> => {
       collection: 'orders',
       id: order.id,
       data: {
-        status: 'failed',
         razorpayPaymentId: event.payload?.payment?.entity?.id ?? order.razorpayPaymentId,
       },
       overrideAccess: true,
     })
 
-    console.info('[razorpay-webhook] Marked order as failed', {
+    console.info('[razorpay-webhook] Recorded failed payment event', {
       orderId: String(order.id),
       razorpayOrderId,
     })

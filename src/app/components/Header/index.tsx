@@ -155,6 +155,14 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
       })
       .filter((item): item is { name: string; href: string; isSection: boolean } => Boolean(item)) ?? []
 
+  const trackOrderHref = user?.email ? `/track-order?email=${encodeURIComponent(user.email)}` : '/track-order'
+
+  const navItemsWithTracking = navItems.some(
+    (item) => item.href === '/track-order' || item.href.startsWith('/track-order?'),
+  )
+    ? navItems
+    : [...navItems, { name: 'Track Order', href: trackOrderHref, isSection: false }]
+
   return (
     <>
       {/* Floating hamburger */}
@@ -226,13 +234,13 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-2">
-              {navItems.map((item) => {
-                const isActive = item.isSection ? false : pathname === item.href
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
+	            <nav className="hidden lg:flex items-center gap-2">
+	              {navItemsWithTracking.map((item) => {
+	                const isActive = item.isSection ? false : pathname === item.href
+	                return (
+	                  <Link
+	                    key={item.name}
+	                    href={item.href}
                     onClick={(e) => {
                       if (item.isSection && pathname === '/') {
                         e.preventDefault()
@@ -542,13 +550,13 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
         aria-modal="true"
       >
         <div className="flex-1 overflow-y-auto overscroll-contain">
-          <nav className="px-3 py-4 pt-16">
-            {navItems.map((item) => {
-              const isActive = item.isSection ? false : pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
+	          <nav className="px-3 py-4 pt-16">
+	            {navItemsWithTracking.map((item) => {
+	              const isActive = item.isSection ? false : pathname === item.href
+	              return (
+	                <Link
+	                  key={item.name}
+	                  href={item.href}
                   onClick={(e) => {
                     if (item.isSection && pathname === '/') {
                       e.preventDefault()

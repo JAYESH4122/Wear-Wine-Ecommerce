@@ -866,7 +866,7 @@ export interface Order {
   orderId: string;
   user?: (number | null) | User;
   email: string;
-  phone: string;
+  phone?: string | null;
   shippingAddress: {
     fullName: string;
     addressLine1: string;
@@ -893,10 +893,9 @@ export interface Order {
     id?: string | null;
   }[];
   total: number;
-  status: 'placed' | 'packed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled' | 'failed';
+  status: 'placed' | 'shipped';
   courier?: 'dtdc' | null;
-  awbNumber?: string | null;
-  trackingUrl?: string | null;
+  trackingId?: string | null;
   razorpayOrderId?: string | null;
   razorpayPaymentId?: string | null;
   razorpaySignature?: string | null;
@@ -1387,8 +1386,7 @@ export interface OrdersSelect<T extends boolean = true> {
   total?: T;
   status?: T;
   courier?: T;
-  awbNumber?: T;
-  trackingUrl?: T;
+  trackingId?: T;
   razorpayOrderId?: T;
   razorpayPaymentId?: T;
   razorpaySignature?: T;

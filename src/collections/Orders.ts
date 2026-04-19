@@ -35,6 +35,17 @@ export const Orders: CollectionConfig = {
     update: adminOnly,
     delete: adminOnly,
   },
+  hooks: {
+    beforeChange: [
+      async ({ data, originalDoc, operation }) => {
+        // If trackingId is added or changed, set status to shipped
+        if (data.trackingId && (operation === 'create' || data.trackingId !== originalDoc?.trackingId)) {
+          data.status = 'shipped'
+        }
+        return data
+      },
+    ],
+  },
   fields: [
     {
       name: 'orderId',
@@ -62,7 +73,7 @@ export const Orders: CollectionConfig = {
     {
       name: 'phone',
       type: 'text',
-      required: true,
+      required: false,
     },
     {
       name: 'shippingAddress',
@@ -173,12 +184,7 @@ export const Orders: CollectionConfig = {
       defaultValue: 'placed',
       options: [
         { label: 'Placed', value: 'placed' },
-        { label: 'Packed', value: 'packed' },
         { label: 'Shipped', value: 'shipped' },
-        { label: 'Out for Delivery', value: 'out_for_delivery' },
-        { label: 'Delivered', value: 'delivered' },
-        { label: 'Cancelled', value: 'cancelled' },
-        { label: 'Failed', value: 'failed' },
       ],
     },
     {
@@ -190,11 +196,7 @@ export const Orders: CollectionConfig = {
       ],
     },
     {
-      name: 'awbNumber',
-      type: 'text',
-    },
-    {
-      name: 'trackingUrl',
+      name: 'trackingId',
       type: 'text',
     },
     {

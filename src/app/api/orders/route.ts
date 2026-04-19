@@ -70,6 +70,7 @@ export const GET = async (request: Request): Promise<Response> => {
     Response.json({
       orders: orders.docs.map((order) => ({
         id: order.id,
+        orderId: order.orderId,
         createdAt: order.createdAt,
         total: order.total,
         status: order.status,
