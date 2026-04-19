@@ -4107,6 +4107,21 @@
           "method": "btree",
           "with": {}
         },
+        "orders_razorpay_payment_id_idx": {
+          "name": "orders_razorpay_payment_id_idx",
+          "columns": [
+            {
+              "expression": "razorpay_payment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "orders_updated_at_idx": {
           "name": "orders_updated_at_idx",
           "columns": [
@@ -6692,6 +6707,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "c1998fdb-8040-44e6-a264-9c5067ad7680",
+  "id": "cb4908dd-8551-4b8f-b793-61c91fcbccc2",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

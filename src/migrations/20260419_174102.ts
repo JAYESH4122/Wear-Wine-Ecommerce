@@ -36,7 +36,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_padding_bottom_mobile" AS ENUM('NONE', 'SM1', 'SM2', 'SM3', 'MD1', 'MD2', 'MD3', 'LG1', 'LG2', 'LG3', 'XL1', 'XL2', 'XL3', 'XXL1', 'XXL2', 'XXL3');
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_background_color" AS ENUM('primary', 'secondary', 'alt');
   CREATE TYPE "public"."enum_pages_blocks_contact_properties_background_color_mobile" AS ENUM('primary', 'secondary', 'alt');
-  CREATE TYPE "public"."enum_orders_status" AS ENUM('placed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'failed');
+  CREATE TYPE "public"."enum_orders_status" AS ENUM('placed', 'shipped');
   CREATE TYPE "public"."enum_orders_courier" AS ENUM('dtdc');
   CREATE TYPE "public"."enum_header_nav_items_type" AS ENUM('page', 'section');
   CREATE TYPE "public"."enum_header_nav_items_section" AS ENUM('hero', 'collectionGallery', 'depthDeckCarousel', 'productListSection', 'contact');
@@ -367,7 +367,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"order_id" varchar NOT NULL,
   	"user_id" integer,
   	"email" varchar NOT NULL,
-  	"phone" varchar NOT NULL,
+  	"phone" varchar,
   	"shipping_address_full_name" varchar NOT NULL,
   	"shipping_address_address_line1" varchar NOT NULL,
   	"shipping_address_address_line2" varchar,
@@ -379,8 +379,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"total" numeric NOT NULL,
   	"status" "enum_orders_status" DEFAULT 'placed' NOT NULL,
   	"courier" "enum_orders_courier" DEFAULT 'dtdc',
-  	"awb_number" varchar,
-  	"tracking_url" varchar,
+  	"tracking_id" varchar,
   	"razorpay_order_id" varchar,
   	"razorpay_payment_id" varchar,
   	"razorpay_signature" varchar,
@@ -715,6 +714,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "orders_user_idx" ON "orders" USING btree ("user_id");
   CREATE INDEX "orders_email_idx" ON "orders" USING btree ("email");
   CREATE INDEX "orders_razorpay_order_id_idx" ON "orders" USING btree ("razorpay_order_id");
+  CREATE INDEX "orders_razorpay_payment_id_idx" ON "orders" USING btree ("razorpay_payment_id");
   CREATE INDEX "orders_updated_at_idx" ON "orders" USING btree ("updated_at");
   CREATE INDEX "orders_created_at_idx" ON "orders" USING btree ("created_at");
   CREATE UNIQUE INDEX "payload_kv_key_idx" ON "payload_kv" USING btree ("key");
