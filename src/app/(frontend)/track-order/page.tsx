@@ -90,13 +90,13 @@ export default function TrackOrderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] py-12 md:py-24">
+    <div className="bg-[#FDFCFB] py-12 md:py-24">
       <div className="container max-w-2xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 mb-4 font-serif">
+          <h1 className="lg:text-6xl text-[40px] font-bold tracking-tight text-neutral-900 mb-4">
             Track your order
           </h1>
-          <p className="text-neutral-500 text-lg">
+          <p className="text-neutral-500 lg:text-[17px] text-[12px]">
             Enter your details below to check your order status.
           </p>
         </div>
