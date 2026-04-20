@@ -475,6 +475,7 @@ export interface CollectionGallery {
     image: number | Media;
     title: string;
     label: string;
+    product?: (number | null) | Product;
     id?: string | null;
   }[];
   id?: string | null;
@@ -1199,6 +1200,7 @@ export interface CollectionGallerySelect<T extends boolean = true> {
         image?: T;
         title?: T;
         label?: T;
+        product?: T;
         id?: T;
       };
   id?: T;

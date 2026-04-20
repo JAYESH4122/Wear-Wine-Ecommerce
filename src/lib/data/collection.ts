@@ -33,5 +33,6 @@ export const getCollectionImages = async (): Promise<GalleryImage[]> => {
       image: item.image as Media,
       title: item.title,
       label: item.label,
+      product: item.product,
     }))
 }

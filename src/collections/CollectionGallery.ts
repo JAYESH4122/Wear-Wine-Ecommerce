@@ -42,6 +42,12 @@ export const CollectionGallery: Block = {
           type: 'text',
           required: true,
         },
+        {
+          name: 'product',
+          type: 'relationship',
+          relationTo: 'products',
+          required: false,
+        },
       ],
     },
   ],

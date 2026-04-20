@@ -6,8 +6,9 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import Link from 'next/link'
 import { SectionWrapper } from '../SectionWrapper'
-import type { Media } from '@/payload-types'
+import type { Media, Product } from '@/payload-types'
 import type { ContainerPropsType } from '@types-frontend/types'
 
 if (typeof window !== 'undefined') {
@@ -21,6 +22,7 @@ export interface GalleryImage {
   image: Media
   title?: string
   label?: string
+  product?: string | number | Product | null
 }
 
 interface CollectionGalleryProps {
@@ -133,12 +135,17 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
     return () => ctx.revert()
   }, [index])
 
-  return (
+  const productSlug =
+    typeof image.product === 'object' && image.product !== null ? image.product.slug : null
+  const isClickable = !!productSlug
+
+  const content = (
     <div
       ref={cardRef}
       className={cn(
         'relative w-full h-full overflow-hidden bg-neutral-200 select-none',
-        'cursor-crosshair will-change-transform group active:scale-[0.98] transition-transform duration-300',
+        'will-change-transform group active:scale-[0.98] transition-transform duration-300',
+        isClickable ? 'cursor-pointer' : 'cursor-crosshair',
         className,
       )}
       style={{ transformStyle: 'preserve-3d', perspective: '1200px' }}
@@ -186,6 +193,16 @@ export const ImageCard = ({ image, index, className }: ImageCardProps) => {
       </div>
     </div>
   )
+
+  if (isClickable) {
+    return (
+      <Link href={`/product/${productSlug}`} className="block h-full w-full">
+        {content}
+      </Link>
+    )
+  }
+
+  return content
 }
 
 const getGridItems = (imgs: GalleryImage[]) => {
