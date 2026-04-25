@@ -141,8 +141,8 @@ export const Footer = ({ cmsData, siteSettings }: FooterProps) => {
     >
       <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-background/5 via-transparent to-secondary/10" />
 
-      <footer className="relative z-10 mx-auto max-w-7xl px-6 pb-8 pt-16 md:px-12">
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-secondary/30 to-transparent mb-16" />
+      <footer className="relative z-10 mx-auto max-w-7xl px-6 pb-8 pt-10  lg:pt-16 md:px-12">
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-secondary/30 to-transparent mb-4 lg:mb-16" />
 
         <div className="grid grid-cols-1 gap-12 border-b border-background/10 pb-14 md:grid-cols-4 md:gap-8">
           
@@ -153,9 +153,9 @@ export const Footer = ({ cmsData, siteSettings }: FooterProps) => {
                 <Image
                   src={LogoWhite}
                   alt={brandName}
-                  width={160}
+                  width={180}
                   height={56}
-                  className="h-14 w-24 object-contain"
+                  className="h-14 w-24 lg:h-19 lg:w-36 object-contain"
                   unoptimized
                 />
             </div>

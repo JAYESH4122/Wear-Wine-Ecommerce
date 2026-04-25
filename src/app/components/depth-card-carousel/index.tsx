@@ -63,7 +63,7 @@ export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCar
     <SectionWrapper sectionClassName="w-full bg-background" containerProps={properties || {}}>
       <div
         className={cn(
-          'relative w-full select-none overflow-hidden flex flex-col items-center justify-center pb-10 lg:py-15',
+          'relative w-full select-none overflow-hidden flex flex-col items-center justify-center lg:py-15',
           className,
         )}
       >
