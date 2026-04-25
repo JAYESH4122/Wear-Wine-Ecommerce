@@ -28,4 +28,5 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> 
   fullWidth?: boolean
   asChild?: boolean
   sliderDirection?: 'left' | 'right'
+  noWrap?: boolean
 }

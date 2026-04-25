@@ -17,6 +17,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       fullWidth,
       asChild = false,
       sliderDirection,
+      noWrap = true,
       className,
       children,
       onClick,
@@ -83,7 +84,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               {resolvedLeftIcon}
             </span>
           ) : null}
-          {childContent ? <span className="whitespace-nowrap">{childContent}</span> : null}
+          {childContent ? (
+            <span className={cn(noWrap && 'whitespace-nowrap')}>{childContent}</span>
+          ) : null}
           {rightIcon ? (
             <span
               className={cn(
