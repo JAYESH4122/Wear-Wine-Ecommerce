@@ -59,6 +59,8 @@ export const seedGlobals = async (payload: Payload) => {
   await payload.updateGlobal({
     slug: 'footer',
     data: {
+      tagline: footerData.logo.tagline,
+      description: footerData.logo.description,
       copyright: footerData.copyright,
       contact: {
         title: footerData.contact.title,

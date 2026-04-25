@@ -4,11 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { PolicyContentType } from '@/app/components/footer/data'
+import type { Policy } from '@/payload-types'
 import { Button } from '@/components/ui/button/Button'
 
 interface PolicyContentProps {
-  policy: PolicyContentType
+  policy: Policy
 }
 
 export function PolicyContent({ policy }: PolicyContentProps) {

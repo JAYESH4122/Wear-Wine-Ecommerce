@@ -11,17 +11,15 @@ const run = async () => {
 
   try {
     payload.logger.info('Clearing existing data...')
-    await payload.delete({ collection: 'products', where: {} })
-    await payload.delete({ collection: 'categories', where: {} })
-    await payload.delete({ collection: 'media', where: {} })
-    await payload.delete({ collection: 'colors', where: {} })
-    await payload.delete({ collection: 'sizes', where: {} })
-    try {
-      await payload.delete({ collection: 'policies', where: {} })
-    } catch(_e) {}
+    try { await payload.delete({ collection: 'products', where: {} }) } catch(_e) {}
+    try { await payload.delete({ collection: 'categories', where: {} }) } catch(_e) {}
+    try { await payload.delete({ collection: 'media', where: {} }) } catch(_e) {}
+    try { await payload.delete({ collection: 'colors', where: {} }) } catch(_e) {}
+    try { await payload.delete({ collection: 'sizes', where: {} }) } catch(_e) {}
+    try { await payload.delete({ collection: 'policies', where: {} }) } catch(_e) {}
 
-    await seed(payload)
-    await seedGlobals(payload)
+    try { await seed(payload) } catch(_e) {}
+    try { await seedGlobals(payload) } catch(_e) {}
 
     payload.logger.info('Seed completed successfully!')
     process.exit(0)

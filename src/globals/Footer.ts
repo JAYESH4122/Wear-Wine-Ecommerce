@@ -8,6 +8,14 @@ export const Footer: GlobalConfig = {
   fields: [
 
     {
+      name: 'tagline',
+      type: 'text',
+    },
+    {
+      name: 'description',
+      type: 'textarea',
+    },
+    {
       name: 'policiesGroup',
       type: 'group',
       fields: [

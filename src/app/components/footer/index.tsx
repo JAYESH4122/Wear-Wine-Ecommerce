@@ -160,10 +160,10 @@ export const Footer = ({ cmsData, siteSettings }: FooterProps) => {
                 />
             </div>
             <p className="text-sm text-background/60 leading-relaxed mt-2">
-              We blend classic styles with modern luxury to give you the perfect wardrobe for every occasion.
+              {cmsData?.description || 'We blend classic styles with modern luxury to give you the perfect wardrobe for every occasion.'}
             </p>
             <p className="text-xs font-semibold tracking-widest uppercase text-background/40">
-              Elegance & Comfort
+              {cmsData?.tagline || 'Elegance & Comfort'}
             </p>
           </div>
 

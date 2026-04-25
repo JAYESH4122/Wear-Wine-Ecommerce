@@ -1459,6 +1459,8 @@ export interface Header {
  */
 export interface Footer {
   id: number;
+  tagline?: string | null;
+  description?: string | null;
   policiesGroup?: {
     title?: string | null;
     links?:
@@ -1585,6 +1587,8 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
+  tagline?: T;
+  description?: T;
   policiesGroup?:
     | T
     | {
