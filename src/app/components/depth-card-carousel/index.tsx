@@ -9,14 +9,10 @@ const AUTOPLAY_INTERVAL = 5000
 
 const SPRING = { stiffness: 120, damping: 14, mass: 1.2 }
 
-const CONSTANTS = { 
+const CONSTANTS = {
   CARD_WIDTH_DESKTOP: 480,
-  CARD_WIDTH_MOBILE: '75%',
   CARD_HEIGHT_DESKTOP: 650,
-  CARD_HEIGHT_MOBILE: 450,
   STK_X_SPREAD_DESKTOP: 320,
-  STK_X_SPREAD_MOBILE_RIGHT: 45,
-  STK_X_SPREAD_MOBILE_LEFT: 20,
   BORDER_RADIUS: '10px',
   BLUR_INTENSITY: 0.8,
   PERSPECTIVE: '2000px',
@@ -35,13 +31,27 @@ export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCar
   const [active, setActive] = useState(0)
   const [hovered, setHovered] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [viewportWidth, setViewportWidth] = useState(1440)
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
+    const check = () => {
+      setViewportWidth(window.innerWidth)
+      setIsMobile(window.innerWidth < 768)
+    }
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
   }, [])
+
+  const cardWidth = isMobile
+    ? Math.min(Math.max(viewportWidth * 0.72, 240), 320)
+    : CONSTANTS.CARD_WIDTH_DESKTOP
+  const cardHeight = isMobile
+    ? Math.min(Math.max(viewportWidth * 1.08, 360), 460)
+    : CONSTANTS.CARD_HEIGHT_DESKTOP
+  const stackOffset = isMobile
+    ? Math.min(Math.max(viewportWidth * 0.24, 84), 124)
+    : CONSTANTS.STK_X_SPREAD_DESKTOP
 
   const goTo = useCallback(
     (dir: number) => {
@@ -74,60 +84,62 @@ export const DepthDeckCarousel = ({ cards, className, properties }: DepthDeckCar
             onDragEnd={(_, i) => (i.offset.x > 50 ? goTo(-1) : i.offset.x < -50 && goTo(1))}
             className="relative w-full flex items-center justify-center cursor-grab active:cursor-grabbing"
             style={{
-              height: isMobile
-                ? CONSTANTS.CARD_HEIGHT_MOBILE + 100
-                : CONSTANTS.CARD_HEIGHT_DESKTOP + 100,
+              height: cardHeight + (isMobile ? 56 : 100),
               perspective: CONSTANTS.PERSPECTIVE,
               transformStyle: 'preserve-3d',
             }}
           >
             {safeCards.map((card, i) => {
-              const rel = ((i - active + safeCards.length) % safeCards.length) - Math.floor(safeCards.length / 2)
+              const rel =
+                ((i - active + safeCards.length) % safeCards.length) -
+                Math.floor(safeCards.length / 2)
               const abs = Math.abs(rel)
               const isCenter = rel === 0
 
-              const xSpread = isMobile
-                ? rel >= 0
-                  ? rel * CONSTANTS.STK_X_SPREAD_MOBILE_RIGHT
-                  : rel * CONSTANTS.STK_X_SPREAD_MOBILE_LEFT
-                : rel * CONSTANTS.STK_X_SPREAD_DESKTOP
+              const xSpread = rel * stackOffset
 
-            return (
-              <motion.div
-                key={i}
-                initial={false}
-                animate={{
-                  x: xSpread,
-                  z: -abs * 200,
-                  rotateY: rel * -10,
-                  scale: 1 - abs * 0.08,
-                  opacity: abs > 2 ? 0 : 1,
-                  filter: `blur(${abs * CONSTANTS.BLUR_INTENSITY}px) brightness(${1 - abs * 0.1})`,
-                }}
-                transition={{ type: 'spring', ...SPRING }}
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
-                className={cn(
-                  'absolute overflow-hidden shadow-2xl bg-white',
-                  isCenter ? 'z-50' : 'z-10',
-                )}
-                style={{
-                  width: isMobile ? CONSTANTS.CARD_WIDTH_MOBILE : CONSTANTS.CARD_WIDTH_DESKTOP,
-                  height: isMobile ? CONSTANTS.CARD_HEIGHT_MOBILE : CONSTANTS.CARD_HEIGHT_DESKTOP,
-                  borderRadius: CONSTANTS.BORDER_RADIUS,
-                  backfaceVisibility: 'hidden',
-                }}
-              >
-                <motion.img
-                  src={typeof card.image === 'object' && card.image !== null ? card.image.url || '' : typeof card.image === 'string' ? card.image : ''}
-                  animate={{ scale: hovered === i ? 1.05 : 1 }}
-                  transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
-            )
-          })}
-        </motion.div>
+              return (
+                <motion.div
+                  key={i}
+                  initial={false}
+                  animate={{
+                    x: xSpread,
+                    z: -abs * 200,
+                    rotateY: rel * -10,
+                    scale: 1 - abs * 0.08,
+                    opacity: abs > 2 ? 0 : 1,
+                    filter: `blur(${abs * CONSTANTS.BLUR_INTENSITY}px) brightness(${1 - abs * 0.1})`,
+                  }}
+                  transition={{ type: 'spring', ...SPRING }}
+                  onMouseEnter={() => setHovered(i)}
+                  onMouseLeave={() => setHovered(null)}
+                  className={cn(
+                    'absolute overflow-hidden shadow-2xl bg-white',
+                    isCenter ? 'z-50' : 'z-10',
+                  )}
+                  style={{
+                    width: cardWidth,
+                    height: cardHeight,
+                    borderRadius: CONSTANTS.BORDER_RADIUS,
+                    backfaceVisibility: 'hidden',
+                  }}
+                >
+                  <motion.img
+                    src={
+                      typeof card.image === 'object' && card.image !== null
+                        ? card.image.url || ''
+                        : typeof card.image === 'string'
+                          ? card.image
+                          : ''
+                    }
+                    animate={{ scale: hovered === i ? 1.05 : 1 }}
+                    transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+                    className="h-full w-full object-cover"
+                  />
+                </motion.div>
+              )
+            })}
+          </motion.div>
 
           <div className="flex items-center gap-10 hidden md:flex">
             <div className="flex gap-3">

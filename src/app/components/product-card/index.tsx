@@ -61,12 +61,16 @@ export const ProductCard = ({
 
   const variants = product?.variants ?? []
   const defaultVariant = variants.length > 0 ? variants[0] : null
-  const defaultSize = typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : null
-  const defaultColor = typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : null
+  const defaultSize =
+    typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : null
+  const defaultColor =
+    typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : null
 
   const isFavorite = isInWishlist(id, defaultSize?.id, defaultColor?.id)
   const isAddedToCart = isInCart(id, defaultSize?.id, defaultColor?.id)
-  const discountPct = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : null
+  const discountPct = originalPrice
+    ? Math.round(((originalPrice - price) / originalPrice) * 100)
+    : null
 
   // ── GSAP Animation System ─────────────────────────────────────────────────
   useEffect(() => {
@@ -130,7 +134,7 @@ export const ProductCard = ({
               duration: 0.15,
               ease: 'power2.out',
             },
-            0
+            0,
           )
         }
 
@@ -225,10 +229,12 @@ export const ProductCard = ({
 
     const variants = product?.variants ?? []
     const defaultVariant = variants.length > 0 ? variants[0] : null
-    
+
     // Size is required, Color is optional
-    const size = typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : undefined
-    const color = typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : undefined
+    const size =
+      typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : undefined
+    const color =
+      typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : undefined
 
     try {
       if (onAddToCart) {
@@ -258,15 +264,17 @@ export const ProductCard = ({
   const handleWishlistToggle = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
+
     const variants = product?.variants ?? []
     const defaultVariant = variants.length > 0 ? variants[0] : null
-    const size = typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : undefined
-    const color = typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : undefined
+    const size =
+      typeof defaultVariant?.size === 'object' ? (defaultVariant.size as Size) : undefined
+    const color =
+      typeof defaultVariant?.color === 'object' ? (defaultVariant.color as Color) : undefined
 
     const wasIn = isInWishlist(id, size?.id, color?.id)
     toggleWishlist((product as WishlistItem) || { id, name: title, price }, size, color)
-    
+
     onFavorite?.(id)
     setWishState(wasIn ? 'removed' : 'added')
     setTimeout(() => setWishState('idle'), 1800)
@@ -290,7 +298,7 @@ export const ProductCard = ({
             className={clsx(
               'object-cover transition-all duration-700 ease-out',
               isHovered ? 'scale-110 opacity-0' : 'scale-100 opacity-100',
-              !hoverImage && isHovered && '!opacity-100'
+              !hoverImage && isHovered && '!opacity-100',
             )}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
@@ -301,7 +309,7 @@ export const ProductCard = ({
               fill
               className={clsx(
                 'object-cover absolute inset-0 transition-all duration-700 ease-out',
-                isHovered ? 'scale-100 opacity-100' : 'scale-110 opacity-0'
+                isHovered ? 'scale-100 opacity-100' : 'scale-110 opacity-0',
               )}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
@@ -341,68 +349,79 @@ export const ProductCard = ({
               transition={{ duration: 0.25, ease: [0.2, 0.9, 0.4, 1] }}
               className="absolute bottom-3 left-3 right-3 z-20 flex gap-2"
             >
-              {/* Cart Button - Full width primary */}
+              {/* Cart Button - Refined with icon only */}
               <motion.button
                 onClick={handleAddToCart}
                 onTouchEnd={handleAddToCart}
                 disabled={cartState === 'loading'}
                 aria-label="Add to cart"
                 className={clsx(
-                  'flex-1 h-11 rounded-full flex items-center justify-center gap-2 transition-all duration-300',
+                  'flex-1 h-11 rounded-full flex items-center justify-center transition-all duration-300',
                   cartState === 'added' || isAddedToCart
-                    ? 'bg-emerald-600 text-white shadow-lg'
-                    : 'bg-white/95 backdrop-blur-md text-neutral-900 shadow-md hover:bg-black hover:text-white active:scale-95'
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
+                    : 'bg-white/95 backdrop-blur-md text-neutral-900 shadow-lg shadow-black/5 hover:bg-black hover:text-white active:scale-95',
                 )}
               >
                 <AnimatePresence mode="wait">
                   {cartState === 'loading' ? (
                     <motion.span
                       key="spin"
-                      initial={{ opacity: 0, scale: 0.6 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.6 }}
+                      initial={{ opacity: 0, scale: 0.5, rotate: -30 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      exit={{ opacity: 0, scale: 0.5, rotate: 30 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin" strokeWidth={2} />
                     </motion.span>
                   ) : cartState === 'added' || isAddedToCart ? (
                     <motion.span
                       key="check"
-                      initial={{ opacity: 0, scale: 0.4 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.4 }}
-                      className="flex items-center gap-2"
+                      initial={{ opacity: 0, scale: 0.4, rotate: -20 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      exit={{ opacity: 0, scale: 0.4, rotate: 20 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 200,
+                        damping: 15,
+                      }}
+                      className="flex items-center justify-center"
                     >
-                      <Check className="w-4 h-4" strokeWidth={2.5} />
-                      <span className="text-[10px] font-black uppercase tracking-wide">In Bag</span>
+                      <Check className="w-5 h-5" strokeWidth={3} />
                     </motion.span>
                   ) : (
                     <motion.span
                       key="bag"
-                      initial={{ opacity: 0, y: 4 }}
+                      initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      className="flex items-center gap-2"
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex items-center justify-center"
                     >
-                      <ShoppingBag className="w-4 h-4" strokeWidth={1.8} />
-                      <span className="text-[11px] font-black uppercase tracking-wide">Add</span>
+                      <ShoppingBag className="w-5 h-5" strokeWidth={2} />
                     </motion.span>
                   )}
                 </AnimatePresence>
               </motion.button>
 
-              {/* Wishlist Button - Circular secondary */}
+              {/* Wishlist Button - Refined circular design */}
               <motion.button
                 onClick={handleWishlistToggle}
                 onTouchEnd={handleWishlistToggle}
                 aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
                 className={clsx(
                   'h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 shrink-0',
+                  'shadow-lg backdrop-blur-md',
                   wishState === 'added'
-                    ? 'bg-rose-500 text-white shadow-lg'
+                    ? 'bg-rose-500 text-white shadow-rose-500/20 scale-110'
                     : wishState === 'removed'
-                      ? 'bg-neutral-100 text-neutral-500'
-                      : 'bg-white/95 backdrop-blur-md text-neutral-900 shadow-md hover:bg-rose-500 hover:text-white active:scale-95'
+                      ? 'bg-neutral-200 text-neutral-400 scale-95'
+                      : isFavorite
+                        ? 'bg-rose-50 text-rose-500 hover:bg-rose-100 hover:scale-105'
+                        : 'bg-white/95 text-neutral-700 hover:bg-rose-50 hover:text-rose-500 hover:scale-105 active:scale-95',
+                  'ring-1 ring-black/5',
                 )}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <AnimatePresence mode="wait">
                   {wishState === 'added' ? (
@@ -411,17 +430,23 @@ export const ProductCard = ({
                       initial={{ scale: 0.3, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.3, opacity: 0 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 20,
+                      }}
                     >
-                      <Heart className="w-4 h-4 fill-white stroke-white" strokeWidth={1.5} />
+                      <Heart className="w-5 h-5 fill-white stroke-white" strokeWidth={1.5} />
                     </motion.span>
                   ) : wishState === 'removed' ? (
                     <motion.span
                       key="heart-out"
-                      initial={{ scale: 1.2, opacity: 0 }}
+                      initial={{ scale: 1.3, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <Heart className="w-4 h-4" strokeWidth={1.5} />
+                      <Heart className="w-5 h-5 text-neutral-400" strokeWidth={1.5} />
                     </motion.span>
                   ) : (
                     <motion.span
@@ -429,11 +454,12 @@ export const ProductCard = ({
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
                     >
                       <Heart
                         className={clsx(
-                          'w-4 h-4 transition-all duration-300',
-                          isFavorite ? 'fill-rose-500 stroke-rose-500' : ''
+                          'w-5 h-5 transition-all duration-300',
+                          isFavorite ? 'fill-rose-500 stroke-rose-500' : 'fill-transparent',
                         )}
                         strokeWidth={1.5}
                       />
@@ -468,7 +494,7 @@ export const ProductCard = ({
                     'w-2.5 h-2.5',
                     i < Math.floor(rating)
                       ? 'fill-amber-400 text-amber-400'
-                      : 'fill-neutral-200 text-neutral-200'
+                      : 'fill-neutral-200 text-neutral-200',
                   )}
                 />
               ))}
@@ -500,7 +526,9 @@ export const ProductCard = ({
             )}
             {defaultColor && (
               <div className="flex items-center gap-1.5 text-[10px]">
-                <span className="text-neutral-400 font-medium uppercase tracking-tight">Color:</span>
+                <span className="text-neutral-400 font-medium uppercase tracking-tight">
+                  Color:
+                </span>
                 <span
                   className="w-2 h-2 rounded-full border border-neutral-200 shadow-sm shrink-0"
                   style={{ backgroundColor: defaultColor.hex || '#ddd' }}
