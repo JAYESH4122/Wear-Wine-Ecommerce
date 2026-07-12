@@ -516,28 +516,6 @@ export const ProductCard = ({
           )}
         </div>
 
-        {(defaultSize || defaultColor) && (
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 pt-2 border-t border-neutral-50">
-            {defaultSize && (
-              <div className="flex items-center gap-1.5 text-[10px]">
-                <span className="text-neutral-400 font-medium uppercase tracking-tight">Size:</span>
-                <span className="text-neutral-900 font-black">{defaultSize.label}</span>
-              </div>
-            )}
-            {defaultColor && (
-              <div className="flex items-center gap-1.5 text-[10px]">
-                <span className="text-neutral-400 font-medium uppercase tracking-tight">
-                  Color:
-                </span>
-                <span
-                  className="w-2 h-2 rounded-full border border-neutral-200 shadow-sm shrink-0"
-                  style={{ backgroundColor: defaultColor.hex || '#ddd' }}
-                />
-                <span className="text-neutral-900 font-black">{defaultColor.name}</span>
-              </div>
-            )}
-          </div>
-        )}
       </Link>
     </div>
   )

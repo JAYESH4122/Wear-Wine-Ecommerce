@@ -209,8 +209,8 @@ const HeroSlide = ({ slide, index, isActive, isInitialRender }: HeroSlideProps) 
       </div>
 
       <div className="absolute inset-0 z-[2] pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/40" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-black/30" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.35)_100%)]" />
       </div>
 
       <div
