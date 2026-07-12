@@ -1,27 +1,34 @@
+import { getPayloadClient } from '@/lib/payload-client'
+
 export interface CarouselCard {
   src: string
   title?: string
   description?: string
 }
-import { getApiUrl } from '@/lib/api/getApiUrl'
 
 export const getCarouselData = async (): Promise<CarouselCard[]> => {
-  const API_URL = getApiUrl()
-  const params = new URLSearchParams({ limit: '30', depth: '0' })
-  params.set('where[type][equals]', 'carousel')
+  try {
+    const payload = await getPayloadClient()
+    const data = await payload.find({
+      collection: 'media',
+      where: {
+        type: {
+          equals: 'carousel',
+        },
+      },
+      limit: 30,
+      depth: 0,
+    })
+    const docs = data?.docs ?? []
 
-  const res = await fetch(`${API_URL}/api/media?${params.toString()}`, {
-    credentials: 'include',
-  })
-  if (!res.ok) {
-    throw new Error(`Failed to fetch carousel media: ${res.status}`)
+    return docs.map((doc) => ({
+      src: doc.url || '',
+      title: doc.alt ?? undefined,
+      description: 'Editorial Selection',
+    }))
+  } catch (error) {
+    console.error('Error fetching carousel media:', error)
+    return []
   }
-  const data = (await res.json()) as { docs?: { url?: string | null; alt?: string | null }[] }
-  const docs = data?.docs ?? []
-
-  return docs.map((doc) => ({
-    src: doc.url || '',
-    title: doc.alt ?? undefined,
-    description: 'Editorial Selection',
-  }))
 }
+

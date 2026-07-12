@@ -1,20 +1,19 @@
-import { getApiUrl } from '@/lib/api/getApiUrl'
+import { getPayloadClient } from '@/lib/payload-client'
 import type { Product } from '@/payload-types'
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    const API_URL = getApiUrl()
-    const params = new URLSearchParams({
-      depth: '2',
-      limit: '1',
+    const payload = await getPayloadClient()
+    const data = await payload.find({
+      collection: 'products',
+      where: {
+        slug: {
+          equals: slug,
+        },
+      },
+      depth: 2,
+      limit: 1,
     })
-    params.set('where[slug][equals]', slug)
-
-    const res = await fetch(`${API_URL}/api/products?${params.toString()}`, {
-      credentials: 'include',
-    })
-    if (!res.ok) return null
-    const data = (await res.json()) as { docs?: Product[] }
     return data?.docs?.[0] ?? null
   } catch (error) {
     console.error(`Error fetching product ${slug}:`, error)
@@ -32,22 +31,30 @@ export async function getRelatedProducts({
   limit?: number
 }): Promise<Product[]> {
   try {
-    const API_URL = getApiUrl()
-    const params = new URLSearchParams({
-      depth: '1',
-      limit: String(limit),
+    const payload = await getPayloadClient()
+    const data = await payload.find({
+      collection: 'products',
+      where: {
+        and: [
+          {
+            category: {
+              equals: categoryId,
+            },
+          },
+          {
+            slug: {
+              not_equals: slug,
+            },
+          },
+        ],
+      },
+      depth: 1,
+      limit,
     })
-    params.set('where[and][0][category][equals]', String(categoryId))
-    params.set('where[and][1][slug][not_equals]', slug)
-
-    const res = await fetch(`${API_URL}/api/products?${params.toString()}`, {
-      credentials: 'include',
-    })
-    if (!res.ok) return []
-    const data = (await res.json()) as { docs?: Product[] }
-    return data?.docs ?? []
+    return (data?.docs as Product[]) ?? []
   } catch (error) {
     console.error('Error fetching related products:', error)
     return []
   }
 }
+
