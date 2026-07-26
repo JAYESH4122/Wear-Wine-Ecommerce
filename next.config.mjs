@@ -4,6 +4,9 @@ import { withPayload } from '@payloadcms/next/withPayload'
 const nextConfig = {
   // Your Next.js config here
   images: {
+    // Keep optimized product images warm after the first visit. This works with
+    // the source media cache headers configured in the Media collection.
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: 'http',

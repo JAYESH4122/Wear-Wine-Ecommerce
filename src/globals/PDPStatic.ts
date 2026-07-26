@@ -1,9 +1,13 @@
 import { GlobalConfig } from 'payload'
+import { revalidateGlobalCache } from '@/lib/cache-tags'
 
 export const PDPStatic: GlobalConfig = {
   slug: 'pdp-static',
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [() => revalidateGlobalCache('pdp-static')],
   },
   fields: [
     {

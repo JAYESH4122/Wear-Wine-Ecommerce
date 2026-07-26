@@ -12,7 +12,8 @@ import {
 } from '@/lib/server/commerce'
 
 const verifySignature = (orderId: string, paymentId: string, signature: string) => {
-  const secret = process.env.RAZORPAY_KEY_SECRET!
+  const secret = process.env.RAZORPAY_KEY_SECRET
+  if (!secret) return false
   const generatedSignature = crypto
     .createHmac('sha256', secret)
     .update(`${orderId}|${paymentId}`)
@@ -48,6 +49,14 @@ export const POST = async (request: Request): Promise<Response> => {
 
   if (!body || !body.razorpay_order_id || !body.razorpay_payment_id || !body.razorpay_signature || !body.orderData) {
     return withCors(request, Response.json({ error: 'Missing required fields' }, { status: 400 }))
+  }
+
+  if (!process.env.RAZORPAY_KEY_SECRET) {
+    console.error('[verify-payment] Razorpay environment variables are not configured.')
+    return withCors(
+      request,
+      Response.json({ error: 'Payments are temporarily unavailable' }, { status: 503 }),
+    )
   }
 
   const { orderData } = body

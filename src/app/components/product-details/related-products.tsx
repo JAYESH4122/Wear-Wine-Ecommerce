@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Heart } from 'lucide-react'
 import { cn, formatPriceINR } from '@/lib/utils'
 import { useWishlist } from '@/providers/wishlist'
+import { getMediaUrl } from '@/lib/media'
 import type { Product, Media } from './types'
 import type { Category } from '@/payload-types'
 
@@ -41,6 +42,7 @@ export const RelatedProducts = ({ products }: Props) => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
         {products.map((rp) => {
           const img = rp.images?.[0]?.image as Media | undefined
+          const imageUrl = getMediaUrl(img, 'card')
           const wishlisted = isInWishlist(String(rp.id))
           const hasSale = !!rp.salePrice && rp.salePrice < rp.price
 
@@ -51,10 +53,10 @@ export const RelatedProducts = ({ products }: Props) => {
             <div key={rp.id} className="group flex flex-col">
               {/* Image */}
               <div className="relative aspect-[3/4] overflow-hidden bg-neutral-50 mb-3">
-                {img?.url ? (
+                {imageUrl ? (
                   <Image
-                    src={img.url}
-                    alt={img.alt ?? rp.name}
+                    src={imageUrl}
+                    alt={img?.alt ?? rp.name}
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
                     className="object-cover transition-transform duration-700 group-hover:scale-105"

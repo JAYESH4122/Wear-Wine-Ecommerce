@@ -11,6 +11,7 @@ import { gsap } from 'gsap'
 import type { Color, Size } from '@/payload-types'
 import { useWishlist } from '@/providers/wishlist'
 import { useCart } from '@/providers/cart'
+import { useResponsive } from '@/hooks/use-responsive'
 import type { CartProduct } from '@/providers/cart'
 import type { WishlistItem } from '@/providers/wishlist'
 
@@ -58,6 +59,7 @@ export const ProductCard = ({
 
   const { isInWishlist, toggleWishlist } = useWishlist()
   const { addItem, isInCart } = useCart()
+  const { isMobile } = useResponsive()
 
   const variants = product?.variants ?? []
   const defaultVariant = variants.length > 0 ? variants[0] : null
@@ -290,7 +292,11 @@ export const ProductCard = ({
     >
       {/* ── IMAGE SECTION ──────────────────────────────────────────────────── */}
       <div className="relative aspect-[3/4] overflow-hidden bg-neutral-50">
-        <Link href={`/product/${slug || id}`} className="block h-full w-full" tabIndex={-1}>
+        <Link
+          href={`/product/${slug || id}`}
+          className="block h-full w-full cursor-pointer"
+          tabIndex={-1}
+        >
           <Image
             src={image}
             alt={title}
@@ -341,25 +347,31 @@ export const ProductCard = ({
 
         {/* ── ACTION BUTTONS (Bottom edge) ──────────────────────────────────── */}
         <AnimatePresence>
-          {(isHovered || isMobileActive) && isInStock && (
+          {(isHovered || isMobileActive || isMobile) && isInStock && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.25, ease: [0.2, 0.9, 0.4, 1] }}
-              className="absolute bottom-3 left-3 right-3 z-20 flex gap-2"
+              className="absolute bottom-3 left-3 right-3 z-20 flex items-stretch justify-end gap-2 md:justify-start"
             >
-              {/* Cart Button - Refined with icon only */}
+              {/* Icon-only on mobile keeps both touch targets balanced. */}
               <motion.button
+                type="button"
                 onClick={handleAddToCart}
-                onTouchEnd={handleAddToCart}
                 disabled={cartState === 'loading'}
-                aria-label="Add to cart"
+                aria-label={
+                  cartState === 'loading'
+                    ? 'Adding to bag'
+                    : cartState === 'added' || isAddedToCart
+                      ? 'Added to bag'
+                      : 'Add to bag'
+                }
                 className={clsx(
-                  'flex-1 h-11 rounded-full flex items-center justify-center transition-all duration-300',
+                  'group/cart flex h-12 w-12 shrink-0 items-center justify-center gap-0 rounded-full border border-white/40 px-0 text-[10px] font-black uppercase tracking-[0.16em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 disabled:cursor-wait md:flex-1 md:gap-2 md:px-4',
                   cartState === 'added' || isAddedToCart
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                    : 'bg-white/95 backdrop-blur-md text-neutral-900 shadow-lg shadow-black/5 hover:bg-black hover:text-white active:scale-95',
+                    ? 'cursor-pointer bg-emerald-600 text-white shadow-[0_12px_24px_-12px_rgba(5,150,105,0.75)]'
+                    : 'bg-white/95 text-neutral-900 shadow-[0_12px_24px_-12px_rgba(0,0,0,0.5)] backdrop-blur-md cursor-pointer hover:-translate-y-0.5 hover:bg-neutral-950 hover:text-white hover:shadow-[0_16px_28px_-12px_rgba(0,0,0,0.7)] active:translate-y-0 active:scale-[0.98]',
                 )}
               >
                 <AnimatePresence mode="wait">
@@ -397,28 +409,33 @@ export const ProductCard = ({
                       transition={{ duration: 0.2 }}
                       className="flex items-center justify-center"
                     >
-                      <ShoppingBag className="w-5 h-5" strokeWidth={2} />
+                      <ShoppingBag className="h-[18px] w-[18px] transition-transform duration-300 group-hover/cart:-translate-y-0.5" strokeWidth={2} />
                     </motion.span>
                   )}
                 </AnimatePresence>
+                <span className="hidden md:inline">
+                  {cartState === 'loading'
+                    ? 'Adding'
+                    : cartState === 'added' || isAddedToCart
+                      ? 'Added to bag'
+                      : 'Add to bag'}
+                </span>
               </motion.button>
 
-              {/* Wishlist Button - Refined circular design */}
+              {/* The compact wishlist action remains visually secondary. */}
               <motion.button
+                type="button"
                 onClick={handleWishlistToggle}
-                onTouchEnd={handleWishlistToggle}
                 aria-label={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
                 className={clsx(
-                  'h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 shrink-0',
-                  'shadow-lg backdrop-blur-md',
+                  'h-12 w-12 shrink-0 cursor-pointer rounded-full border border-white/40 flex items-center justify-center shadow-[0_12px_24px_-12px_rgba(0,0,0,0.5)] backdrop-blur-md transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2',
                   wishState === 'added'
-                    ? 'bg-rose-500 text-white shadow-rose-500/20 scale-110'
+                    ? 'bg-rose-500 text-white shadow-[0_12px_24px_-12px_rgba(244,63,94,0.75)] scale-105'
                     : wishState === 'removed'
                       ? 'bg-neutral-200 text-neutral-400 scale-95'
                       : isFavorite
-                        ? 'bg-rose-50 text-rose-500 hover:bg-rose-100 hover:scale-105'
-                        : 'bg-white/95 text-neutral-700 hover:bg-rose-50 hover:text-rose-500 hover:scale-105 active:scale-95',
-                  'ring-1 ring-black/5',
+                        ? 'bg-rose-50 text-rose-500 hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-[0_16px_28px_-12px_rgba(244,63,94,0.45)]'
+                        : 'bg-white/95 text-neutral-700 hover:-translate-y-0.5 hover:bg-rose-50 hover:text-rose-500 hover:shadow-[0_16px_28px_-12px_rgba(244,63,94,0.45)] active:translate-y-0 active:scale-[0.96]',
                 )}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -473,7 +490,10 @@ export const ProductCard = ({
       </div>
 
       {/* ── PRODUCT INFO ────────────────────────────────────────────────────── */}
-      <Link href={`/product/${slug || id}`} className="pt-3 pb-2 px-2 flex flex-col gap-1 flex-1">
+      <Link
+        href={`/product/${slug || id}`}
+        className="pt-3 pb-2 px-2 flex flex-col gap-1 flex-1 cursor-pointer"
+      >
         {category && (
           <span className="text-[9px] font-black uppercase tracking-[0.22em] text-neutral-400">
             {category}

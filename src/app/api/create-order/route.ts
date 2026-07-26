@@ -13,10 +13,17 @@ import {
 import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
 import { withCors } from '@/lib/server/cors'
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-})
+const getRazorpayClient = () => {
+  const keyId = process.env.RAZORPAY_KEY_ID
+  const keySecret = process.env.RAZORPAY_KEY_SECRET
+
+  if (!keyId || !keySecret) return null
+
+  return new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  })
+}
 
 const invalidBody = (request: Request, message: string) =>
   withCors(request, Response.json({ error: message }, { status: 400 }))
@@ -82,6 +89,15 @@ export const POST = async (request: Request): Promise<Response> => {
   })
 
   if (rate.limited) return tooManyRequests(request)
+
+  const razorpay = getRazorpayClient()
+  if (!razorpay) {
+    console.error('[create-order] Razorpay environment variables are not configured.')
+    return withCors(
+      request,
+      Response.json({ error: 'Payments are temporarily unavailable' }, { status: 503 }),
+    )
+  }
 
   const body = (await request.json().catch(() => null)) as
     | {
