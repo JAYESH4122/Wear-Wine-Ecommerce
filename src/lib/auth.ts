@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { UserService } from './user-service'
 import { verifyGoogleExchangeToken } from './server/google-exchange-token'
+import { checkRateLimit, getClientIpFromHeaderRecord } from './server/rate-limit'
 
 const requireEnv = (key: string): string => {
   const value = process.env[key]
@@ -18,7 +19,18 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
         googleExchangeToken: { label: 'Google Exchange Token', type: 'text' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
+        const loginIdentity =
+          typeof credentials?.email === 'string'
+            ? credentials.email.trim().toLowerCase()
+            : 'google-exchange'
+        const rate = await checkRateLimit({
+          key: `auth-login:${getClientIpFromHeaderRecord(request.headers)}:${loginIdentity}`,
+          limit: 10,
+          windowMs: 15 * 60 * 1000,
+        })
+        if (rate.limited) throw new Error('Too many sign-in attempts. Please try again later.')
+
         const googleExchangeToken = credentials?.googleExchangeToken
 
         if (typeof googleExchangeToken === 'string' && googleExchangeToken.length > 0) {

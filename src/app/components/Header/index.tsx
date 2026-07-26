@@ -155,7 +155,7 @@ export const Header = ({ cmsData, siteSettings }: HeaderProps) => {
       })
       .filter((item): item is { name: string; href: string; isSection: boolean } => Boolean(item)) ?? []
 
-  const trackOrderHref = user?.email ? `/track-order?email=${encodeURIComponent(user.email)}` : '/track-order'
+  const trackOrderHref = '/track-order'
 
   const navItemsWithTracking = navItems.some(
     (item) => item.href === '/track-order' || item.href.startsWith('/track-order?'),

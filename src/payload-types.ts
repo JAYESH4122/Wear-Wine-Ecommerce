@@ -79,6 +79,9 @@ export interface Config {
     carts: Cart;
     wishlists: Wishlist;
     orders: Order;
+    'rate-limit-buckets': RateLimitBucket;
+    'payment-attempts': PaymentAttempt;
+    'payment-webhook-events': PaymentWebhookEvent;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -98,6 +101,9 @@ export interface Config {
     carts: CartsSelect<false> | CartsSelect<true>;
     wishlists: WishlistsSelect<false> | WishlistsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    'rate-limit-buckets': RateLimitBucketsSelect<false> | RateLimitBucketsSelect<true>;
+    'payment-attempts': PaymentAttemptsSelect<false> | PaymentAttemptsSelect<true>;
+    'payment-webhook-events': PaymentWebhookEventsSelect<false> | PaymentWebhookEventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -884,6 +890,7 @@ export interface Order {
   id: number;
   orderId: string;
   user?: (number | null) | User;
+  paymentAttempt?: (number | null) | PaymentAttempt;
   email: string;
   phone?: string | null;
   shippingAddress: {
@@ -917,7 +924,79 @@ export interface Order {
   trackingId?: string | null;
   razorpayOrderId?: string | null;
   razorpayPaymentId?: string | null;
+  /**
+   * Legacy records only. New payment signatures are never stored.
+   */
   razorpaySignature?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-attempts".
+ */
+export interface PaymentAttempt {
+  id: number;
+  attemptId: string;
+  user?: (number | null) | User;
+  email: string;
+  phone: string;
+  shippingAddress: {
+    fullName: string;
+    addressLine1: string;
+    addressLine2?: string | null;
+    city: string;
+    state: string;
+    country: string;
+    postalCode: string;
+    landmark?: string | null;
+  };
+  items: {
+    product: number | Product;
+    name: string;
+    size?: (number | null) | Size;
+    color?: (number | null) | Color;
+    variantKey: string;
+    variantId: string;
+    quantity: number;
+    unitPricePaise: number;
+    lineTotalPaise: number;
+    id?: string | null;
+  }[];
+  amountPaise: number;
+  currency: 'INR';
+  status: 'creating' | 'pending' | 'authorized' | 'captured' | 'failed' | 'expired' | 'refund_required' | 'refunded';
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  order?: (number | null) | Order;
+  expiresAt: string;
+  processedAt?: string | null;
+  failureReason?: string | null;
+  refundId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rate-limit-buckets".
+ */
+export interface RateLimitBucket {
+  id: number;
+  key: string;
+  count: number;
+  resetAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-webhook-events".
+ */
+export interface PaymentWebhookEvent {
+  id: number;
+  eventId: string;
+  eventName: string;
+  razorpayOrderId?: string | null;
+  paymentAttempt?: (number | null) | PaymentAttempt;
+  processedAt: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -992,6 +1071,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'rate-limit-buckets';
+        value: number | RateLimitBucket;
+      } | null)
+    | ({
+        relationTo: 'payment-attempts';
+        value: number | PaymentAttempt;
+      } | null)
+    | ({
+        relationTo: 'payment-webhook-events';
+        value: number | PaymentWebhookEvent;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1402,6 +1493,7 @@ export interface WishlistsSelect<T extends boolean = true> {
 export interface OrdersSelect<T extends boolean = true> {
   orderId?: T;
   user?: T;
+  paymentAttempt?: T;
   email?: T;
   phone?: T;
   shippingAddress?:
@@ -1434,6 +1526,76 @@ export interface OrdersSelect<T extends boolean = true> {
   razorpayOrderId?: T;
   razorpayPaymentId?: T;
   razorpaySignature?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rate-limit-buckets_select".
+ */
+export interface RateLimitBucketsSelect<T extends boolean = true> {
+  key?: T;
+  count?: T;
+  resetAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-attempts_select".
+ */
+export interface PaymentAttemptsSelect<T extends boolean = true> {
+  attemptId?: T;
+  user?: T;
+  email?: T;
+  phone?: T;
+  shippingAddress?:
+    | T
+    | {
+        fullName?: T;
+        addressLine1?: T;
+        addressLine2?: T;
+        city?: T;
+        state?: T;
+        country?: T;
+        postalCode?: T;
+        landmark?: T;
+      };
+  items?:
+    | T
+    | {
+        product?: T;
+        name?: T;
+        size?: T;
+        color?: T;
+        variantKey?: T;
+        variantId?: T;
+        quantity?: T;
+        unitPricePaise?: T;
+        lineTotalPaise?: T;
+        id?: T;
+      };
+  amountPaise?: T;
+  currency?: T;
+  status?: T;
+  razorpayOrderId?: T;
+  razorpayPaymentId?: T;
+  order?: T;
+  expiresAt?: T;
+  processedAt?: T;
+  failureReason?: T;
+  refundId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-webhook-events_select".
+ */
+export interface PaymentWebhookEventsSelect<T extends boolean = true> {
+  eventId?: T;
+  eventName?: T;
+  razorpayOrderId?: T;
+  paymentAttempt?: T;
+  processedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -1,23 +1,30 @@
 import type { CollectionConfig } from 'payload'
 
+import {
+  adminFieldOnly,
+  adminOnly,
+  adminPanelOnly,
+  ownerOrAdminByID,
+} from '@/access/ownerOrAdmin'
+
 export const Users: CollectionConfig = {
   slug: 'users',
   admin: {
     useAsTitle: 'name',
   },
   access: {
-    admin: ({ req: { user } }) => {
-      if (!user) return true
-      return user.roles?.includes('admin')
-    },
-    read: () => true,
-    create: () => true,
+    admin: adminPanelOnly,
+    create: adminOnly,
+    read: ownerOrAdminByID,
+    update: ownerOrAdminByID,
+    delete: adminOnly,
+    unlock: adminOnly,
   },
   auth: {
     verify: true,
     cookies: {
       secure: true,
-      sameSite: 'None',
+      sameSite: 'Lax',
     },
   },
   fields: [
@@ -30,6 +37,10 @@ export const Users: CollectionConfig = {
       name: 'googleId',
       type: 'text',
       unique: true,
+      access: {
+        create: adminFieldOnly,
+        update: adminFieldOnly,
+      },
       admin: {
         readOnly: true,
       },
@@ -38,6 +49,10 @@ export const Users: CollectionConfig = {
       name: 'isVerified',
       type: 'checkbox',
       defaultValue: false,
+      access: {
+        create: adminFieldOnly,
+        update: adminFieldOnly,
+      },
       admin: {
         readOnly: true,
       },
@@ -51,6 +66,7 @@ export const Users: CollectionConfig = {
       required: true,
       saveToJWT: true,
       access: {
+        create: ({ req: { user } }) => Boolean(user?.roles?.includes('admin')),
         update: ({ req: { user } }) => Boolean(user?.roles?.includes('admin')),
       },
     },

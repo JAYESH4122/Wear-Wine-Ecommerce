@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { adminOnly } from '@/access/ownerOrAdmin'
+
 export const Colors: CollectionConfig = {
   slug: 'colors',
 
@@ -8,7 +10,10 @@ export const Colors: CollectionConfig = {
   },
 
   access: {
+    create: adminOnly,
+    delete: adminOnly,
     read: () => true,
+    update: adminOnly,
   },
 
   fields: [
