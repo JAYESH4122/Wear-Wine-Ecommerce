@@ -16,6 +16,7 @@ import { getApiUrl } from '@/lib/api/getApiUrl'
 import { Button } from '@/components/ui/button/Button'
 import { useResponsive } from '@/hooks/use-responsive'
 import { SectionWrapper } from '../SectionWrapper'
+import { getMediaUrl } from '@/lib/media'
 
 import type { Category as CategoryType, Product as ProductType } from '@/payload-types'
 import type { ContainerPropsType } from '@types-frontend/types'
@@ -159,7 +160,7 @@ export const ProductListSection = ({
           p.category && typeof p.category === 'object' ? (p.category as CategoryType) : null
         const firstImage = p.images?.[0]?.image
         const imageUrl =
-          firstImage && typeof firstImage === 'object' ? (firstImage.url ?? null) : null
+          firstImage && typeof firstImage === 'object' ? getMediaUrl(firstImage, 'card') : null
         const firstTag = p.tags?.[0]
         const tagName = firstTag && typeof firstTag === 'object' ? (firstTag.name ?? null) : null
 

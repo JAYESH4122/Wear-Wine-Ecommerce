@@ -1,9 +1,13 @@
 import { GlobalConfig } from 'payload'
+import { revalidateGlobalCache } from '@/lib/cache-tags'
 
 export const Footer: GlobalConfig = {
   slug: 'footer',
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [() => revalidateGlobalCache('footer')],
   },
   fields: [
 

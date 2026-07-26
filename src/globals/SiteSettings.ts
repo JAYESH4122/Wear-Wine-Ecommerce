@@ -1,9 +1,13 @@
 import { GlobalConfig } from 'payload'
+import { revalidateGlobalCache } from '@/lib/cache-tags'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [() => revalidateGlobalCache('site-settings')],
   },
   fields: [
     {
