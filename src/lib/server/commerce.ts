@@ -264,7 +264,9 @@ export const filterValidWishlistItems = async (
 }
 
 export const hashGuestCartMerge = (userId: PrimitiveId, items: CartInputItem[]): string => {
-  const sorted = [...items].sort((a, b) => toIdKey(a.productId).localeCompare(toIdKey(b.productId)))
+  const itemKey = (item: CartInputItem) =>
+    `${toIdKey(item.productId)}:${item.size ?? 'none'}:${item.color ?? 'none'}`
+  const sorted = [...items].sort((a, b) => itemKey(a).localeCompare(itemKey(b)))
   const serial = JSON.stringify({ userId: toIdKey(userId), items: sorted })
   return crypto.createHash('sha256').update(serial).digest('hex')
 }
@@ -376,16 +378,18 @@ export const requirePayloadUser = async (payload: Payload, sessionUserId: string
 
 export const mergeCartItems = (existing: CartInputItem[], incoming: CartInputItem[]): CartInputItem[] => {
   const map = new Map<string, CartInputItem>()
+  const itemKey = (item: CartInputItem) =>
+    `${toIdKey(item.productId)}:${item.size ?? 'none'}:${item.color ?? 'none'}`
 
   for (const item of existing) {
-    map.set(toIdKey(item.productId), { ...item })
+    map.set(itemKey(item), { ...item })
   }
 
   for (const item of incoming) {
-    const key = toIdKey(item.productId)
+    const key = itemKey(item)
     const existingItem = map.get(key)
     map.set(key, {
-      productId: item.productId,
+      ...item,
       quantity: (existingItem?.quantity ?? 0) + item.quantity,
     })
   }
@@ -406,132 +410,3 @@ export const mergeWishlistIds = (existing: PrimitiveId[], incoming: PrimitiveId[
 
   return output
 }
-
-// ---------------------------------------------------------------------------
-// Stock helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Finds the variant in a product that matches the given size + color IDs.
- * Returns the variant index and the matching variant, or null if not found.
- */
-export const findMatchingVariant = (
-  product: Product,
-  sizeId: PrimitiveId | null | undefined,
-  colorId: PrimitiveId | null | undefined,
-): { index: number; variant: NonNullable<Product['variants']>[number] } | null => {
-  if (!Array.isArray(product.variants) || product.variants.length === 0) return null
-
-  for (let i = 0; i < product.variants.length; i++) {
-    const v = product.variants[i]!
-    const vSizeId = typeof v.size === 'object' && v.size ? (v.size as { id?: unknown }).id : v.size
-    const vColorId = typeof v.color === 'object' && v.color ? (v.color as { id?: unknown }).id : v.color
-
-    const sizeMatch = sizeId == null ? true : String(vSizeId) === String(sizeId)
-    const colorMatch = colorId == null ? true : String(vColorId) === String(colorId)
-
-    if (sizeMatch && colorMatch) return { index: i, variant: v }
-  }
-
-  return null
-}
-
-export type StockError = {
-  productId: PrimitiveId
-  productName: string
-  requested: number
-  available: number
-}
-
-/**
- * Checks that every ordered item has enough stock in its matched variant.
- * Returns an array of errors — empty array means all items are in stock.
- */
-export const checkVariantStock = (
-  items: CartInputItem[],
-  productsById: Map<string, Product>,
-): StockError[] => {
-  const errors: StockError[] = []
-
-  for (const item of items) {
-    const product = productsById.get(toIdKey(item.productId))
-    if (!product) continue // already filtered out
-
-    const match = findMatchingVariant(product, item.size, item.color)
-    const available = match ? (match.variant.stock ?? 0) : 0
-
-    if (available < item.quantity) {
-      errors.push({
-        productId: item.productId,
-        productName: product.name,
-        requested: item.quantity,
-        available,
-      })
-    }
-  }
-
-  return errors
-}
-
-/**
- * Deducts stock for each ordered variant after a confirmed payment.
- * Updates products in-place via payload Local API.
- * Logs but does NOT throw on partial failures — the order has already been placed.
- */
-export const deductVariantStock = async (
-  payload: Payload,
-  items: CartInputItem[],
-  productsById: Map<string, Product>,
-): Promise<void> => {
-  for (const item of items) {
-    const product = productsById.get(toIdKey(item.productId))
-    if (!product || !Array.isArray(product.variants)) continue
-
-    const match = findMatchingVariant(product, item.size, item.color)
-    if (!match) {
-      console.warn('[deductVariantStock] No matching variant found, skipping stock deduction', {
-        productId: item.productId,
-        productName: product.name,
-        sizeId: item.size,
-        colorId: item.color,
-      })
-      continue
-    }
-
-    const currentStock = match.variant.stock ?? 0
-    const newStock = Math.max(0, currentStock - item.quantity)
-
-    // Build updated variants array, only mutating the matched variant's stock
-    const updatedVariants = product.variants.map((v, idx) => {
-      if (idx !== match.index) return v
-      return { ...v, stock: newStock }
-    })
-
-    try {
-      await payload.update({
-        collection: 'products',
-        id: product.id,
-        data: { variants: updatedVariants as NonNullable<Product['variants']> },
-        overrideAccess: true,
-      })
-
-      console.info('[deductVariantStock] Stock deducted', {
-        productId: product.id,
-        productName: product.name,
-        variantIndex: match.index,
-        sizeId: item.size,
-        colorId: item.color,
-        previousStock: currentStock,
-        newStock,
-        quantityDeducted: item.quantity,
-      })
-    } catch (err) {
-      console.error('[deductVariantStock] Failed to deduct stock — order already created, manual correction needed', {
-        productId: product.id,
-        productName: product.name,
-        error: err instanceof Error ? err.message : String(err),
-      })
-    }
-  }
-}
-

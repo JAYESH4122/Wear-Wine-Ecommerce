@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload'
+import { adminOnly } from '@/access/ownerOrAdmin'
 import { generateSlug } from './lib'
 import { CollectionGallery } from './CollectionGallery'
 import { DepthDeckCarousel } from './DepthDeckCarousel'
@@ -13,7 +14,10 @@ export const Pages: CollectionConfig = {
     defaultColumns: ['title', 'slug', 'updatedAt'],
   },
   access: {
+    create: adminOnly,
+    delete: adminOnly,
     read: () => true,
+    update: adminOnly,
   },
   hooks: {
     beforeValidate: [generateSlug('title')],

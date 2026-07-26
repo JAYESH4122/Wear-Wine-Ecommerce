@@ -1,172 +1,170 @@
 import { getPayload } from 'payload'
-import crypto from 'crypto'
 
-import configPromise from '@/payload.config'
-import { withCors } from '@/lib/server/cors'
+import { rejectDisallowedOrigin, withCors } from '@/lib/server/cors'
 import {
-  deductVariantStock,
-  fetchProductsByIds,
-  normalizeCartItems,
-  normalizeShippingAddress,
-  normalizeMoney,
-} from '@/lib/server/commerce'
+  finalizeCapturedPayment,
+  findPaymentAttempt,
+  isCapturedPayment,
+  paymentMatchesAttempt,
+  recordPaymentState,
+} from '@/lib/server/payment-attempts'
+import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
+import {
+  fetchRazorpayPayment,
+  getRazorpayClient,
+  verifyPaymentSignature,
+} from '@/lib/server/razorpay'
+import configPromise from '@/payload.config'
 
-const verifySignature = (orderId: string, paymentId: string, signature: string) => {
-  const secret = process.env.RAZORPAY_KEY_SECRET
-  if (!secret) return false
-  const generatedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(`${orderId}|${paymentId}`)
-    .digest('hex')
+const validRazorpayId = (value: unknown, prefix: string): value is string =>
+  typeof value === 'string'
+  && value.length <= 100
+  && value.startsWith(prefix)
+  && /^[A-Za-z0-9_-]+$/.test(value)
 
-  return generatedSignature === signature
-}
-
-export const OPTIONS = async (request: Request) => {
-  return withCors(request, new Response(null, { status: 204 }))
-}
+export const OPTIONS = async (request: Request) =>
+  withCors(request, new Response(null, { status: 204 }))
 
 export const POST = async (request: Request): Promise<Response> => {
-  const body = (await request.json().catch(() => null)) as {
-    razorpay_order_id?: string
-    razorpay_payment_id?: string
-    razorpay_signature?: string
-    orderData?: {
-      email?: string
-      phone?: string
-      shippingAddress?: any
-      items?: any
-      total?: number
-      userId?: string | null
-    }
-  } | null
+  const originRejection = rejectDisallowedOrigin(request)
+  if (originRejection) return originRejection
 
-  console.info('[verify-payment] Received payload:', {
-    razorpayOrderId: body?.razorpay_order_id,
-    razorpayPaymentId: body?.razorpay_payment_id,
-    hasSignature: !!body?.razorpay_signature,
+  const rate = await checkRateLimit({
+    key: `razorpay-verify:${getClientIp(request)}`,
+    limit: 20,
+    windowMs: 15 * 60 * 1000,
   })
-
-  if (!body || !body.razorpay_order_id || !body.razorpay_payment_id || !body.razorpay_signature || !body.orderData) {
-    return withCors(request, Response.json({ error: 'Missing required fields' }, { status: 400 }))
+  if (rate.limited) {
+    return withCors(request, Response.json({ error: 'Too many requests' }, { status: 429 }))
   }
 
-  if (!process.env.RAZORPAY_KEY_SECRET) {
-    console.error('[verify-payment] Razorpay environment variables are not configured.')
+  const body = (await request.json().catch(() => null)) as
+    | {
+        attemptId?: unknown
+        razorpay_order_id?: unknown
+        razorpay_payment_id?: unknown
+        razorpay_signature?: unknown
+      }
+    | null
+
+  if (
+    !body
+    || typeof body.attemptId !== 'string'
+    || !/^[0-9a-f-]{36}$/i.test(body.attemptId)
+    || !validRazorpayId(body.razorpay_order_id, 'order_')
+    || !validRazorpayId(body.razorpay_payment_id, 'pay_')
+    || typeof body.razorpay_signature !== 'string'
+    || !/^[a-f0-9]{64}$/i.test(body.razorpay_signature)
+  ) {
+    return withCors(request, Response.json({ error: 'Invalid payment response' }, { status: 400 }))
+  }
+
+  let razorpay
+  try {
+    razorpay = getRazorpayClient()
+  } catch (error) {
+    console.error('[verify-payment] Unsafe Razorpay configuration', {
+      error: error instanceof Error ? error.message : 'unknown',
+    })
+    return withCors(
+      request,
+      Response.json({ error: 'Payments are temporarily unavailable' }, { status: 503 }),
+    )
+  }
+  if (!razorpay) {
     return withCors(
       request,
       Response.json({ error: 'Payments are temporarily unavailable' }, { status: 503 }),
     )
   }
 
-  const { orderData } = body
   const payload = await getPayload({ config: configPromise })
+  const attempt = await findPaymentAttempt(payload, body.attemptId)
+  if (!attempt?.razorpayOrderId || body.razorpay_order_id !== attempt.razorpayOrderId) {
+    return withCors(request, Response.json({ error: 'Payment reference mismatch' }, { status: 400 }))
+  }
+
+  let signatureIsValid = false
+  try {
+    signatureIsValid = verifyPaymentSignature({
+      orderId: attempt.razorpayOrderId,
+      paymentId: body.razorpay_payment_id,
+      signature: body.razorpay_signature,
+    })
+  } catch {
+    return withCors(
+      request,
+      Response.json({ error: 'Payments are temporarily unavailable' }, { status: 503 }),
+    )
+  }
+  if (!signatureIsValid) {
+    return withCors(request, Response.json({ error: 'Invalid payment signature' }, { status: 400 }))
+  }
 
   try {
-    // 1. Idempotency Check: Prevent duplicate orders + double stock deduction
-    const existingOrders = await payload.find({
-      collection: 'orders',
-      where: {
-        razorpayPaymentId: {
-          equals: body.razorpay_payment_id,
-        },
-      },
-      overrideAccess: true,
-      limit: 1,
-    })
+    const payment = await fetchRazorpayPayment(razorpay, body.razorpay_payment_id)
+    if (
+      payment.id !== body.razorpay_payment_id
+      || !paymentMatchesAttempt(payment, attempt)
+    ) {
+      return withCors(request, Response.json({ error: 'Payment details mismatch' }, { status: 400 }))
+    }
 
-    if (existingOrders.docs.length > 0) {
-      console.info('[verify-payment] Order already exists for this paymentId (Idempotency), returning success', {
-        paymentId: body.razorpay_payment_id,
-        orderId: existingOrders.docs[0].orderId,
+    if (isCapturedPayment(payment)) {
+      const result = await finalizeCapturedPayment({
+        payload,
+        attemptId: attempt.attemptId,
+        paymentId: payment.id,
       })
-      return withCors(request, Response.json({ success: true, orderId: existingOrders.docs[0].orderId }))
+
+      if (result.state === 'refund_required') {
+        return withCors(
+          request,
+          Response.json(
+            {
+              state: 'refund_required',
+              error: 'Payment was captured, but fulfilment requires a refund review',
+            },
+            { status: 409 },
+          ),
+        )
+      }
+
+      return withCors(
+        request,
+        Response.json({ success: true, state: 'captured', orderId: result.orderId }),
+      )
     }
 
-    // 2. Signature Verification
-    const isValid = verifySignature(body.razorpay_order_id, body.razorpay_payment_id, body.razorpay_signature)
-    if (!isValid) {
-      console.error('[verify-payment] Invalid signature', {
-        razorpayOrderId: body.razorpay_order_id,
-        razorpayPaymentId: body.razorpay_payment_id,
+    if (payment.status === 'failed') {
+      await recordPaymentState({
+        payload,
+        attempt,
+        status: 'failed',
+        paymentId: payment.id,
+        failureReason: 'Razorpay reported a failed payment',
       })
-      return withCors(request, Response.json({ error: 'Invalid signature' }, { status: 400 }))
+      return withCors(
+        request,
+        Response.json({ state: 'failed', error: 'Payment failed' }, { status: 402 }),
+      )
     }
 
-    // 3. Security Re-validation (Prevent trust of frontend data)
-    const normalizedItems = normalizeCartItems(orderData.items)
-    const shippingAddress = normalizeShippingAddress(orderData.shippingAddress)
-
-    if (!normalizedItems.length || !shippingAddress || !orderData.email || !orderData.phone) {
-      return withCors(request, Response.json({ error: 'Invalid order data' }, { status: 400 }))
-    }
-
-    const productsById = await fetchProductsByIds(
+    await recordPaymentState({
       payload,
-      normalizedItems.map((item) => item.productId),
-    )
-
-    const validItems = normalizedItems
-      .map((item) => {
-        const product = productsById.get(String(item.productId))
-        if (!product) return null
-        return {
-          product: item.productId,
-          // Persist the variant IDs so admin & stock logic can reference them
-          size: item.size ?? undefined,
-          color: item.color ?? undefined,
-          quantity: item.quantity,
-          name: product.name,
-          price: typeof product.salePrice === 'number' ? product.salePrice : product.price,
-        }
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null)
-
-    const computedTotal = validItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const normalizedComputedTotal = normalizeMoney(computedTotal)
-
-    // 4. Create Order in Payload (with variant snapshot)
-    const orderId = `ORD-${Date.now()}`
-    const order = await payload.create({
-      collection: 'orders',
-      data: {
-        orderId,
-        user: orderData.userId ? Number(orderData.userId) : null,
-        email: orderData.email.toLowerCase().trim(),
-        phone: orderData.phone.trim(),
-        shippingAddress: {
-          fullName: shippingAddress.fullName!,
-          addressLine1: shippingAddress.addressLine1!,
-          addressLine2: shippingAddress.addressLine2 || '',
-          city: shippingAddress.city!,
-          state: shippingAddress.state!,
-          country: shippingAddress.country!,
-          postalCode: shippingAddress.postalCode!,
-          landmark: shippingAddress.landmark || '',
-        },
-        items: validItems,
-        total: normalizedComputedTotal,
-        status: 'placed',
-        razorpayOrderId: body.razorpay_order_id,
-        razorpayPaymentId: body.razorpay_payment_id,
-        razorpaySignature: body.razorpay_signature,
-      },
-      overrideAccess: true,
+      attempt,
+      status: payment.status === 'authorized' ? 'authorized' : 'pending',
+      paymentId: payment.id,
     })
-
-    console.info('[verify-payment] Order created successfully', {
-      orderId: order.orderId,
-      razorpayPaymentId: body.razorpay_payment_id,
-    })
-
-    // 5. Deduct stock for each ordered variant (non-blocking — order is already confirmed)
-    await deductVariantStock(payload, normalizedItems, productsById)
-
-    return withCors(request, Response.json({ success: true, orderId: order.orderId }))
+    return withCors(request, Response.json({ success: true, state: 'processing' }))
   } catch (error) {
-    console.error('[verify-payment] System error during verification/creation', {
+    console.error('[verify-payment] Verification failed', {
+      attemptId: attempt.attemptId,
       error: error instanceof Error ? error.message : 'unknown',
     })
-    return withCors(request, Response.json({ error: 'Internal server error' }, { status: 500 }))
+    return withCors(
+      request,
+      Response.json({ error: 'Payment verification is temporarily unavailable' }, { status: 503 }),
+    )
   }
 }

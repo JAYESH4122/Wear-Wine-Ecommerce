@@ -98,9 +98,6 @@ const OrdersPage = () => {
       year: 'numeric',
     }).format(new Date(dateString))
 
-  const toDisplayStatus = (status: OrderSummary['status']) =>
-    status.charAt(0).toUpperCase() + status.slice(1)
-
   if (!isHydrated || isAuthLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -189,7 +186,7 @@ const OrdersPage = () => {
           <motion.div key="content" className="space-y-4">
             {filteredOrders.length > 0 ? (
               filteredOrders.map((order) => {
-                const trackingHref = `/track-order?orderId=${encodeURIComponent(order.orderId)}&email=${encodeURIComponent(user.email || '')}`
+                const trackingHref = `/track-order?orderId=${encodeURIComponent(order.orderId)}`
 
                 return (
                   <Link key={order.id} href={trackingHref} className="block">

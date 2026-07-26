@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { adminOnly } from '@/access/ownerOrAdmin'
 import { generateSlug } from './lib'
 
 export const Tags: CollectionConfig = {
@@ -9,7 +10,10 @@ export const Tags: CollectionConfig = {
   },
 
   access: {
+    create: adminOnly,
+    delete: adminOnly,
     read: () => true,
+    update: adminOnly,
   },
 
   hooks: {

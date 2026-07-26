@@ -1,10 +1,12 @@
 import { GlobalConfig } from 'payload'
+import { adminOnly } from '@/access/ownerOrAdmin'
 import { revalidateGlobalCache } from '@/lib/cache-tags'
 
 export const PDPStatic: GlobalConfig = {
   slug: 'pdp-static',
   access: {
     read: () => true,
+    update: adminOnly,
   },
   hooks: {
     afterChange: [() => revalidateGlobalCache('pdp-static')],

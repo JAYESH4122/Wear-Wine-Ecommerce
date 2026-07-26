@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
-import { formatSlug, generateSlug } from './lib'
+import { adminOnly } from '@/access/ownerOrAdmin'
+import { generateSlug } from './lib'
 import { validateVariantCombination } from './validation'
 
 export const Products: CollectionConfig = {
@@ -10,7 +11,10 @@ export const Products: CollectionConfig = {
   },
 
   access: {
+    create: adminOnly,
+    delete: adminOnly,
     read: () => true,
+    update: adminOnly,
   },
 
   hooks: {

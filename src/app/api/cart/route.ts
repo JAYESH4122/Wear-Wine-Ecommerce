@@ -11,7 +11,7 @@ import {
   normalizeCartItems,
   requirePayloadUser,
 } from '@/lib/server/commerce'
-import { withCors } from '@/lib/server/cors'
+import { rejectDisallowedOrigin, withCors } from '@/lib/server/cors'
 
 const unauthorized = (request: Request) =>
   withCors(request, Response.json({ error: 'Unauthorized' }, { status: 401 }))
@@ -61,6 +61,9 @@ export const GET = async (request: Request): Promise<Response> => {
 }
 
 export const PUT = async (request: Request): Promise<Response> => {
+  const originRejection = rejectDisallowedOrigin(request)
+  if (originRejection) return originRejection
+
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return unauthorized(request)
 
