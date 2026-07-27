@@ -1,15 +1,9 @@
 import { GlobalConfig } from 'payload'
-import { adminOnly } from '@/access/ownerOrAdmin'
-import { revalidateGlobalCache } from '@/lib/cache-tags'
 
 export const Footer: GlobalConfig = {
   slug: 'footer',
   access: {
     read: () => true,
-    update: adminOnly,
-  },
-  hooks: {
-    afterChange: [() => revalidateGlobalCache('footer')],
   },
   fields: [
 

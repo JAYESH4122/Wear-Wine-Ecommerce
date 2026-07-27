@@ -2,6 +2,7 @@ import type { Product, Media, Color, Size, PdpStatic } from '@/payload-types'
 
 export interface ProductDetailsProps {
   product: Product
+  relatedProducts?: Product[]
   pdpStatic: PdpStatic
 }
 

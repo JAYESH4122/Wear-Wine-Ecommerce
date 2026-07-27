@@ -1,205 +1,218 @@
 import { getServerSession } from 'next-auth'
 import { getPayload } from 'payload'
+import Razorpay from 'razorpay'
 
-import { authOptions } from '@/lib/auth'
-import { normalizeShippingAddress, requirePayloadUser } from '@/lib/server/commerce'
-import { rejectDisallowedOrigin, withCors } from '@/lib/server/cors'
-import {
-  buildPaymentSnapshot,
-  InvalidCartError,
-  opaqueAttemptId,
-} from '@/lib/server/payment-attempts'
-import { assertLiveBusinessReadiness } from '@/lib/server/live-readiness'
-import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
-import { getPaymentRuntimeConfig, getRazorpayClient } from '@/lib/server/razorpay'
 import configPromise from '@/payload.config'
+import { authOptions } from '@/lib/auth'
+import {
+  checkVariantStock,
+  fetchProductsByIds,
+  normalizeCartItems,
+  requirePayloadUser,
+} from '@/lib/server/commerce'
+import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
+import { withCors } from '@/lib/server/cors'
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+})
 
 const invalidBody = (request: Request, message: string) =>
   withCors(request, Response.json({ error: message }, { status: 400 }))
 
-const paymentsUnavailable = (request: Request) =>
-  withCors(
-    request,
-    Response.json({ error: 'Payments are temporarily unavailable' }, { status: 503 }),
-  )
+const tooManyRequests = (request: Request) =>
+  withCors(request, Response.json({ error: 'Too many requests' }, { status: 429 }))
 
-const cleanText = (value: unknown, maxLength: number) => {
-  if (typeof value !== 'string') return ''
-  const cleaned = value.trim()
-  return cleaned.length <= maxLength ? cleaned : ''
+type ShippingAddressInput = {
+  fullName?: string
+  addressLine1?: string
+  addressLine2?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
+  landmark?: string
 }
 
-export const OPTIONS = async (request: Request) =>
-  withCors(request, new Response(null, { status: 204 }))
+const normalizeMoney = (value: number) => Math.round(value * 100) / 100
+
+const toTrimmedString = (value: unknown): string => (typeof value === 'string' ? value.trim() : '')
+
+const normalizeShippingAddress = (shippingAddress: ShippingAddressInput | undefined) => {
+  if (!shippingAddress) return null
+
+  const normalized = {
+    fullName: toTrimmedString(shippingAddress.fullName),
+    addressLine1: toTrimmedString(shippingAddress.addressLine1),
+    addressLine2: toTrimmedString(shippingAddress.addressLine2),
+    city: toTrimmedString(shippingAddress.city),
+    state: toTrimmedString(shippingAddress.state),
+    country: toTrimmedString(shippingAddress.country),
+    postalCode: toTrimmedString(shippingAddress.postalCode),
+    landmark: toTrimmedString(shippingAddress.landmark),
+  }
+
+  if (
+    !normalized.fullName
+    || !normalized.addressLine1
+    || !normalized.city
+    || !normalized.state
+    || !normalized.country
+    || !normalized.postalCode
+  ) {
+    return null
+  }
+
+  return normalized
+}
+
+
+
+export const OPTIONS = async (request: Request) => {
+  return withCors(request, new Response(null, { status: 204 }))
+}
 
 export const POST = async (request: Request): Promise<Response> => {
-  const originRejection = rejectDisallowedOrigin(request)
-  if (originRejection) return originRejection
-
-  const contentLength = Number(request.headers.get('content-length') ?? 0)
-  if (contentLength > 32_768) return invalidBody(request, 'Request body is too large')
-
-  const rate = await checkRateLimit({
-    key: `razorpay-create:${getClientIp(request)}`,
-    limit: 10,
+  const ip = getClientIp(request)
+  const rate = checkRateLimit({
+    key: `razorpay-create:${ip}`,
+    limit: 20,
     windowMs: 15 * 60 * 1000,
   })
-  if (rate.limited) {
-    return withCors(request, Response.json({ error: 'Too many requests' }, { status: 429 }))
-  }
 
-  let razorpay
-  let paymentRuntime
-  try {
-    paymentRuntime = getPaymentRuntimeConfig()
-    razorpay = getRazorpayClient()
-  } catch (error) {
-    console.error('[create-order] Unsafe Razorpay configuration', {
-      error: error instanceof Error ? error.message : 'unknown',
-    })
-    return paymentsUnavailable(request)
-  }
-  if (!razorpay) return paymentsUnavailable(request)
+  if (rate.limited) return tooManyRequests(request)
 
   const body = (await request.json().catch(() => null)) as
     | {
         email?: unknown
         phone?: unknown
-        shippingAddress?: Record<string, unknown>
+        total?: unknown
+        shippingAddress?: {
+          fullName?: string
+          addressLine1?: string
+          addressLine2?: string
+          city?: string
+          state?: string
+          country?: string
+          postalCode?: string
+          landmark?: string
+        }
         items?: unknown
       }
     | null
+
   if (!body) return invalidBody(request, 'Invalid request body')
 
-  const email = cleanText(body.email, 254).toLowerCase()
-  const phone = cleanText(body.phone, 20).replace(/[\s()-]/g, '')
-  const shippingAddress = normalizeShippingAddress({
-    fullName: cleanText(body.shippingAddress?.fullName, 100),
-    addressLine1: cleanText(body.shippingAddress?.addressLine1, 200),
-    addressLine2: cleanText(body.shippingAddress?.addressLine2, 200),
-    city: cleanText(body.shippingAddress?.city, 100),
-    state: cleanText(body.shippingAddress?.state, 100),
-    country: cleanText(body.shippingAddress?.country, 100),
-    postalCode: cleanText(body.shippingAddress?.postalCode, 20),
-    landmark: cleanText(body.shippingAddress?.landmark, 150),
-  })
+  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+  const phone = typeof body.phone === 'string' ? body.phone.trim() : ''
+  const providedTotal = Number(body.total)
+  const shippingAddress = normalizeShippingAddress(body.shippingAddress)
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return invalidBody(request, 'A valid email is required')
-  }
-  if (!/^\+?[0-9]{10,15}$/.test(phone)) {
-    return invalidBody(request, 'A valid phone number is required')
-  }
-  if (!shippingAddress) {
-    return invalidBody(request, 'All required shipping address fields must be provided')
-  }
+  if (!email) return invalidBody(request, 'Email is required')
+  if (!phone) return invalidBody(request, 'Phone is required')
+  if (!Number.isFinite(providedTotal) || providedTotal <= 0) return invalidBody(request, 'Total is required')
+  if (!shippingAddress) return invalidBody(request, 'All required shipping address fields must be provided')
+
+  const normalizedItems = normalizeCartItems(body.items)
+  if (normalizedItems.length === 0) return invalidBody(request, 'Cart items are required')
 
   const payload = await getPayload({ config: configPromise })
-  if (paymentRuntime.mode === 'live') {
-    try {
-      await assertLiveBusinessReadiness(payload)
-    } catch (error) {
-      console.error('[create-order] Live payments blocked by the business-readiness gate', {
-        error: error instanceof Error ? error.message : 'unknown',
-      })
-      return paymentsUnavailable(request)
-    }
-  }
-
   const session = await getServerSession(authOptions)
-  const payloadUser = session?.user?.id
-    ? await requirePayloadUser(payload, session.user.id)
-    : null
 
-  if (session?.user?.id && !payloadUser) {
-    return withCors(request, Response.json({ error: 'Unauthorized' }, { status: 401 }))
-  }
+  const payloadUser = session?.user?.id ? await requirePayloadUser(payload, session.user.id) : null
+
+  // Security: If logged in, email MUST match user email
   if (payloadUser && email !== payloadUser.email.toLowerCase()) {
     return invalidBody(request, 'Email mismatch for authenticated user')
   }
 
-  let snapshot
-  try {
-    snapshot = await buildPaymentSnapshot(payload, body.items)
-  } catch (error) {
-    if (error instanceof InvalidCartError) return invalidBody(request, error.message)
-    throw error
+  const productsById = await fetchProductsByIds(
+    payload,
+    normalizedItems.map((item) => item.productId),
+  )
+
+  const validItems = normalizedItems
+    .map((item) => {
+      const product = productsById.get(String(item.productId))
+      if (!product) return null
+      
+      return {
+        product: item.productId,
+        quantity: item.quantity,
+        name: product.name,
+        price: typeof product.salePrice === 'number' ? product.salePrice : product.price
+      }
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null)
+
+  if (validItems.length === 0) return invalidBody(request, 'No valid products were provided')
+
+  // Stock availability check before charging the customer
+  const stockErrors = checkVariantStock(normalizedItems, productsById)
+  if (stockErrors.length > 0) {
+    const detail = stockErrors
+      .map((e) => `"${e.productName}" (requested: ${e.requested}, available: ${e.available})`)
+      .join('; ')
+    console.warn('[create-order] Stock unavailable for items', { stockErrors })
+    return withCors(
+      request,
+      Response.json(
+        {
+          error: 'Insufficient stock for one or more items',
+          stockErrors,
+          detail,
+        },
+        { status: 400 },
+      ),
+    )
   }
 
-  const attemptId = opaqueAttemptId()
-  const attempt = await payload.create({
-    collection: 'payment-attempts',
-    data: {
-      attemptId,
-      user: payloadUser?.id,
-      email,
-      phone,
-      shippingAddress,
-      items: snapshot.items,
-      amountPaise: snapshot.amountPaise,
-      currency: 'INR',
-      status: 'creating',
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-    },
-    overrideAccess: true,
-  })
+  const computedTotal = validItems.reduce((sum, item) => {
+    return sum + item.price * item.quantity
+  }, 0)
+  const normalizedComputedTotal = normalizeMoney(computedTotal)
+
+  if (normalizeMoney(providedTotal) !== normalizedComputedTotal) {
+    return invalidBody(request, 'Order total mismatch')
+  }
+
+  // Razorpay expects amount in paise (multiply by 100)
+  const amountInPaise = Math.round(normalizedComputedTotal * 100)
 
   try {
+    // 1. Create Order in Razorpay ONLY
+    // We do NOT create the Payload order record yet to avoid "zombie" entries.
     const razorpayOrder = await razorpay.orders.create({
-      amount: snapshot.amountPaise,
+      amount: amountInPaise,
       currency: 'INR',
-      receipt: attemptId,
-      notes: { payment_attempt: attemptId },
-    })
-
-    if (
-      Number(razorpayOrder.amount) !== snapshot.amountPaise
-      || razorpayOrder.currency !== 'INR'
-    ) {
-      throw new Error('Razorpay returned a mismatched order')
-    }
-
-    await payload.update({
-      collection: 'payment-attempts',
-      id: attempt.id,
-      data: {
-        status: 'pending',
-        razorpayOrderId: razorpayOrder.id,
+      receipt: `RCPT-${Date.now()}`,
+      notes: {
+        email,
+        itemCount: String(validItems.length),
       },
-      overrideAccess: true,
     })
 
-    console.info('[create-order] Payment attempt created', {
-      attemptId,
+    console.info('[create-order] Razorpay order generated', {
       razorpayOrderId: razorpayOrder.id,
-      amountPaise: snapshot.amountPaise,
-      authenticated: Boolean(payloadUser),
+      amount: razorpayOrder.amount,
+      isGuest: !payloadUser?.id,
     })
 
     return withCors(
       request,
       Response.json({
-        attemptId,
         razorpayOrderId: razorpayOrder.id,
-        amount: snapshot.amountPaise,
-        currency: 'INR',
-      }),
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        // We return validItems and total so the frontend can pass them to verify-payment
+        // or just keep them in state.
+      })
     )
   } catch (error) {
-    await payload.update({
-      collection: 'payment-attempts',
-      id: attempt.id,
-      data: {
-        status: 'failed',
-        failureReason: 'Razorpay order creation failed',
-        processedAt: new Date().toISOString(),
-      },
-      overrideAccess: true,
+    console.error('[create-order] Failed to create Razorpay order', {
+      error: error instanceof Error ? error.stack || error.message : String(error),
     })
-    console.error('[create-order] Razorpay order creation failed', {
-      attemptId,
-      error: error instanceof Error ? error.message : 'unknown',
-    })
-    return paymentsUnavailable(request)
+    return withCors(request, Response.json({ error: error instanceof Error ? error.message : 'Failed to create payment order' }, { status: 500 }))
   }
 }

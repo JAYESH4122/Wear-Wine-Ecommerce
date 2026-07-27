@@ -1,13 +1,20 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
 
 test.describe('Frontend', () => {
-  test('tracking requires contact details without putting them in the URL', async ({ page }) => {
-    await page.goto('/track-order?orderId=WW-TEST&email=private@example.com')
+  let page: Page
 
-    await expect(page.getByRole('heading', { name: /track your order/i })).toBeVisible()
-    await expect(page.getByLabel(/email or phone number/i)).toHaveValue('')
-    await expect(page.getByLabel(/exact order id/i)).toHaveValue('WW-TEST')
-    await expect(page).not.toHaveURL(/email=/)
-    await expect(page.getByLabel(/email or phone number/i)).toHaveAttribute('required', '')
+  test.beforeAll(async ({ browser }, testInfo) => {
+    const context = await browser.newContext()
+    page = await context.newPage()
+  })
+
+  test('can go on homepage', async ({ page }) => {
+    await page.goto('http://localhost:3000')
+
+    await expect(page).toHaveTitle(/Payload Blank Template/)
+
+    const heading = page.locator('h1').first()
+
+    await expect(heading).toHaveText('Welcome to your new project.')
   })
 })

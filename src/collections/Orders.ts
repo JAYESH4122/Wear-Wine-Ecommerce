@@ -9,7 +9,7 @@ export const Orders: CollectionConfig = {
     defaultColumns: ['email', 'phone', 'total', 'status', 'createdAt'],
   },
   access: {
-    create: adminOnly,
+    create: () => true,
     read: ({ req: { user } }) => {
       // Admin can read all
       if (user) {
@@ -63,15 +63,6 @@ export const Orders: CollectionConfig = {
       relationTo: 'users',
       required: false,
       index: true,
-    },
-    {
-      name: 'paymentAttempt',
-      type: 'relationship',
-      relationTo: 'payment-attempts',
-      unique: true,
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'email',
@@ -211,7 +202,6 @@ export const Orders: CollectionConfig = {
     {
       name: 'razorpayOrderId',
       type: 'text',
-      unique: true,
       admin: {
         readOnly: true,
       },
@@ -220,7 +210,6 @@ export const Orders: CollectionConfig = {
     {
       name: 'razorpayPaymentId',
       type: 'text',
-      unique: true,
       index: true,
       admin: {
         readOnly: true,
@@ -231,7 +220,6 @@ export const Orders: CollectionConfig = {
       type: 'text',
       admin: {
         readOnly: true,
-        description: 'Legacy records only. New payment signatures are never stored.',
       },
     },
   ],
