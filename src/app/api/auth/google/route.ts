@@ -6,7 +6,7 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import { createGoogleExchangeToken } from '@/lib/server/google-exchange-token'
 import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
-import { rejectDisallowedOrigin, withCors } from '@/lib/server/cors'
+import { withCors } from '@/lib/server/cors'
 
 const GOOGLE_AUDIENCE = process.env.GOOGLE_CLIENT_ID
 
@@ -29,15 +29,12 @@ export const OPTIONS = async (request: Request) => {
 }
 
 export const POST = async (request: Request): Promise<Response> => {
-  const originRejection = rejectDisallowedOrigin(request)
-  if (originRejection) return originRejection
-
   if (!GOOGLE_AUDIENCE || !googleClient) {
     return buildError(request, 'Google OAuth is not configured', 500)
   }
 
   const ip = getClientIp(request)
-  const rate = await checkRateLimit({
+  const rate = checkRateLimit({
     key: `auth-google:${ip}`,
     limit: 20,
     windowMs: 15 * 60 * 1000,

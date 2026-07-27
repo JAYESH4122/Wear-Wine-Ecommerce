@@ -1,7 +1,5 @@
 import type { CollectionConfig } from 'payload'
 
-import { adminOnly } from '@/access/ownerOrAdmin'
-
 export const Sizes: CollectionConfig = {
   slug: 'sizes',
 
@@ -10,10 +8,7 @@ export const Sizes: CollectionConfig = {
   },
 
   access: {
-    create: adminOnly,
-    delete: adminOnly,
     read: () => true,
-    update: adminOnly,
   },
 
   fields: [

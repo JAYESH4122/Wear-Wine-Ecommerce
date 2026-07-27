@@ -1,5 +1,4 @@
 import { CollectionConfig } from 'payload'
-import { adminOnly } from '@/access/ownerOrAdmin'
 import { generateSlug } from './lib'
 
 export const Policies: CollectionConfig = {
@@ -9,10 +8,7 @@ export const Policies: CollectionConfig = {
     defaultColumns: ['title', 'slug', 'lastUpdated'],
   },
   access: {
-    create: adminOnly,
-    delete: adminOnly,
     read: () => true,
-    update: adminOnly,
   },
   hooks: {
     beforeValidate: [generateSlug('title')],

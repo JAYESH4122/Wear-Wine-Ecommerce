@@ -4,16 +4,13 @@ import {
   hydrateWishlistItems,
   normalizeWishlistItems,
 } from '@/lib/server/commerce'
-import { rejectDisallowedOrigin, withCors } from '@/lib/server/cors'
+import { withCors } from '@/lib/server/cors'
 
 export const OPTIONS = async (request: Request) => {
   return withCors(request, new Response(null, { status: 204 }))
 }
 
 export const POST = async (request: Request): Promise<Response> => {
-  const originRejection = rejectDisallowedOrigin(request)
-  if (originRejection) return originRejection
-
   try {
     const body = (await request.json().catch(() => null)) as { items?: unknown } | null
     if (!body || !body.items) {

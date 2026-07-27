@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Package, Search, Calendar, History, ShoppingCart, Truck } from 'lucide-react'
+import { Package, Search, Calendar, MapPin, History, ShoppingCart, Truck } from 'lucide-react'
 
 interface Order {
   orderId: string
@@ -51,14 +51,10 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
           <aside className="lg:col-span-5 bg-background-primary rounded-lg p-8 md:p-12 shadow-[0_20px_50px_rgba(28,27,27,0.03)] border border-border-secondary">
             <form onSubmit={handleTrack} className="space-y-8">
               <div className="space-y-2">
-                <label
-                  htmlFor="tracking-contact"
-                  className="block font-primary text-sm uppercase tracking-widest text-text font-semibold"
-                >
+                <label className="block font-primary text-sm uppercase tracking-widest text-text font-semibold">
                   Email or Phone Number
                 </label>
                 <input
-                  id="tracking-contact"
                   type="text"
                   value={emailOrPhone}
                   onChange={(e) => setEmailOrPhone(e.target.value)}
@@ -68,20 +64,15 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
                 />
               </div>
               <div className="space-y-2">
-                <label
-                  htmlFor="tracking-order-id"
-                  className="block font-primary text-sm uppercase tracking-widest text-text font-semibold"
-                >
-                  Exact Order ID
+                <label className="block font-primary text-sm uppercase tracking-widest text-text font-semibold">
+                  Order ID (Optional)
                 </label>
                 <input
-                  id="tracking-order-id"
                   type="text"
                   value={orderId}
                   onChange={(e) => setOrderId(e.target.value)}
                   className="w-full h-14 px-6 rounded-lg bg-background-secondary border-none focus:ring-2 focus:ring-primary/20 text-text placeholder:text-content-placeholder font-medium transition-all font-primary"
                   placeholder="WW-2024-XXXX"
-                  required
                 />
               </div>
 
@@ -198,14 +189,24 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
                             Estimated Delivery
                           </p>
                           <p className="text-lg font-primary text-text font-semibold">
-                            {order.status === 'shipped' ? 'See courier tracking' : 'Processing'}
+                            {order.status === 'shipped' ? 'October 24, 2024' : 'Processing'}
                           </p>
                         </div>
                       </div>
-                      <p className="text-sm font-primary text-content-tertiary">
-                        For privacy, delivery contact and address details are not displayed on this
-                        public tracking page.
-                      </p>
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-full bg-background-secondary flex items-center justify-center text-surface-brick">
+                          <MapPin className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-content-tertiary font-bold font-primary">
+                            Shipping Address
+                          </p>
+                          <p className="text-lg font-primary text-text font-semibold leading-snug">
+                            721 Sommelier Blvd, Suite 4<br />
+                            Oakville, CA 94562
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="bg-background-secondary rounded-lg p-6 relative overflow-hidden group">
@@ -214,7 +215,7 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({
                           Tracking Number
                         </p>
                         <p className="text-2xl font-anton text-text tracking-tighter">
-                          {order.trackingId || 'Not assigned yet'}
+                          {order.trackingId || 'WW-PENDING-XXXX'}
                         </p>
                         {order.trackingId && (
                           <button className="text-left font-primary text-sm underline decoration-surface-brick underline-offset-4 text-surface-brick font-bold hover:decoration-2">

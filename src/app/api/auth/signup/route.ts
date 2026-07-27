@@ -2,7 +2,7 @@ import { getPayload } from 'payload'
 
 import configPromise from '@/payload.config'
 import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
-import { rejectDisallowedOrigin, withCors } from '@/lib/server/cors'
+import { withCors } from '@/lib/server/cors'
 
 const invalidBody = (request: Request, message: string) =>
   withCors(request, Response.json({ error: message }, { status: 400 }))
@@ -19,11 +19,8 @@ export const OPTIONS = async (request: Request) => {
 }
 
 export const POST = async (request: Request): Promise<Response> => {
-  const originRejection = rejectDisallowedOrigin(request)
-  if (originRejection) return originRejection
-
   const ip = getClientIp(request)
-  const rate = await checkRateLimit({
+  const rate = checkRateLimit({
     key: `auth-signup:${ip}`,
     limit: 20,
     windowMs: 15 * 60 * 1000,

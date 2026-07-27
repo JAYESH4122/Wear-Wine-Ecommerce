@@ -2,8 +2,6 @@
 
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { LayoutGroup, motion } from 'framer-motion'
-import Link from 'next/link'
 import type { Swiper as SwiperInstance } from 'swiper'
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 
@@ -18,7 +16,6 @@ import { getApiUrl } from '@/lib/api/getApiUrl'
 import { Button } from '@/components/ui/button/Button'
 import { useResponsive } from '@/hooks/use-responsive'
 import { SectionWrapper } from '../SectionWrapper'
-import { getMediaUrl } from '@/lib/media'
 
 import type { Category as CategoryType, Product as ProductType } from '@/payload-types'
 import type { ContainerPropsType } from '@types-frontend/types'
@@ -36,7 +33,6 @@ interface Product {
   category?: string
   categorySlug?: string
   slug?: string
-  isInStock: boolean
 }
 
 const ALL_CATEGORY: Category = { id: 'all', name: 'All Products' }
@@ -163,31 +159,26 @@ export const ProductListSection = ({
           p.category && typeof p.category === 'object' ? (p.category as CategoryType) : null
         const firstImage = p.images?.[0]?.image
         const imageUrl =
-          firstImage && typeof firstImage === 'object' ? getMediaUrl(firstImage, 'card') : null
+          firstImage && typeof firstImage === 'object' ? (firstImage.url ?? null) : null
         const firstTag = p.tags?.[0]
         const tagName = firstTag && typeof firstTag === 'object' ? (firstTag.name ?? null) : null
 
-        const totalStock = (p.variants || []).reduce(
-          (acc, variant) => acc + (variant.stock ?? 0),
-          0,
-        )
+        const totalStock = (p.variants || []).reduce((acc, variant) => acc + (variant.stock ?? 0), 0)
         const isInStock = totalStock > 0
-
-        const salePrice = p.salePrice
-        const hasSale = typeof salePrice === 'number' && salePrice > 0 && salePrice < p.price
 
         return {
           id: String(p.id),
           title: p.name,
-          price: hasSale ? salePrice : p.price,
-          originalPrice: hasSale ? p.price : undefined,
+          price: p.salePrice ?? p.price,
+          originalPrice: p.salePrice ? p.price : undefined,
           image: imageUrl ?? '/placeholder.jpg',
-          badge: tagName ?? (hasSale ? 'Sale' : undefined),
+          badge: tagName ?? (p.salePrice ? 'Sale' : undefined),
           rating: 5.0,
           category: category?.name ?? undefined,
           categorySlug: category?.slug,
           slug: p.slug ?? undefined,
           isInStock,
+          product: p as any,
         }
       }),
     [dbProducts],
@@ -239,7 +230,6 @@ export const ProductListSection = ({
             </div>
             <div>
               <Button
-                asChild
                 variant={isDesktop ? 'primary' : 'ghost'}
                 className={cn(isDesktop ? '' : 'p-0')}
                 size="lg"
@@ -247,7 +237,7 @@ export const ProductListSection = ({
                   <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 }
               >
-                <Link href="/shop">Shop More</Link>
+                Shop More
               </Button>
             </div>
           </div>
@@ -259,41 +249,22 @@ export const ProductListSection = ({
           className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-neutral-200"
         >
           {/* Category filters */}
-          <LayoutGroup id="product-category-filters">
-            <div
-              className="flex max-w-full items-center gap-2 overflow-x-auto no-scrollbar py-2"
-              role="group"
-              aria-label="Filter products by category"
-            >
-              {categories.map((cat) => {
-                const isSelected = selectedCategory === cat.id
-
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleCategoryChange(cat.id)}
-                    aria-pressed={isSelected}
-                    className={cn(
-                      'relative px-5 py-2 text-sm font-medium whitespace-nowrap border transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2',
-                      isSelected
-                        ? 'text-white border-neutral-900'
-                        : 'text-neutral-500 border-neutral-200 hover:border-neutral-900 hover:text-neutral-900 active:border-neutral-900 active:text-neutral-900',
-                    )}
-                  >
-                    {isSelected && (
-                      <motion.span
-                        layoutId="active-product-category-filter"
-                        aria-hidden="true"
-                        className="absolute inset-0 bg-neutral-900"
-                        transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }}
-                      />
-                    )}
-                    <span className="relative z-10">{cat.name}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </LayoutGroup>
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.id)}
+                className={cn(
+                  'relative px-5 py-2 text-sm font-medium whitespace-nowrap border transition-colors duration-200 cursor-pointer',
+                  selectedCategory === cat.id
+                    ? 'text-white border-neutral-900 bg-neutral-900'
+                    : 'text-neutral-500 border-neutral-200 hover:border-neutral-900 hover:text-neutral-900 active:border-neutral-900 active:text-neutral-900',
+                )}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
 
           {/* Nav arrows */}
           {filteredProducts.length > 1 && (
@@ -302,7 +273,9 @@ export const ProductListSection = ({
                 <Button
                   key={dir}
                   onClick={() =>
-                    dir === 'prev' ? swiperRef.current?.slidePrev() : swiperRef.current?.slideNext()
+                    dir === 'prev'
+                      ? swiperRef.current?.slidePrev()
+                      : swiperRef.current?.slideNext()
                   }
                   variant="slider"
                   size="icon"
