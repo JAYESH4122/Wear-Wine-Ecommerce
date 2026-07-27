@@ -2,8 +2,83 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
-   CREATE TYPE "public"."enum_payment_attempts_currency" AS ENUM('INR');
-  CREATE TYPE "public"."enum_payment_attempts_status" AS ENUM('creating', 'pending', 'authorized', 'captured', 'failed', 'expired', 'refund_required', 'refunded');
+  DO $$
+  DECLARE
+    currency_labels text[];
+    status_labels text[];
+  BEGIN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM "pg_type" AS type
+      INNER JOIN "pg_namespace" AS namespace
+        ON namespace.oid = type.typnamespace
+      WHERE namespace.nspname = 'public'
+        AND type.typname = 'enum_payment_attempts_currency'
+    ) THEN
+      CREATE TYPE "public"."enum_payment_attempts_currency" AS ENUM('INR');
+    ELSE
+      SELECT array_agg(enum_value.enumlabel::text ORDER BY enum_value.enumsortorder)
+      INTO currency_labels
+      FROM "pg_enum" AS enum_value
+      INNER JOIN "pg_type" AS type
+        ON type.oid = enum_value.enumtypid
+      INNER JOIN "pg_namespace" AS namespace
+        ON namespace.oid = type.typnamespace
+      WHERE namespace.nspname = 'public'
+        AND type.typname = 'enum_payment_attempts_currency';
+
+      IF currency_labels IS DISTINCT FROM ARRAY['INR']::text[] THEN
+        RAISE EXCEPTION
+          'Existing enum_payment_attempts_currency labels do not match the expected schema';
+      END IF;
+    END IF;
+
+    IF NOT EXISTS (
+      SELECT 1
+      FROM "pg_type" AS type
+      INNER JOIN "pg_namespace" AS namespace
+        ON namespace.oid = type.typnamespace
+      WHERE namespace.nspname = 'public'
+        AND type.typname = 'enum_payment_attempts_status'
+    ) THEN
+      CREATE TYPE "public"."enum_payment_attempts_status" AS ENUM(
+        'creating',
+        'pending',
+        'authorized',
+        'captured',
+        'failed',
+        'expired',
+        'refund_required',
+        'refunded'
+      );
+    ELSE
+      SELECT array_agg(enum_value.enumlabel::text ORDER BY enum_value.enumsortorder)
+      INTO status_labels
+      FROM "pg_enum" AS enum_value
+      INNER JOIN "pg_type" AS type
+        ON type.oid = enum_value.enumtypid
+      INNER JOIN "pg_namespace" AS namespace
+        ON namespace.oid = type.typnamespace
+      WHERE namespace.nspname = 'public'
+        AND type.typname = 'enum_payment_attempts_status';
+
+      IF status_labels IS DISTINCT FROM ARRAY[
+        'creating',
+        'pending',
+        'authorized',
+        'captured',
+        'failed',
+        'expired',
+        'refund_required',
+        'refunded'
+      ]::text[] THEN
+        RAISE EXCEPTION
+          'Existing enum_payment_attempts_status labels do not match the expected schema';
+      END IF;
+    END IF;
+  END
+  $$;
+
   DO $$
   BEGIN
     IF EXISTS (
