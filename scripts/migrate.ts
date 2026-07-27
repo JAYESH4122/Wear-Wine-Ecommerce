@@ -8,7 +8,10 @@ dotenv.config()
 prompts.override({ confirm: true })
 process.env.DISABLE_PAYLOAD_HMR = 'true'
 
-const [{ getPayload }, { default: config }] = await Promise.all([import('payload'), import('@payload-config')])
+const [{ getPayload }, { default: config }] = await Promise.all([
+  import('payload'),
+  import('@payload-config'),
+])
 
 const payload = await getPayload({ config })
 
@@ -17,23 +20,20 @@ if (!payload.db) {
 }
 
 try {
-  try {
-    const { docs } = (await payload.find({
-      collection: 'payload-migrations',
-      depth: 0,
-      limit: 0,
-      where: {
-        batch: { equals: -1 },
-      },
-    })) as { docs: PayloadMigration[] }
-
-    if (docs?.length) {
-      await Promise.all(docs.map((doc) => payload.delete({ collection: 'payload-migrations', id: doc.id })))
-    }
-  } catch {
-  }
-
   await payload.db.migrate?.()
+
+  const { docs } = (await payload.find({
+    collection: 'payload-migrations',
+    depth: 0,
+    limit: 0,
+    where: {
+      and: [{ batch: { equals: -1 } }, { name: { equals: 'dev' } }],
+    },
+  })) as { docs: PayloadMigration[] }
+
+  for (const doc of docs) {
+    await payload.delete({ collection: 'payload-migrations', id: doc.id })
+  }
 } finally {
   await payload.destroy()
 }

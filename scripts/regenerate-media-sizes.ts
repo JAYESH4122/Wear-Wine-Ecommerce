@@ -107,3 +107,6 @@ if (!applyChanges) {
 if (failed > 0) {
   process.exitCode = 1
 }
+
+await payload.destroy()
+process.exit(process.exitCode ?? 0)
