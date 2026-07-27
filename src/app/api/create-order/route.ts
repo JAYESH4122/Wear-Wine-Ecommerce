@@ -18,8 +18,6 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
 })
 
-const CHECKOUT_WRITES_FROZEN = true
-
 const invalidBody = (request: Request, message: string) =>
   withCors(request, Response.json({ error: message }, { status: 400 }))
 
@@ -69,27 +67,13 @@ const normalizeShippingAddress = (shippingAddress: ShippingAddressInput | undefi
   return normalized
 }
 
+
+
 export const OPTIONS = async (request: Request) => {
   return withCors(request, new Response(null, { status: 204 }))
 }
 
 export const POST = async (request: Request): Promise<Response> => {
-  if (CHECKOUT_WRITES_FROZEN) {
-    return withCors(
-      request,
-      Response.json(
-        { error: 'Checkout is temporarily paused for scheduled database maintenance.' },
-        {
-          status: 503,
-          headers: {
-            'Cache-Control': 'no-store',
-            'Retry-After': '900',
-          },
-        },
-      ),
-    )
-  }
-
   const ip = getClientIp(request)
   const rate = checkRateLimit({
     key: `razorpay-create:${ip}`,
@@ -152,7 +136,7 @@ export const POST = async (request: Request): Promise<Response> => {
     .map((item) => {
       const product = productsById.get(String(item.productId))
       if (!product) return null
-
+      
       return {
         product: item.productId,
         quantity: item.quantity,
