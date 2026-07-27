@@ -1,6 +1,10 @@
 import type { CollectionConfig } from 'payload'
 
-import { ownerOrAdminByUserField } from '@/access/ownerOrAdmin'
+import {
+  adminFieldOnly,
+  ownerOrAdminByUserField,
+  ownerOrAdminCreateByUserField,
+} from '@/access/ownerOrAdmin'
 
 export const Carts: CollectionConfig = {
   slug: 'carts',
@@ -9,7 +13,7 @@ export const Carts: CollectionConfig = {
     defaultColumns: ['user', 'updatedAt'],
   },
   access: {
-    create: ownerOrAdminByUserField,
+    create: ownerOrAdminCreateByUserField,
     read: ownerOrAdminByUserField,
     update: ownerOrAdminByUserField,
     delete: ownerOrAdminByUserField,
@@ -22,6 +26,9 @@ export const Carts: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
+      access: {
+        update: adminFieldOnly,
+      },
     },
     {
       name: 'items',

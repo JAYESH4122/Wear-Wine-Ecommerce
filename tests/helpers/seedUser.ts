@@ -6,6 +6,8 @@ export const testUser = {
   email: 'dev@payloadcms.com',
   password: 'test',
   roles: ['admin'] as ('admin' | 'user')[],
+  isVerified: true,
+  _verified: true,
 }
 
 /**

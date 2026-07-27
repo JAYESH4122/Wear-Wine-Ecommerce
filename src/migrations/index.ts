@@ -1,5 +1,7 @@
 import * as migration_20260419_174102 from './20260419_174102';
 import * as migration_20260420_092741 from './20260420_092741';
+import * as migration_20260726_080409_add_media_image_sizes from './20260726_080409_add_media_image_sizes';
+import * as migration_20260726_143300_razorpay_live_security from './20260726_143300_razorpay_live_security';
 
 export const migrations = [
   {
@@ -10,6 +12,16 @@ export const migrations = [
   {
     up: migration_20260420_092741.up,
     down: migration_20260420_092741.down,
-    name: '20260420_092741'
+    name: '20260420_092741',
+  },
+  {
+    up: migration_20260726_080409_add_media_image_sizes.up,
+    down: migration_20260726_080409_add_media_image_sizes.down,
+    name: '20260726_080409_add_media_image_sizes',
+  },
+  {
+    up: migration_20260726_143300_razorpay_live_security.up,
+    down: migration_20260726_143300_razorpay_live_security.down,
+    name: '20260726_143300_razorpay_live_security'
   },
 ];

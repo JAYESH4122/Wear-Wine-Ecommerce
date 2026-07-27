@@ -4,13 +4,13 @@ import { useState, useMemo } from 'react'
 import { ProductBreadcrumb } from './product-breadcrumb'
 import { ProductGallery } from './product-gallery'
 import { ProductInfoPanel } from './product-info-panel'
-import { RelatedProducts } from './related-products'
 import { SizeChartModal } from './size-chart-model'
 import { TermsModal } from './terms-modal'
 import type { ProductDetailsProps, NormalizedColor, NormalizedSize } from './types'
 import type { Category, Color, Media, Size } from '@/payload-types'
+import { getMediaUrl } from '@/lib/media'
 
-export const ProductDetails = ({ product, relatedProducts = [], pdpStatic }: ProductDetailsProps) => {
+export const ProductDetails = ({ product, pdpStatic }: ProductDetailsProps) => {
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showSizeChart, setShowSizeChart] = useState(false)
 
@@ -83,16 +83,17 @@ export const ProductDetails = ({ product, relatedProducts = [], pdpStatic }: Pro
             </div>
           </div>
         </div>
-
-        {/* Related products */}
-        <RelatedProducts products={relatedProducts} />
       </div>
 
       <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
       <SizeChartModal
         isOpen={showSizeChart}
         onClose={() => setShowSizeChart(false)}
-        imageUrl={typeof pdpStatic?.sizeChart?.image === 'object' ? pdpStatic.sizeChart.image?.url ?? '' : ''}
+        imageUrl={
+          typeof pdpStatic?.sizeChart?.image === 'object'
+            ? getMediaUrl(pdpStatic.sizeChart.image, 'pdp') ?? ''
+            : ''
+        }
       />
     </div>
   )

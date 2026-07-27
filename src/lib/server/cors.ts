@@ -1,4 +1,4 @@
-const parseAllowedOrigins = (): string[] => {
+export const parseAllowedOrigins = (): string[] => {
   const raw = process.env.PAYLOAD_CORS_ORIGINS || ''
   return raw
     .split(',')
@@ -10,20 +10,33 @@ export const getCorsHeaders = (request: Request): HeadersInit => {
   const requestOrigin = request.headers.get('origin')
   const allowedOrigins = parseAllowedOrigins()
 
-  let allowOrigin = ''
-  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
-    allowOrigin = requestOrigin
-  } else if (allowedOrigins.length > 0) {
-    allowOrigin = allowedOrigins[0] as string
-  }
-
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
     Vary: 'Origin',
   }
+
+  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    headers['Access-Control-Allow-Origin'] = requestOrigin
+  }
+
+  return headers
+}
+
+export const isAllowedMutationOrigin = (request: Request): boolean => {
+  const origin = request.headers.get('origin')
+  if (!origin) return true
+  return parseAllowedOrigins().includes(origin)
+}
+
+export const rejectDisallowedOrigin = (request: Request): Response | null => {
+  if (isAllowedMutationOrigin(request)) return null
+
+  return withCors(
+    request,
+    Response.json({ error: 'Origin is not allowed' }, { status: 403 }),
+  )
 }
 
 export const withCors = (request: Request, response: Response): Response => {

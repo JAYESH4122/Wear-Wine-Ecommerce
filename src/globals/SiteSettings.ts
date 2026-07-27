@@ -1,9 +1,15 @@
 import { GlobalConfig } from 'payload'
+import { adminOnly } from '@/access/ownerOrAdmin'
+import { revalidateGlobalCache } from '@/lib/cache-tags'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   access: {
     read: () => true,
+    update: adminOnly,
+  },
+  hooks: {
+    afterChange: [() => revalidateGlobalCache('site-settings')],
   },
   fields: [
     {

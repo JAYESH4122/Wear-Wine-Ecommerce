@@ -42,7 +42,13 @@ interface AddressErrors {
   country?: string
 }
 
+type PaymentStatusResponse = {
+  state?: 'processing' | 'captured' | 'failed' | 'refund_required' | 'refunded'
+  orderId?: string
+  error?: string
+}
 
+let razorpayScriptPromise: Promise<boolean> | null = null
 
 const STEPS = [
   { id: 1, label: 'Cart' },
@@ -247,14 +253,85 @@ const CartPageContent = () => {
   )
 
   const loadRazorpayScript = useCallback(() => {
-    return new Promise((resolve) => {
+    if ((window as Window & { Razorpay?: unknown }).Razorpay) return Promise.resolve(true)
+    if (razorpayScriptPromise) return razorpayScriptPromise
+
+    razorpayScriptPromise = new Promise<boolean>((resolve) => {
       const script = document.createElement('script')
       script.src = 'https://checkout.razorpay.com/v1/checkout.js'
       script.onload = () => resolve(true)
-      script.onerror = () => resolve(false)
+      script.onerror = () => {
+        razorpayScriptPromise = null
+        resolve(false)
+      }
       document.body.appendChild(script)
     })
+    return razorpayScriptPromise
   }, [])
+
+  const completeCapturedOrder = useCallback(
+    (orderId: string) => {
+      localStorage.removeItem('pendingPaymentAttempt')
+      clearCart()
+      setOrderSuccess('Payment successful! Your order has been placed.')
+      setIsPlacingOrder(false)
+      setTimeout(() => {
+        router.push(`/track-order?orderId=${encodeURIComponent(orderId)}`)
+      }, 1500)
+    },
+    [clearCart, router],
+  )
+
+  const pollPaymentStatus = useCallback(
+    async (attemptId: string) => {
+      const API_URL = getApiUrl()
+
+      for (let index = 0; index < 10; index += 1) {
+        if (index > 0) await new Promise((resolve) => setTimeout(resolve, 2000))
+
+        const response = await fetch(`${API_URL}/api/payment-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ attemptId }),
+        })
+        const data = (await response.json().catch(() => ({}))) as PaymentStatusResponse
+        if (!response.ok) {
+          if (response.status >= 500) continue
+          throw new Error(data.error || 'Unable to confirm payment status')
+        }
+
+        if (data.state === 'captured' && data.orderId) {
+          completeCapturedOrder(data.orderId)
+          return
+        }
+        if (data.state === 'failed') {
+          localStorage.removeItem('pendingPaymentAttempt')
+          throw new Error('Payment failed')
+        }
+        if (data.state === 'refund_required' || data.state === 'refunded') {
+          localStorage.removeItem('pendingPaymentAttempt')
+          throw new Error('Your payment needs refund assistance. Please contact support.')
+        }
+      }
+
+      setOrderSuccess(
+        'Payment received and is still processing. Keep this page or return shortly for confirmation.',
+      )
+      setIsPlacingOrder(false)
+    },
+    [completeCapturedOrder],
+  )
+
+  useEffect(() => {
+    const pendingAttempt = localStorage.getItem('pendingPaymentAttempt')
+    if (!pendingAttempt) return
+
+    void pollPaymentStatus(pendingAttempt).catch((error: unknown) => {
+      setOrderError(error instanceof Error ? error.message : 'Unable to recover payment status')
+      setIsPlacingOrder(false)
+    })
+  }, [pollPaymentStatus])
 
   const handlePlaceOrder = useCallback(async () => {
     if (!validateAddress() || cart.length === 0) return
@@ -266,6 +343,10 @@ const CartPageContent = () => {
     const API_URL = getApiUrl()
 
     try {
+      if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+        throw new Error('Payments are temporarily unavailable')
+      }
+
       const sdkLoaded = await loadRazorpayScript()
       if (!sdkLoaded) {
         throw new Error('Razorpay SDK failed to load. Are you online?')
@@ -294,8 +375,9 @@ const CartPageContent = () => {
             items: cart.map((item) => ({
               productId: item.product.id,
               quantity: item.quantity,
+              size: item.selectedSize?.id ?? null,
+              color: item.selectedColor?.id ?? null,
             })),
-            total: subtotal,
           }),
         })
 
@@ -303,9 +385,10 @@ const CartPageContent = () => {
         if (!response.ok) {
           throw new Error(orderData.error || 'Failed to create order')
         }
-        if (!orderData?.razorpayOrderId) {
+        if (!orderData?.razorpayOrderId || !orderData?.attemptId) {
           throw new Error('Order creation failed to return a payment reference')
         }
+        localStorage.setItem('pendingPaymentAttempt', orderData.attemptId)
 
         // 2. Options for Razorpay
         const options = {
@@ -325,29 +408,10 @@ const CartPageContent = () => {
                 },
                 credentials: 'include',
                 body: JSON.stringify({
+                  attemptId: orderData.attemptId,
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
-                  orderData: {
-                    email: address.email,
-                    phone: address.phone,
-                    shippingAddress: {
-                      fullName: address.fullName,
-                      addressLine1: address.addressLine1,
-                      addressLine2: address.addressLine2,
-                      city: address.city,
-                      state: address.state,
-                      country: address.country,
-                      postalCode: address.zip,
-                      landmark: address.landmark,
-                    },
-                    items: cart.map((item) => ({
-                      productId: item.product.id,
-                      quantity: item.quantity,
-                    })),
-                    total: subtotal,
-                    userId: user?.id || null,
-                  },
                 }),
               })
 
@@ -356,13 +420,13 @@ const CartPageContent = () => {
                 throw new Error(verifyData.error || 'Payment verification failed')
               }
 
-              clearCart()
-              setOrderSuccess('Payment successful! Your order has been placed.')
-              
-              // Redirect to tracking page
-              setTimeout(() => {
-                router.push(`/track-order?orderId=${verifyData.orderId}&email=${encodeURIComponent(address.email)}`)
-              }, 1500)
+              if (verifyData.state === 'captured' && verifyData.orderId) {
+                completeCapturedOrder(verifyData.orderId)
+                return
+              }
+
+              setOrderSuccess('Payment received. Waiting for capture confirmation from Razorpay.')
+              await pollPaymentStatus(orderData.attemptId)
             } catch (err) {
               setOrderError(err instanceof Error ? err.message : 'Verification failed')
               setIsPlacingOrder(false)
@@ -378,6 +442,7 @@ const CartPageContent = () => {
           },
           modal: {
             ondismiss: () => {
+              localStorage.removeItem('pendingPaymentAttempt')
               setIsPlacingOrder(false)
             },
           },
@@ -404,10 +469,10 @@ const CartPageContent = () => {
     address.landmark,
     cart,
     clearCart,
-    transitionTo,
     validateAddress,
     loadRazorpayScript,
-    subtotal,
+    completeCapturedOrder,
+    pollPaymentStatus,
   ])
 
   const contentClass = cn(
@@ -616,7 +681,7 @@ const CartPageContent = () => {
                         Secure Checkout
                       </h3>
                       <p className="text-xs text-neutral-500 mt-1">
-                        Professional encryption by Razorpay
+                        Checkout handled by Razorpay
                       </p>
                     </div>
                     <Image 
@@ -630,9 +695,8 @@ const CartPageContent = () => {
 
                   <div className="space-y-4">
                     <p className="text-xs text-neutral-400 leading-relaxed max-w-md">
-                      By proceeding, you will be redirected to Razorpay&apos;s secure payment portal. 
-                      We support all major payment methods including Cards, UPI, Netbanking, 
-                      and Wallets.
+                      Razorpay will show the payment methods currently available for this order.
+                      Your order is placed only after the payment is confirmed as captured.
                     </p>
                     
                     <div className="flex flex-wrap gap-4 opacity-40 grayscale group-hover:grayscale-0 transition-all duration-300">
@@ -648,7 +712,7 @@ const CartPageContent = () => {
                     <div className="flex items-center gap-3 text-emerald-600 bg-emerald-50/50 p-4 border border-emerald-100/50">
                       <Check className="w-4 h-4" />
                       <p className="text-[10px] font-bold uppercase tracking-widest">
-                        Your payment is 100% secure and encrypted
+                        Payments processed securely by Razorpay
                       </p>
                     </div>
                   </div>
