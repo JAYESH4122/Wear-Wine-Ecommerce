@@ -14,6 +14,9 @@ import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
 import { getPaymentRuntimeConfig, getRazorpayClient } from '@/lib/server/razorpay'
 import configPromise from '@/payload.config'
 
+// Keep checkout closed until the production business-readiness claims are verified.
+const checkoutWritesFrozen = true
+
 const invalidBody = (request: Request, message: string) =>
   withCors(request, Response.json({ error: message }, { status: 400 }))
 
@@ -35,6 +38,22 @@ export const OPTIONS = async (request: Request) =>
 export const POST = async (request: Request): Promise<Response> => {
   const originRejection = rejectDisallowedOrigin(request)
   if (originRejection) return originRejection
+
+  if (checkoutWritesFrozen) {
+    return withCors(
+      request,
+      Response.json(
+        { error: 'Checkout is temporarily paused while payment readiness is verified.' },
+        {
+          status: 503,
+          headers: {
+            'Cache-Control': 'no-store',
+            'Retry-After': '900',
+          },
+        },
+      ),
+    )
+  }
 
   const contentLength = Number(request.headers.get('content-length') ?? 0)
   if (contentLength > 32_768) return invalidBody(request, 'Request body is too large')
