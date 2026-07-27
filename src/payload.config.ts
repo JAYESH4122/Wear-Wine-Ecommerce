@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { resendAdapter } from '@payloadcms/email-resend'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -20,6 +21,9 @@ import { Policies } from './collections/Policies'
 import { Carts } from './collections/Carts'
 import { Wishlists } from './collections/Wishlists'
 import { Orders } from './collections/Orders'
+import { RateLimitBuckets } from './collections/RateLimitBuckets'
+import { PaymentAttempts } from './collections/PaymentAttempts'
+import { PaymentWebhookEvents } from './collections/PaymentWebhookEvents'
 import { PDPStatic } from './globals/PDPStatic'
 import { SiteSettings } from './globals/SiteSettings'
 
@@ -34,17 +38,50 @@ const requireEnv = (key: string): string => {
   return value
 }
 
+const allowedOrigins = requireEnv('PAYLOAD_CORS_ORIGINS')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+const resendApiKey = process.env.RESEND_API_KEY?.trim()
+const emailFrom = process.env.EMAIL_FROM?.trim()
+const emailAdapter =
+  resendApiKey && emailFrom
+    ? resendAdapter({
+        apiKey: resendApiKey,
+        defaultFromAddress: emailFrom,
+        defaultFromName: process.env.EMAIL_FROM_NAME?.trim() || 'Wear Vine',
+      })
+    : undefined
+
 export default buildConfig({
   serverURL: requireEnv('NEXT_PUBLIC_API_URL'),
-  cors: [requireEnv('PAYLOAD_CORS_ORIGINS')],
-  csrf: [requireEnv('PAYLOAD_CORS_ORIGINS')],
+  cors: allowedOrigins,
+  csrf: allowedOrigins,
+  ...(emailAdapter ? { email: emailAdapter } : {}),
   admin: {
     user: Users.slug,
     importMap: {
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Products, Categories, Tags, Colors, Sizes, Pages, Policies, Carts, Wishlists, Orders],
+  collections: [
+    Users,
+    Media,
+    Products,
+    Categories,
+    Tags,
+    Colors,
+    Sizes,
+    Pages,
+    Policies,
+    Carts,
+    Wishlists,
+    Orders,
+    RateLimitBuckets,
+    PaymentAttempts,
+    PaymentWebhookEvents,
+  ],
   globals: [Header, Footer, PDPStatic, SiteSettings],
   editor: lexicalEditor(),
   secret: requireEnv('PAYLOAD_SECRET'),

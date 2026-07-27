@@ -43,9 +43,11 @@ export async function generateMetadata() {
 const RootLayout = async (props: { children: React.ReactNode }) => {
   const { children } = props
 
-  const headerData = await getGlobal<HeaderType>('header')
-  const footerData = await getGlobal<FooterType>('footer')
-  const siteSettings = await getGlobal<SiteSettingsType>('site-settings')
+  const [headerData, footerData, siteSettings] = await Promise.all([
+    getGlobal<HeaderType>('header'),
+    getGlobal<FooterType>('footer'),
+    getGlobal<SiteSettingsType>('site-settings'),
+  ])
 
   return (
     <html

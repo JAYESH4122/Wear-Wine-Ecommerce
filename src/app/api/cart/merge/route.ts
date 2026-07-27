@@ -14,7 +14,7 @@ import {
   requirePayloadUser,
 } from '@/lib/server/commerce'
 import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
-import { withCors } from '@/lib/server/cors'
+import { rejectDisallowedOrigin, withCors } from '@/lib/server/cors'
 
 const unauthorized = (request: Request) =>
   withCors(request, Response.json({ error: 'Unauthorized' }, { status: 401 }))
@@ -47,11 +47,14 @@ export const OPTIONS = async (request: Request) => {
 }
 
 export const POST = async (request: Request): Promise<Response> => {
+  const originRejection = rejectDisallowedOrigin(request)
+  if (originRejection) return originRejection
+
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return unauthorized(request)
 
   const ip = getClientIp(request)
-  const rate = checkRateLimit({
+  const rate = await checkRateLimit({
     key: `cart-merge:${ip}`,
     limit: 40,
     windowMs: 15 * 60 * 1000,

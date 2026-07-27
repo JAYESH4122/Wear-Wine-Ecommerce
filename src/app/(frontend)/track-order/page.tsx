@@ -20,7 +20,7 @@ export default function TrackOrderPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [hasSearched, setHasSearched] = useState(false)
 
-  const performTracking = async (params: { emailOrPhone: string; orderId?: string }) => {
+  const performTracking = async (params: { emailOrPhone: string; orderId: string }) => {
     setLoading(true)
     setError(null)
     setHasSearched(true)
@@ -31,7 +31,7 @@ export default function TrackOrderPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           emailOrPhone: params.emailOrPhone.trim(),
-          orderId: params.orderId?.trim() || undefined,
+          orderId: params.orderId.trim(),
         }),
       })
 
@@ -47,43 +47,36 @@ export default function TrackOrderPage() {
       if (data.docs?.length > 0) {
         localStorage.setItem('lastTrackEmail', params.emailOrPhone.trim())
       }
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to track order')
       setOrders([])
     } finally {
       setLoading(false)
     }
   }
 
-  // Auto-fill from localStorage or URL
+  // Contact data stays out of the URL; only the opaque order reference may be prefilled.
   useEffect(() => {
     let currentEmailOrPhone = ''
-    let currentOrderId = ''
-
     const saved = localStorage.getItem('lastTrackEmail')
     if (saved) currentEmailOrPhone = saved
+    const currentOrderId = searchParams.get('orderId') || ''
 
-    const urlEmail = searchParams.get('email')
-    const urlPhone = searchParams.get('phone')
-    if (urlEmail) currentEmailOrPhone = urlEmail
-    else if (urlPhone) currentEmailOrPhone = urlPhone
-
-    const urlOrder = searchParams.get('orderId')
-    if (urlOrder) currentOrderId = urlOrder
+    if (searchParams.has('email') || searchParams.has('phone')) {
+      const sanitizedParams = new URLSearchParams()
+      if (currentOrderId) sanitizedParams.set('orderId', currentOrderId)
+      const sanitizedQuery = sanitizedParams.toString()
+      window.history.replaceState(null, '', `/track-order${sanitizedQuery ? `?${sanitizedQuery}` : ''}`)
+    }
 
     setEmailOrPhone(currentEmailOrPhone)
     setOrderId(currentOrderId)
-
-    // Auto-trigger search if we have both
-    if (currentEmailOrPhone && currentOrderId) {
-      void performTracking({ emailOrPhone: currentEmailOrPhone, orderId: currentOrderId })
-    }
   }, [searchParams])
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!emailOrPhone.trim()) {
-      setError('Email or Phone is required')
+    if (!emailOrPhone.trim() || !orderId.trim()) {
+      setError('Exact Order ID and Email or Phone are required')
       return
     }
     await performTracking({ emailOrPhone, orderId })

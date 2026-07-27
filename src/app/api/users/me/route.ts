@@ -4,7 +4,7 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import { authOptions } from '@/lib/auth'
 import { requirePayloadUser } from '@/lib/server/commerce'
-import { withCors } from '@/lib/server/cors'
+import { rejectDisallowedOrigin, withCors } from '@/lib/server/cors'
 
 const unauthorized = (request: Request) =>
   withCors(request, Response.json({ error: 'Unauthorized' }, { status: 401 }))
@@ -17,6 +17,9 @@ export const OPTIONS = async (request: Request) => {
 }
 
 export const PATCH = async (request: Request): Promise<Response> => {
+  const originRejection = rejectDisallowedOrigin(request)
+  if (originRejection) return originRejection
+
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return unauthorized(request)
 
