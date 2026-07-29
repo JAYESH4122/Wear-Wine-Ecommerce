@@ -24,8 +24,10 @@ const isProductionRuntime = () => {
   return process.env.NODE_ENV === 'production'
 }
 
+export const arePaymentsEnabled = () => process.env.PAYMENTS_ENABLED === 'true'
+
 export const getPaymentRuntimeConfig = (): PaymentRuntimeConfig => {
-  const enabled = process.env.PAYMENTS_ENABLED === 'true'
+  const enabled = arePaymentsEnabled()
   const mode = process.env.RAZORPAY_MODE
   const keyId = process.env.RAZORPAY_KEY_ID?.trim() ?? ''
   const publicKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.trim() ?? ''

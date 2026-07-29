@@ -16,6 +16,7 @@ import {
   type PaymentAttemptRecord,
 } from '@/lib/server/payment-attempts'
 import {
+  arePaymentsEnabled,
   constantTimeHexEqual,
   getPaymentRuntimeConfig,
   verifyPaymentSignature,
@@ -37,6 +38,15 @@ afterEach(() => {
 })
 
 describe('payment trust boundary', () => {
+  it('keeps payments disabled unless explicitly enabled', () => {
+    vi.stubEnv('PAYMENTS_ENABLED', 'false')
+    expect(arePaymentsEnabled()).toBe(false)
+    expect(getPaymentRuntimeConfig().enabled).toBe(false)
+
+    vi.stubEnv('PAYMENTS_ENABLED', 'true')
+    expect(arePaymentsEnabled()).toBe(true)
+  })
+
   it('rejects Razorpay payment details that are not bound to the stored attempt', () => {
     expect(
       paymentMatchesAttempt(

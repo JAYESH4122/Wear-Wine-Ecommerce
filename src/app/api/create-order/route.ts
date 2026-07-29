@@ -11,11 +11,12 @@ import {
 } from '@/lib/server/payment-attempts'
 import { assertLiveBusinessReadiness } from '@/lib/server/live-readiness'
 import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit'
-import { getPaymentRuntimeConfig, getRazorpayClient } from '@/lib/server/razorpay'
+import {
+  arePaymentsEnabled,
+  getPaymentRuntimeConfig,
+  getRazorpayClient,
+} from '@/lib/server/razorpay'
 import configPromise from '@/payload.config'
-
-// Keep checkout closed until the production business-readiness claims are verified.
-const checkoutWritesFrozen = true
 
 const invalidBody = (request: Request, message: string) =>
   withCors(request, Response.json({ error: message }, { status: 400 }))
@@ -39,7 +40,9 @@ export const POST = async (request: Request): Promise<Response> => {
   const originRejection = rejectDisallowedOrigin(request)
   if (originRejection) return originRejection
 
-  if (checkoutWritesFrozen) {
+  // Keep checkout closed until the deployment explicitly enables payments.
+  // Live mode additionally requires the CMS business-readiness gate below.
+  if (!arePaymentsEnabled()) {
     return withCors(
       request,
       Response.json(
