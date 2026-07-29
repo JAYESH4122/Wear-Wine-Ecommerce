@@ -114,7 +114,7 @@ export const policyPages: Record<string, PolicyContentType> = {
       {
         heading: 'Shipping Policy',
         content:
-          'We offer free standard shipping on all orders over ₹100. Standard shipping typically takes 5-7 business days. Express shipping (2-3 business days) is available for an additional fee. International shipping is available to select countries.',
+          'We currently ship within India. Shipping charges and delivery estimates are shown at checkout before you complete your purchase. Orders typically arrive within 5-7 business days after processing.',
       },
       {
         heading: 'Processing Time',
@@ -156,7 +156,7 @@ export const policyPages: Record<string, PolicyContentType> = {
       {
         question: 'What payment methods do you accept?',
         answer:
-          'We accept all major credit cards (Visa, MasterCard, American Express, Discover), PayPal, Apple Pay, and Google Pay. All transactions are secured with SSL encryption.',
+          'Payments are securely processed through Razorpay. The payment methods available for your order are shown in the Razorpay checkout.',
       },
       {
         question: 'How do I find my size?',
@@ -171,7 +171,7 @@ export const policyPages: Record<string, PolicyContentType> = {
       {
         question: 'Do you offer gift wrapping?',
         answer:
-          'Yes! We offer complimentary gift wrapping on all orders. Simply select the gift wrap option at checkout and add a personalized message. Your items will arrive beautifully packaged in our signature gift box.',
+          'Gift wrapping is not currently available. All orders are carefully packed for delivery.',
       },
       {
         question: 'How do I care for my garments?',
@@ -181,7 +181,7 @@ export const policyPages: Record<string, PolicyContentType> = {
       {
         question: 'Do you ship internationally?',
         answer:
-          'Yes, we ship to over 50 countries worldwide. International shipping rates and delivery times vary by location. Import duties and taxes may apply and are the responsibility of the customer.',
+          'We currently ship within India only. Delivery availability and charges are shown at checkout.',
       },
       {
         question: 'How can I contact customer support?',
